@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum GlobalRole {
+  ADMIN
+  USER
+}
+
+enum ProjectRole {
+  PROJECT_ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+model User {
+  id         String       @id @default(cuid())
+  email      String       @unique
+  name       String
+  password   String
+  avatarUrl  String?
+  role       GlobalRole   @default(USER)
+
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  memberships ProjectMember[]
+  tasks       Task[]      @relation("AssignedTasks")
+  reported    Task[]      @relation("ReportedTasks")
+  comments    Comment[]
+  notifications Notification[]
+}
+
+model Project {
+  id          String          @id @default(cuid())
+  name        String
+  description String?
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  members     ProjectMember[]
+  boards      Board[]
+}
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  role      ProjectRole
+
+  userId    String
+  projectId String
+
+  user      User        @relation(fields: [userId], references: [id])
+  project   Project     @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+}
+
+model Board {
+  id        String     @id @default(cuid())
+  name      String
+
+  projectId String
+  project   Project    @relation(fields: [projectId], references: [id])
+
+  columns   Column[]
+}
+
+model Column {
+  id        String   @id @default(cuid())
+  name      String
+  order     Int
+  wipLimit  Int?
+
+  boardId   String
+  board     Board    @relation(fields: [boardId], references: [id])
+
+  tasks     Task[]
+}
+
+model Task {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+
+  priority    TaskPriority
+  status      TaskStatus
+
+  dueDate     DateTime?
+
+  columnId    String
+  column      Column        @relation(fields: [columnId], references: [id])
+
+  assigneeId  String?
+  assignee    User?         @relation("AssignedTasks", fields: [assigneeId], references: [id])
+
+  reporterId  String
+  reporter    User          @relation("ReportedTasks", fields: [reporterId], references: [id])
+
+  parentId    String?
+  parent      Task?         @relation("TaskHierarchy", fields: [parentId], references: [id])
+  children    Task[]        @relation("TaskHierarchy")
+
+  comments    Comment[]
+  audits      AuditLog[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+
+  action    String
+  oldValue  String?
+  newValue  String?
+
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  message   String
+  read      Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+}

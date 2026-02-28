@@ -1,0 +1,15 @@
+# Node
+node_modules/
+
+# Environment files
+.env
+
+# Prisma / SQLite
+dev.db
+
+# Build outputs
+dist/
+build/
+
+# OS
+.DS_Store
