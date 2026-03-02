@@ -7,21 +7,14 @@ datasource db {
 }
 
 enum GlobalRole {
-  ADMIN
+  GLOBAL_ADMIN
   USER
 }
 
 enum ProjectRole {
   PROJECT_ADMIN
-  MEMBER
-  VIEWER
-}
-
-enum TaskPriority {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
+  PROJECT_MEMBER
+  PROJECT_VIEWER
 }
 
 enum TaskType {
@@ -30,148 +23,132 @@ enum TaskType {
   BUG
 }
 
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  name      String
-  password  String
-  avatarUrl String?
-  role      GlobalRole @default(USER)
+  id           String     @id @default(uuid())
+  email        String     @unique
+  password     String
+  name         String
+  avatarUrl    String?
+  globalRole   GlobalRole @default(USER)
+  refreshToken String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  memberships   ProjectMember[]
-  tasks         Task[]          @relation("AssignedTasks")
-  reported      Task[]          @relation("ReportedTasks")
+  projects      ProjectMember[]
+  reportedTasks Task[]          @relation("Reporter")
+  assignedTasks Task[]          @relation("Assignee")
   comments      Comment[]
+  auditLogs     AuditLog[]
   notifications Notification[]
-
-  refreshTokens RefreshToken[]
 }
 
 model Project {
-  id          String  @id @default(cuid())
+  id          String          @id @default(uuid())
   name        String
   description String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  members ProjectMember[]
-  boards  Board[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  members     ProjectMember[]
+  boards      Board[]
 }
 
 model ProjectMember {
-  id   String      @id @default(cuid())
-  role ProjectRole
-
+  id        String      @id @default(uuid())
   userId    String
   projectId String
-
-  user    User    @relation(fields: [userId], references: [id])
-  project Project @relation(fields: [projectId], references: [id])
+  role      ProjectRole
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([userId, projectId])
 }
 
 model Board {
-  id   String @id @default(cuid())
-  name String
-
+  id        String   @id @default(uuid())
+  name      String
   projectId String
-  project   Project @relation(fields: [projectId], references: [id])
-
-  columns Column[]
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  columns   Column[]
+  tasks     Task[]
 }
 
 model Column {
-  id       String @id @default(cuid())
+  id       String @id @default(uuid())
   name     String
   order    Int
   wipLimit Int?
-
-  boardId String
-  board   Board  @relation(fields: [boardId], references: [id])
-
-  tasks Task[]
+  boardId  String
+  board    Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks    Task[]
 }
 
 model Task {
-  id          String  @id @default(cuid())
+  id          String    @id @default(uuid())
   title       String
   description String?
+  type        TaskType
+  priority    Priority
+  dueDate     DateTime?
 
-  type TaskType
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
+  closedAt   DateTime?
 
-  priority TaskPriority
-
-  dueDate DateTime?
-
-  columnId String
-  column   Column @relation(fields: [columnId], references: [id])
-
-  assigneeId String?
-  assignee   User?   @relation("AssignedTasks", fields: [assigneeId], references: [id])
-
+  boardId    String
+  columnId   String
   reporterId String
-  reporter   User   @relation("ReportedTasks", fields: [reporterId], references: [id])
+  assigneeId String?
+  parentId   String?
 
-  parentId String?
-  parent   Task?   @relation("TaskHierarchy", fields: [parentId], references: [id])
-  children Task[]  @relation("TaskHierarchy")
+  board    Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  column   Column @relation(fields: [columnId], references: [id])
+  reporter User   @relation("Reporter", fields: [reporterId], references: [id])
+  assignee User?  @relation("Assignee", fields: [assigneeId], references: [id])
 
-  comments Comment[]
-  audits   AuditLog[]
+  parent   Task?  @relation("TaskHierarchy", fields: [parentId], references: [id])
+  children Task[] @relation("TaskHierarchy")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  comments  Comment[]
+  auditLogs AuditLog[]
 }
 
 model Comment {
-  id      String @id @default(cuid())
-  content String
-
-  taskId String
-  task   Task   @relation(fields: [taskId], references: [id])
-
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id])
-
+  id        String   @id @default(uuid())
+  content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  authorId  String
+  taskId    String
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 }
 
 model AuditLog {
-  id String @id @default(cuid())
+  id        String   @id @default(uuid())
+  taskId    String
+  userId    String
+  action    String
+  oldValue  String?
+  newValue  String?
+  timestamp DateTime @default(now())
 
-  taskId String
-  task   Task   @relation(fields: [taskId], references: [id])
-
-  action   String
-  oldValue String?
-  newValue String?
-
-  createdAt DateTime @default(now())
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
-  id String @id @default(cuid())
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  message String
-  read    Boolean @default(false)
-
-  createdAt DateTime @default(now())
-}
-
-model RefreshToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
+  id        String   @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  expiresAt DateTime
-  revoked   Boolean  @default(false)
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

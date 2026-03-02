@@ -9,7 +9,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -19,8 +19,29 @@ function LoginPage() {
 
     setError(null);
 
-    console.log('Login attempt:', { email, password });
-    navigate('/board');
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed.');
+      }
+
+      console.log('Login successful:', data.user);
+      navigate('/board');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred.');
+      }
+    }
   };
 
   return (

@@ -10,7 +10,7 @@ function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     if (!name || !email || !password || !confirmPassword) {
@@ -25,13 +25,28 @@ function RegisterPage() {
 
     setError(null);
 
-    console.log('Register attempt:', {
-      name,
-      email,
-      password,
-    });
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
 
-    navigate('/login');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed.');
+      }
+
+      console.log('Registration successful:', data.user);
+      navigate('/login');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred during registration.');
+      }
+    }
   };
 
   return (
