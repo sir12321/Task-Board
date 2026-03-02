@@ -14,7 +14,7 @@ const TaskCard = ({ task, onClick }: Props) => {
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
-  const assignees = task.assigneeIds ?? [];
+  const assignees = task.assigneeId ? [task.assigneeId] : [];
   const avatarInitials = (id: string) => id.slice(0, 2).toUpperCase();
 
   return (

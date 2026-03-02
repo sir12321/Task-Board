@@ -1,18 +1,14 @@
 import './Sidebar.css';
+import type { UserSummary } from '../../types/Board';
 import { useNavigate } from 'react-router-dom';
 
 interface Props {
   collapsed: boolean;
   toggle: () => void;
+  user: UserSummary;
 }
 
-const user = {
-  name: 'Manya Jain',
-  email: 'manya@iitd.ac.in',
-  avatarUrl: null,
-};
-
-const Sidebar = ({ collapsed, toggle }: Props) => {
+const Sidebar = ({ collapsed, toggle, user }: Props) => {
   const navigate = useNavigate();
   return (
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>

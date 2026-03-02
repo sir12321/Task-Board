@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Sidebar from './Sidebar';
+import { mockUser } from '../../pages/MockData/user';
 import './Layout.css';
 
 interface Props {
@@ -12,7 +13,11 @@ const Layout = ({ children }: Props) => {
 
   return (
     <div className={`layout ${collapsed ? 'collapsed' : ''}`}>
-      <Sidebar collapsed={collapsed} toggle={() => setCollapsed(!collapsed)} />
+      <Sidebar
+        collapsed={collapsed}
+        toggle={() => setCollapsed(!collapsed)}
+        user={mockUser}
+      />
       <div className="content">{children}</div>
     </div>
   );

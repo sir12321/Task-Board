@@ -1,13 +1,17 @@
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
+export type TaskType = "STORY" | "TASK" | "BUG";
+
 export interface Task {
   id: string;
   title: string;
-  description: string;
+  description? : string | null;
+  type: TaskType;
   status: string;
   priority: TaskPriority;
-  assigneeIds: string[];
+  assigneeId: string;
   reporterId: string;
+  parentId: string | null;
   dueDate: string | null;
   createdAt: string;
   updatedAt: string;
