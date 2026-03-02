@@ -31,12 +31,13 @@ enum Priority {
 }
 
 model User {
-  userId          String            @id @default(uuid())
+  id              String            @id @default(uuid())
   email           String            @unique
   password        String
   name            String          
-  avatarUrl       String          
-  GlobalRole      String            @default(USER)
+  avatarUrl       String?          
+  globalRole      GlobalRole        @default(USER)
+  refreshToken    String?
 
   projects        ProjectMember[]
   reportedTasks   Task[]            @relation("Reporter")
