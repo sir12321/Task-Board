@@ -1,0 +1,23 @@
+.board {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  margin-top: 20px;
+  padding-bottom: 20px;
+  overflow-x: auto;
+}
+
+/* Bottom-right toast for brief error messages */
+.toast-bottom-right {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  background: rgba(20,20,20,0.72);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.3);
+  z-index: 1200;
+  font-size: 14px;
+  max-width: 320px;
+}

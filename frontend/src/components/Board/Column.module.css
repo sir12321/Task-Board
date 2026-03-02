@@ -1,0 +1,35 @@
+.column {
+  background: #f6f7f9;
+  border-radius: 12px;
+  padding: 16px;
+  width: 330px;
+  min-height: 500px;
+  box-shadow: inset 0 0 0 1px rgba(9,30,66,0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.column h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  color: #172b4d;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wip-limit {
+  font-size: 18px;
+  color: #6b778c;
+  margin-left: 8px;
+}
+
+.column > .task-card:first-of-type {
+  margin-top: 6px;
+}
+
+.column .task-card {
+  margin-bottom: 12px;
+}

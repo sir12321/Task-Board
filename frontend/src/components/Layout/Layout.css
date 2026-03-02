@@ -1,0 +1,19 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  background: #ffffff;
+}
+
+.sidebar {
+  width: 220px;
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.content {
+  flex: 1;
+  transition: margin-left 0.3s ease;
+}

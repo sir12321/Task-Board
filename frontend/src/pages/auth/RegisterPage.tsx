@@ -1,36 +1,37 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import styles from "./RegisterPage.module.css";
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import styles from './RegisterPage.module.css';
 
 function RegisterPage() {
-  const [name, setName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const handleSubmit = (
-    e: React.FormEvent<HTMLFormElement>
-  ): void => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
 
     if (!name || !email || !password || !confirmPassword) {
-      setError("All fields are required.");
+      setError('All fields are required.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError('Passwords do not match.');
       return;
     }
 
     setError(null);
 
-    console.log("Register attempt:", {
+    console.log('Register attempt:', {
       name,
       email,
       password,
     });
+
+    navigate('/login');
   };
 
   return (
@@ -91,7 +92,7 @@ function RegisterPage() {
         </form>
 
         <p className={styles.footerText}>
-          Already have an account?{" "}
+          Already have an account?{' '}
           <Link to="/login" className={styles.link}>
             Login
           </Link>
