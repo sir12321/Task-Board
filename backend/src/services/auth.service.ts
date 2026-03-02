@@ -5,6 +5,7 @@ import {
     generateRefreshToken,
     verifyRefreshToken,
 } from '../utils/jwt.util';
+import { User } from '@prisma/client';
 
 export interface RegisterInput {
     email: string;
@@ -17,7 +18,7 @@ export interface LoginInput {
     password: string;
 }
 
-export const registerUser = async (data : RegisterInput) => {
+export const registerUser = async (data : RegisterInput) : Promise<User> => {
     const existingUser = await prisma.user.findUnique({
         where: { email: data.email },
     });
@@ -39,7 +40,7 @@ export const registerUser = async (data : RegisterInput) => {
     return newUser;
 };
 
-export const loginUser = async (data : LoginInput) => {
+export const loginUser = async (data : LoginInput) : Promise<{ user: User; accessToken: string; refreshToken: string }> => {
     const user = await prisma.user.findUnique({
         where: { email: data.email },
     });
@@ -66,8 +67,8 @@ export const loginUser = async (data : LoginInput) => {
     return { user, accessToken, refreshToken };
 };
 
-export const refreshSession = async (token: string) => {
-    const decoded = verifyRefreshToken(token);
+export const refreshSession = async (token: string) : Promise<{ accessToken: string }> => {
+    const decoded = verifyRefreshToken(token) as { userId: string };
 
     const user = await prisma.user.findUnique({
         where: { id: decoded.userId },
@@ -83,7 +84,7 @@ export const refreshSession = async (token: string) => {
     return { accessToken: newAccessToken };
 };
 
-export const logoutUser = async (userId: string) => {
+export const logoutUser = async (userId: string) : Promise<void> => {
     await prisma.user.update({
         where: { id: userId },
         data: { refreshToken: null },
