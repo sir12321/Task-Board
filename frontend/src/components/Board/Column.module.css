@@ -25,3 +25,18 @@
   color: #6b778c;
   margin-left: 8px;
 }
+
+.createButton {
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: #fff;
+  color: #0f172a;
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.createButton:hover {
+  background: #f8fafc;
+}

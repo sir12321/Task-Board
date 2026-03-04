@@ -5,9 +5,10 @@ interface Properties {
   task: Task;
   onClick?: () => void;
   isDraggable?: boolean;
+  onEdit?: () => void;
 }
 
-const TaskCard = ({ task, onClick, isDraggable = true }: Properties) => {
+const TaskCard = ({ task, onClick, isDraggable = true, onEdit }: Properties) => {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null;
     const d = new Date(dateStr);
@@ -32,6 +33,19 @@ const TaskCard = ({ task, onClick, isDraggable = true }: Properties) => {
       tabIndex={onClick ? 0 : undefined}
     >
       <h4>{task.title}</h4>
+      {onEdit && (
+        <button
+          type="button"
+          className="edit-task-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          Edit
+        </button>
+      )}
       <p className="meta">
         <span className={`priority ${taskTypeClass}`}>{task.type}</span>
         {task.dueDate && (

@@ -4,6 +4,7 @@ import type {
   Board,
   BoardColumn,
   Task,
+  TaskUpsertInput,
 } from '../../types/Types';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
@@ -402,6 +403,80 @@ export default function BoardPage() {
     [board.tasks, selection.project],
   );
 
+  const createTask = useCallback(
+    async (payload: TaskUpsertInput): Promise<void> => {
+      const projectDetails = selection.project;
+      if (projectDetails.userRole === 'PROJECT_VIEWER') {
+        alert('You do not have permission to create tasks.');
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const column = board.columns.find((c) => c.id === payload.columnId);
+
+      await new Promise((res) => setTimeout(res, 200));
+
+      setBoard((prev) => ({
+        ...prev,
+        tasks: [
+          {
+            id: `${prev.id}-t${Date.now()}`,
+            title: payload.title,
+            description: payload.description ?? null,
+            type: payload.type,
+            priority: payload.priority,
+            dueDate: payload.dueDate,
+            createdAt: now,
+            updatedAt: now,
+            columnId: payload.columnId,
+            columnName: column?.name ?? 'Unknown',
+            reporterId: MockUser1.id,
+            assigneeId: payload.assigneeId ?? null,
+            parentId: payload.parentId ?? null,
+            comments: [],
+          },
+          ...prev.tasks,
+        ],
+      }));
+    },
+    [board.columns, selection.project],
+  );
+
+  const updateTask = useCallback(
+    async (taskId: string, payload: TaskUpsertInput): Promise<void> => {
+      const projectDetails = selection.project;
+      if (projectDetails.userRole === 'PROJECT_VIEWER') {
+        alert('You do not have permission to edit tasks.');
+        return;
+      }
+
+      const column = board.columns.find((c) => c.id === payload.columnId);
+      await new Promise((res) => setTimeout(res, 200));
+
+      setBoard((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
+          task.id === taskId
+            ? {
+                ...task,
+                title: payload.title,
+                description: payload.description ?? null,
+                type: payload.type,
+                priority: payload.priority,
+                dueDate: payload.dueDate,
+                columnId: payload.columnId,
+                columnName: column?.name ?? task.columnName,
+                assigneeId: payload.assigneeId ?? null,
+                parentId: payload.parentId ?? null,
+                updatedAt: new Date().toISOString(),
+              }
+            : task,
+        ),
+      }));
+    },
+    [board.columns, selection.project],
+  );
+
   return (
     <Layout>
       <div style={{ padding: '20px' }}>
@@ -411,6 +486,8 @@ export default function BoardPage() {
           board={board}
           projectDetails={selection.project}
           onDeleteTask={deleteTask}
+          onCreateTask={createTask}
+          onUpdateTask={updateTask}
         />
       </div>
     </Layout>

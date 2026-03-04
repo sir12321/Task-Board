@@ -7,7 +7,10 @@ interface Properties {
   tasks: Task[];
   onDropTask: (taskId: string, columnId: string) => void;
   onTaskClick?: (taskId: string) => void;
+  onTaskEdit?: (taskId: string) => void;
   isDraggable?: boolean;
+  canManageTasks?: boolean;
+  onCreateTask?: (columnId: string) => void;
 }
 
 const Column = ({
@@ -15,7 +18,10 @@ const Column = ({
   tasks,
   onDropTask,
   onTaskClick,
+  onTaskEdit,
   isDraggable,
+  canManageTasks,
+  onCreateTask,
 }: Properties) => {
   return (
     <div
@@ -32,12 +38,22 @@ const Column = ({
           {column.wipLimit && ` (${tasks.length}/${column.wipLimit})`}
         </div>
       </h3>
+      {canManageTasks && onCreateTask && (
+        <button
+          type="button"
+          className={styles.createButton}
+          onClick={() => onCreateTask(column.id)}
+        >
+          + Create task
+        </button>
+      )}
 
       {tasks.map((task) => (
         <TaskCard
           key={task.id}
           task={task}
           onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
+          onEdit={onTaskEdit ? () => onTaskEdit(task.id) : undefined}
           isDraggable={Boolean(isDraggable && column.id !== 'col-story')}
         />
       ))}

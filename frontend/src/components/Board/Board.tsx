@@ -1,18 +1,35 @@
 import { useReducer, useState, useEffect } from 'react';
-import type { Board as BoardType, ProjectDetails, Task } from '../../types/Types';
+import type {
+  Board as BoardType,
+  ProjectDetails,
+  Task,
+  TaskUpsertInput,
+} from '../../types/Types';
 import { BoardReducer } from './BoardReducer';
 import type { BoardState } from './BoardReducer';
 import Column from './Column';
 import TaskDetailsModal from '../Task/TaskDetailsModal';
+import TaskCreateEditModal from '../Task/TaskCreateEditModal';
 import styles from './Board.module.css';
 
 interface Props {
   board: BoardType;
   projectDetails: ProjectDetails;
   onDeleteTask?: (taskId: string) => Promise<void> | void;
+  onCreateTask?: (payload: TaskUpsertInput) => Promise<void> | void;
+  onUpdateTask?: (
+    taskId: string,
+    payload: TaskUpsertInput,
+  ) => Promise<void> | void;
 }
 
-const Board = ({ board, projectDetails, onDeleteTask }: Props) => {
+const Board = ({
+  board,
+  projectDetails,
+  onDeleteTask,
+  onCreateTask,
+  onUpdateTask,
+}: Props) => {
   const normalizeBoard = (b: BoardType): BoardType => ({
     ...b,
     tasks: b.tasks.map((t) =>
@@ -33,6 +50,16 @@ const Board = ({ board, projectDetails, onDeleteTask }: Props) => {
   // Toast state for showing short-lived error messages
   const [toast, setToast] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [createColumnId, setCreateColumnId] = useState<string | null>(null);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+
+  const canManageTasks =
+    state.projectDetails.userRole === 'PROJECT_ADMIN' ||
+    state.projectDetails.userRole === 'PROJECT_MEMBER';
+  const assignableMembers = state.projectDetails.members.filter(
+    (member) =>
+      member.role === 'PROJECT_ADMIN' || member.role === 'PROJECT_MEMBER',
+  );
 
   useEffect(() => {
     if (!toast) return;
@@ -131,6 +158,21 @@ const Board = ({ board, projectDetails, onDeleteTask }: Props) => {
             isDraggable={state.projectDetails.userRole !== 'PROJECT_VIEWER'}
             onDropTask={handleDrop}
             onTaskClick={(taskId) => setSelectedTaskId(taskId)}
+            onTaskEdit={(taskId) => {
+              if (!canManageTasks) {
+                setToast('You do not have permission to edit tasks');
+                return;
+              }
+              setEditingTaskId(taskId);
+            }}
+            canManageTasks={canManageTasks}
+            onCreateTask={(columnId) => {
+              if (!canManageTasks) {
+                setToast('You do not have permission to create tasks');
+                return;
+              }
+              setCreateColumnId(columnId);
+            }}
           />
         ))}
 
@@ -155,6 +197,70 @@ const Board = ({ board, projectDetails, onDeleteTask }: Props) => {
               dispatch({ type: 'DELETE_TASK', payload: { taskId } });
             }
             setSelectedTaskId(null);
+          }}
+        />
+      )}
+
+      {createColumnId && (
+        <TaskCreateEditModal
+          mode="create"
+          defaultColumnId={createColumnId}
+          columns={state.board.columns}
+          tasks={state.board.tasks}
+          assignableMembers={assignableMembers}
+          onClose={() => setCreateColumnId(null)}
+          onSave={async (payload) => {
+            if (onCreateTask) {
+              await onCreateTask(payload);
+              return;
+            }
+
+            const column = state.board.columns.find((c) => c.id === payload.columnId);
+            const now = new Date().toISOString();
+            dispatch({
+              type: 'ADD_TASK',
+              payload: {
+                task: {
+                  id: `task-${Date.now()}`,
+                  title: payload.title,
+                  description: payload.description ?? null,
+                  type: payload.type,
+                  priority: payload.priority,
+                  dueDate: payload.dueDate,
+                  createdAt: now,
+                  updatedAt: now,
+                  columnId: payload.columnId,
+                  columnName: column?.name ?? 'Unknown',
+                  reporterId: 'current-user',
+                  assigneeId: payload.assigneeId ?? null,
+                  parentId: payload.parentId ?? null,
+                },
+              },
+            });
+          }}
+        />
+      )}
+
+      {editingTaskId && (
+        <TaskCreateEditModal
+          mode="edit"
+          task={state.board.tasks.find((t) => t.id === editingTaskId)}
+          defaultColumnId={
+            state.board.tasks.find((t) => t.id === editingTaskId)?.columnId ?? 'col-backlog'
+          }
+          columns={state.board.columns}
+          tasks={state.board.tasks}
+          assignableMembers={assignableMembers}
+          onClose={() => setEditingTaskId(null)}
+          onSave={async (payload) => {
+            if (onUpdateTask) {
+              await onUpdateTask(editingTaskId, payload);
+              return;
+            }
+            dispatch({
+              type: 'UPDATE_TASK',
+              payload: { taskId: editingTaskId, updates: payload },
+            });
           }}
         />
       )}

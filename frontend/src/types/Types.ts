@@ -37,6 +37,17 @@ export interface Task {
   comments?: Comment[];
 }
 
+export interface TaskUpsertInput {
+  title: string;
+  description?: string | null;
+  type: TaskType;
+  priority: TaskPriority;
+  dueDate: string | null;
+  columnId: string;
+  assigneeId?: string | null;
+  parentId?: string | null;
+}
+
 export interface BoardColumn {
   id: string;
   name: string;

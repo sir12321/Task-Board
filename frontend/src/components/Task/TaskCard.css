@@ -123,3 +123,21 @@
   box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
   border: 1px solid rgba(9, 30, 66, 0.06);
 }
+
+.task-card .edit-task-btn {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: #fff;
+  color: #334155;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.task-card .edit-task-btn:hover {
+  background: #f8fafc;
+}

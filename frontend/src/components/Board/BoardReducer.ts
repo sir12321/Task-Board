@@ -1,4 +1,9 @@
-import type { ProjectDetails, Board } from "../../types/Types";
+import type {
+  ProjectDetails,
+  Board,
+  Task,
+  TaskUpsertInput,
+} from '../../types/Types';
 
 export interface BoardState {
   board: Board;
@@ -23,6 +28,19 @@ export type BoardAction =
       type: 'DELETE_TASK';
       payload: {
         taskId: string;
+      };
+    }
+  | {
+      type: 'ADD_TASK';
+      payload: {
+        task: Task;
+      };
+    }
+  | {
+      type: 'UPDATE_TASK';
+      payload: {
+        taskId: string;
+        updates: TaskUpsertInput;
       };
     };
 
@@ -106,6 +124,38 @@ export const BoardReducer = (
         board: {
           ...state.board,
           tasks: state.board.tasks.filter((t) => t.id !== taskId),
+        },
+        projectDetails: state.projectDetails,
+      };
+    }
+
+    case 'ADD_TASK': {
+      return {
+        board: {
+          ...state.board,
+          tasks: [action.payload.task, ...state.board.tasks],
+        },
+        projectDetails: state.projectDetails,
+      };
+    }
+
+    case 'UPDATE_TASK': {
+      const { taskId, updates } = action.payload;
+      return {
+        board: {
+          ...state.board,
+          tasks: state.board.tasks.map((task) =>
+            task.id === taskId
+              ? {
+                  ...task,
+                  ...updates,
+                  description: updates.description ?? null,
+                  assigneeId: updates.assigneeId ?? null,
+                  parentId: updates.parentId ?? null,
+                  updatedAt: new Date().toISOString(),
+                }
+              : task,
+          ),
         },
         projectDetails: state.projectDetails,
       };
