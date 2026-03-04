@@ -54,13 +54,30 @@
   font-size: 13px;
 }
 
-.priorityBadge {
-  background: #fff7ed;
-  color: #92400e;
+.typeBadge {
   padding: 6px 10px;
   border-radius: 6px;
   font-weight: 600;
   font-size: 13px;
+  border: 1px solid transparent;
+}
+
+.task {
+  color: #0366d6;
+  border-color: rgba(14, 165, 233, 0.45);
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.2) 0%, rgba(14, 165, 233, 0.08) 100%);
+}
+
+.story {
+  color: #6d28d9;
+  border-color: rgba(139, 92, 246, 0.45);
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.24) 0%, rgba(139, 92, 246, 0.09) 100%);
+}
+
+.bug {
+  color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.45);
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.22) 0%, rgba(239, 68, 68, 0.08) 100%);
 }
 
 .container {

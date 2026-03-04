@@ -110,7 +110,7 @@ const mockBoardTasks: Record<string, Task[]> = {
       id: 'b1-t1',
       title: 'Set up project',
       description: 'Initialize repository and tooling',
-      type: 'TASK',
+      type: 'BUG',
       columnId: 'col-progress',
       columnName: 'In Progress',
       priority: 'HIGH',

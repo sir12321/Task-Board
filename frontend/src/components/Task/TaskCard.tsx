@@ -17,10 +17,11 @@ const TaskCard = ({ task, onClick, isDraggable = true }: Properties) => {
 
   const avatarInitials = (id: string) => id.slice(0, 2).toUpperCase();
   const Assignee = task.assigneeId || null;
+  const taskTypeClass = task.type.toLowerCase();
 
   return (
     <div
-      className={`task-card ${!isDraggable ? 'not-draggable' : ''}`}
+      className={`task-card ${taskTypeClass} ${!isDraggable ? 'not-draggable' : ''}`}
       draggable={isDraggable}
       onClick={onClick}
       onDragStart={(e) => {
@@ -32,7 +33,7 @@ const TaskCard = ({ task, onClick, isDraggable = true }: Properties) => {
     >
       <h4>{task.title}</h4>
       <p className="meta">
-        <span className="priority">{task.priority}</span>
+        <span className={`priority ${taskTypeClass}`}>{task.type}</span>
         {task.dueDate && (
           <span className="due-date">Due {formatDate(task.dueDate)}</span>
         )}

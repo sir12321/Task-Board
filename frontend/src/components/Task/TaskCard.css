@@ -5,12 +5,39 @@
   margin-bottom: 12px;
   box-shadow: 0 1px 4px rgba(16, 24, 40, 0.06);
   cursor: grab;
-  border: 1px solid rgba(9, 30, 66, 0.04);
+  border: 1px solid rgba(9, 30, 66, 0.06);
   display: flex;
   flex-direction: column;
   gap: 8px;
   position: relative;
   padding-right: 56px;
+}
+
+.task-card.task {
+  border-color: rgba(14, 165, 233, 0.45);
+  background: linear-gradient(
+    180deg,
+    rgba(14, 165, 233, 0.12) 0%,
+    rgba(14, 165, 233, 0.04) 100%
+  );
+}
+
+.task-card.story {
+  border-color: rgba(139, 92, 246, 0.45);
+  background: linear-gradient(
+    180deg,
+    rgba(139, 92, 246, 0.13) 0%,
+    rgba(139, 92, 246, 0.04) 100%
+  );
+}
+
+.task-card.bug {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: linear-gradient(
+    180deg,
+    rgba(239, 68, 68, 0.12) 0%,
+    rgba(239, 68, 68, 0.04) 100%
+  );
 }
 
 .task-card:active {
@@ -43,12 +70,29 @@
 }
 
 .task-card .priority {
-  background: rgba(14, 165, 233, 0.12);
-  color: #0366d6;
   padding: 4px 8px;
   border-radius: 8px;
   font-weight: 600;
   font-size: 12px;
+  border: 1px solid transparent;
+}
+
+.task-card .priority.task {
+  color: #0366d6;
+  border-color: rgba(14, 165, 233, 0.45);
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.2) 0%, rgba(14, 165, 233, 0.08) 100%);
+}
+
+.task-card .priority.story {
+  color: #6d28d9;
+  border-color: rgba(139, 92, 246, 0.45);
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.24) 0%, rgba(139, 92, 246, 0.09) 100%);
+}
+
+.task-card .priority.bug {
+  color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.45);
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.22) 0%, rgba(239, 68, 68, 0.08) 100%);
 }
 
 .task-card .due-date {

@@ -16,6 +16,7 @@ const TaskDetailsModal = ({ task, onClose, onDelete }: Props) => {
   };
 
   const Assignee = task.assigneeId ? task.assigneeId : null;
+  const taskTypeClass = task.type.toLowerCase();
 
   return (
     <div className={styles['modal-overlay']} onClick={onClose}>
@@ -30,7 +31,11 @@ const TaskDetailsModal = ({ task, onClose, onDelete }: Props) => {
               <h2 className={styles.title}>{task.title}</h2>
               <div className={styles.headerMeta}>
                 <div className={styles.status}>{task.columnName}</div>
-                <div className={styles.priorityBadge}>{task.priority}</div>
+                <div
+                  className={`${styles.typeBadge} ${styles[taskTypeClass]}`}
+                >
+                  {task.type}
+                </div>
               </div>
             </div>
 
