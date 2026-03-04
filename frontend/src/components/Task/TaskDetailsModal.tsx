@@ -131,7 +131,7 @@ const TaskDetailsModal = ({ task, onClose, onDelete }: Props) => {
                       if (!ok) return;
                       try {
                         await onDelete(task.id);
-                      } catch (e) {
+                      } catch {
                         // parent will handle errors/toasts
                       }
                       onClose();

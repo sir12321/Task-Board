@@ -147,7 +147,7 @@ const Board = ({ board, projectDetails, onDeleteTask }: Props) => {
             if (onDeleteTask) {
               try {
                 await onDeleteTask(taskId);
-              } catch (e) {
+              } catch {
                 // parent handler failed — surface a toast
                 setToast('Failed to delete task');
               }
