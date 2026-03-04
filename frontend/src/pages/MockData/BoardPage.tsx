@@ -5,7 +5,7 @@ import type {
   BoardColumn,
   Task,
 } from '../../types/Types';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '../../components/Layout/Layout';
 import BoardView from '../../components/Board/Board';
@@ -365,14 +365,52 @@ export default function BoardPage() {
     );
   }
 
+  const [board, setBoard] = useState(selection.board);
+
+  useEffect(() => {
+    setBoard(selection.board);
+  }, [selection.board]);
+
+  const deleteTask = useCallback(
+    async (taskId: string): Promise<void> => {
+      try {
+        // Permission check
+        const projectDetails = selection.project;
+        if (projectDetails.userRole === 'PROJECT_VIEWER') {
+          alert('You do not have permission to delete tasks.');
+          return;
+        }
+
+        // Parent-child protection
+        const hasChildren = board.tasks.some((t) => t.parentId === taskId);
+        if (hasChildren) {
+          alert('Cannot delete a Story with child tasks.');
+          return;
+        }
+
+        // Simulate backend delay
+        await new Promise((res) => setTimeout(res, 300));
+
+        setBoard((prev) => ({
+          ...prev,
+          tasks: prev.tasks.filter((t) => t.id !== taskId),
+        }));
+      } catch (error) {
+        console.error('Failed to delete task:', error);
+      }
+    },
+    [board.tasks, selection.project],
+  );
+
   return (
     <Layout>
       <div style={{ padding: '20px' }}>
         <h1>TaskFlow Platform</h1>
         <BoardView
-          key={`${selection.project.id}:${selection.board.id}`}
-          board={selection.board}
+          key={`${selection.project.id}:${board.id}`}
+          board={board}
           projectDetails={selection.project}
+          onDeleteTask={deleteTask}
         />
       </div>
     </Layout>

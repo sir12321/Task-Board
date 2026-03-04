@@ -9,9 +9,10 @@ import styles from './Board.module.css';
 interface Props {
   board: BoardType;
   projectDetails: ProjectDetails;
+  onDeleteTask?: (taskId: string) => Promise<void> | void;
 }
 
-const Board = ({ board, projectDetails }: Props) => {
+const Board = ({ board, projectDetails, onDeleteTask }: Props) => {
   const normalizeBoard = (b: BoardType): BoardType => ({
     ...b,
     tasks: b.tasks.map((t) =>
@@ -23,6 +24,11 @@ const Board = ({ board, projectDetails }: Props) => {
     board: normalizeBoard(board),
     projectDetails,
   } as BoardState);
+
+  // Sync external board prop into reducer state when it changes
+  useEffect(() => {
+    dispatch({ type: 'SET_BOARD', payload: { board: normalizeBoard(board) } });
+  }, [board]);
 
   // Toast state for showing short-lived error messages
   const [toast, setToast] = useState<string | null>(null);
@@ -136,6 +142,20 @@ const Board = ({ board, projectDetails }: Props) => {
         <TaskDetailsModal
           task={state.board.tasks.find((t) => t.id === selectedTaskId)!}
           onClose={() => setSelectedTaskId(null)}
+          onDelete={async (taskId: string) => {
+            if (!projectDetails) return;
+            if (onDeleteTask) {
+              try {
+                await onDeleteTask(taskId);
+              } catch (e) {
+                // parent handler failed — surface a toast
+                setToast('Failed to delete task');
+              }
+            } else {
+              dispatch({ type: 'DELETE_TASK', payload: { taskId } });
+            }
+            setSelectedTaskId(null);
+          }}
         />
       )}
     </div>

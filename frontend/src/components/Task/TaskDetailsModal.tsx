@@ -4,9 +4,10 @@ import styles from './TaskDetailsModal.module.css';
 interface Props {
   task: Task;
   onClose: () => void;
+  onDelete?: (taskId: string) => Promise<void> | void;
 }
 
-const TaskDetailsModal = ({ task, onClose }: Props) => {
+const TaskDetailsModal = ({ task, onClose, onDelete }: Props) => {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'None';
     const d = new Date(dateStr);
@@ -121,6 +122,25 @@ const TaskDetailsModal = ({ task, onClose }: Props) => {
               <div className={styles.detailRow}>
                 <div className={styles.detailLabel}>History</div>
               </div>
+              {onDelete && (
+                <div style={{ marginTop: 12 }}>
+                  <button
+                    className={styles.deleteButton}
+                    onClick={async () => {
+                      const ok = window.confirm('Delete this task?');
+                      if (!ok) return;
+                      try {
+                        await onDelete(task.id);
+                      } catch (e) {
+                        // parent will handle errors/toasts
+                      }
+                      onClose();
+                    }}
+                  >
+                    Delete task
+                  </button>
+                </div>
+              )}
             </div>
           </aside>
         </div>

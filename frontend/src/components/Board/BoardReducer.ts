@@ -13,6 +13,18 @@ export type BoardAction =
         targetColumnId: string;
       };
     }
+  | {
+      type: 'SET_BOARD';
+      payload: {
+        board: Board;
+      };
+    }
+  | {
+      type: 'DELETE_TASK';
+      payload: {
+        taskId: string;
+      };
+    };
 
 export const BoardReducer = (
   state: BoardState,
@@ -76,6 +88,24 @@ export const BoardReducer = (
         board: {
           ...state.board,
           tasks: updatedTasks,
+        },
+        projectDetails: state.projectDetails,
+      };
+    }
+
+    case 'SET_BOARD': {
+      return {
+        board: action.payload.board,
+        projectDetails: state.projectDetails,
+      };
+    }
+
+    case 'DELETE_TASK': {
+      const { taskId } = action.payload;
+      return {
+        board: {
+          ...state.board,
+          tasks: state.board.tasks.filter((t) => t.id !== taskId),
         },
         projectDetails: state.projectDetails,
       };
