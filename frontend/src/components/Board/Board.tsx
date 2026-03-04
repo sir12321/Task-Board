@@ -21,6 +21,17 @@ interface Props {
     taskId: string,
     payload: TaskUpsertInput,
   ) => Promise<void> | void;
+  onAddColumn?: (columnName: string) => Promise<void> | void;
+  onRenameColumn?: (columnId: string, newName: string) => Promise<void> | void;
+  onReorderColumn?: (
+    columnId: string,
+    direction: 'left' | 'right',
+  ) => Promise<void> | void;
+  onUpdateColumnWip?: (
+    columnId: string,
+    wipLimit: number | null,
+  ) => Promise<void> | void;
+  onDeleteColumn?: (columnId: string) => Promise<void> | void;
 }
 
 const Board = ({
@@ -29,6 +40,11 @@ const Board = ({
   onDeleteTask,
   onCreateTask,
   onUpdateTask,
+  onAddColumn,
+  onRenameColumn,
+  onReorderColumn,
+  onUpdateColumnWip,
+  onDeleteColumn,
 }: Props) => {
   const normalizeBoard = (b: BoardType): BoardType => ({
     ...b,
@@ -52,10 +68,12 @@ const Board = ({
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [createColumnId, setCreateColumnId] = useState<string | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [workflowEditMode, setWorkflowEditMode] = useState(false);
 
   const canManageTasks =
     state.projectDetails.userRole === 'PROJECT_ADMIN' ||
     state.projectDetails.userRole === 'PROJECT_MEMBER';
+  const canManageColumns = state.projectDetails.userRole === 'PROJECT_ADMIN';
   const assignableMembers = state.projectDetails.members.filter(
     (member) =>
       member.role === 'PROJECT_ADMIN' || member.role === 'PROJECT_MEMBER',
@@ -127,11 +145,165 @@ const Board = ({
     });
   };
 
+  const handleAddColumn = async () => {
+    if (!canManageColumns) {
+      setToast('Only ProjectAdmin can create columns');
+      return;
+    }
+
+    const columnName = window.prompt('Enter column name');
+    if (columnName === null) {
+      return;
+    }
+
+    if (onAddColumn) {
+      await onAddColumn(columnName);
+      return;
+    }
+
+    dispatch({ type: 'ADD_COLUMN', payload: { name: columnName } });
+  };
+
+  const handleRenameColumn = async (columnId: string, currentName: string) => {
+    if (!canManageColumns) {
+      setToast('Only ProjectAdmin can rename columns');
+      return;
+    }
+
+    const newName = window.prompt('Rename column', currentName);
+    if (newName === null) {
+      return;
+    }
+
+    if (onRenameColumn) {
+      await onRenameColumn(columnId, newName);
+      return;
+    }
+
+    dispatch({ type: 'RENAME_COLUMN', payload: { columnId, name: newName } });
+  };
+
+  const sortedColumns = state.board.columns
+    .slice()
+    .sort((a, b) => a.order - b.order);
+
+  const handleMoveColumn = async (
+    columnId: string,
+    direction: 'left' | 'right',
+  ) => {
+    if (!canManageColumns) {
+      setToast('Only ProjectAdmin can reorder columns');
+      return;
+    }
+
+    if (columnId === 'col-story') {
+      setToast('Stories column must stay first');
+      return;
+    }
+
+    const currentIndex = sortedColumns.findIndex((column) => column.id === columnId);
+    if (currentIndex === -1) {
+      return;
+    }
+    const targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex >= 0 && sortedColumns[targetIndex]?.id === 'col-story') {
+      setToast('Stories column must stay first');
+      return;
+    }
+
+    if (onReorderColumn) {
+      await onReorderColumn(columnId, direction);
+      return;
+    }
+
+    dispatch({ type: 'REORDER_COLUMN', payload: { columnId, direction } });
+  };
+
+  const handleEditWip = async (columnId: string, currentWip: number | null) => {
+    if (!canManageColumns) {
+      setToast('Only ProjectAdmin can edit WIP limits');
+      return;
+    }
+
+    const input = window.prompt(
+      'Set WIP limit (empty means no limit)',
+      currentWip === null ? '' : String(currentWip),
+    );
+    if (input === null) {
+      return;
+    }
+
+    const trimmed = input.trim();
+    let nextWip: number | null = null;
+    if (trimmed !== '') {
+      const parsed = Number(trimmed);
+      if (!Number.isInteger(parsed) || parsed < 1) {
+        setToast('WIP must be an integer >= 1, or empty for no limit');
+        return;
+      }
+      nextWip = parsed;
+    }
+
+    if (onUpdateColumnWip) {
+      await onUpdateColumnWip(columnId, nextWip);
+      return;
+    }
+
+    dispatch({ type: 'UPDATE_COLUMN_WIP', payload: { columnId, wipLimit: nextWip } });
+  };
+
+  const handleDeleteColumn = async (columnId: string) => {
+    if (!canManageColumns) {
+      setToast('Only ProjectAdmin can delete columns');
+      return;
+    }
+
+    const column = sortedColumns.find((c) => c.id === columnId);
+    if (!column) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete column "${column.name}"?`);
+    if (!confirmed) {
+      return;
+    }
+
+    if (onDeleteColumn) {
+      await onDeleteColumn(columnId);
+      return;
+    }
+
+    dispatch({ type: 'DELETE_COLUMN', payload: { columnId } });
+  };
+
   return (
-    <div className={styles.board}>
-      {state.board.columns
-        .sort((a, b) => a.order - b.order)
-        .map((column) => (
+    <div className={styles.boardWorkspace}>
+      {canManageColumns && (
+        <div className={styles.workflowToolbar}>
+          <button
+            type="button"
+            className={styles.workflowModeButton}
+            onClick={() => setWorkflowEditMode((prev) => !prev)}
+          >
+            {workflowEditMode ? 'Done Editing Workflow' : 'Edit Workflow'}
+          </button>
+        </div>
+      )}
+
+      <div className={styles.board}>
+        {sortedColumns.map((column, index) => (
+          (() => {
+            const leftNeighbor = index > 0 ? sortedColumns[index - 1] : null;
+            const rightNeighbor =
+              index < sortedColumns.length - 1 ? sortedColumns[index + 1] : null;
+            const isStory = column.id === 'col-story';
+            const canMoveLeft =
+              !isStory && index > 0 && leftNeighbor?.id !== 'col-story';
+            const canMoveRight =
+              !isStory &&
+              index < sortedColumns.length - 1 &&
+              rightNeighbor?.id !== 'col-story';
+            return (
           <Column
             key={column.id}
             column={column}
@@ -173,8 +345,30 @@ const Board = ({
               }
               setCreateColumnId(columnId);
             }}
+            canManageColumns={canManageColumns && workflowEditMode}
+            onRenameColumn={(columnId) =>
+              handleRenameColumn(columnId, column.name)
+            }
+            canMoveLeft={canMoveLeft}
+            canMoveRight={canMoveRight}
+            onMoveLeft={(columnId) => handleMoveColumn(columnId, 'left')}
+            onMoveRight={(columnId) => handleMoveColumn(columnId, 'right')}
+            onEditWip={(columnId) => handleEditWip(columnId, column.wipLimit)}
+            onDeleteColumn={(columnId) => handleDeleteColumn(columnId)}
           />
+            );
+          })()
         ))}
+        {canManageColumns && workflowEditMode && (
+          <button
+            type="button"
+            className={styles.addColumnButton}
+            onClick={handleAddColumn}
+          >
+            + Add Column
+          </button>
+        )}
+      </div>
 
       {/* Toast */}
       {toast && <div className={styles['toast-bottom-right']}>{toast}</div>}

@@ -42,6 +42,39 @@ export type BoardAction =
         taskId: string;
         updates: TaskUpsertInput;
       };
+    }
+  | {
+      type: 'ADD_COLUMN';
+      payload: {
+        name: string;
+      };
+    }
+  | {
+      type: 'RENAME_COLUMN';
+      payload: {
+        columnId: string;
+        name: string;
+      };
+    }
+  | {
+      type: 'REORDER_COLUMN';
+      payload: {
+        columnId: string;
+        direction: 'left' | 'right';
+      };
+    }
+  | {
+      type: 'UPDATE_COLUMN_WIP';
+      payload: {
+        columnId: string;
+        wipLimit: number | null;
+      };
+    }
+  | {
+      type: 'DELETE_COLUMN';
+      payload: {
+        columnId: string;
+      };
     };
 
 export const BoardReducer = (
@@ -156,6 +189,150 @@ export const BoardReducer = (
                 }
               : task,
           ),
+        },
+        projectDetails: state.projectDetails,
+      };
+    }
+
+    case 'ADD_COLUMN': {
+      const name = action.payload.name.trim();
+      if (!name) return state;
+
+      if (state.projectDetails.userRole !== 'PROJECT_ADMIN') {
+        return state;
+      }
+
+      const maxOrder = state.board.columns.reduce(
+        (max, column) => Math.max(max, column.order),
+        -1,
+      );
+      return {
+        board: {
+          ...state.board,
+          columns: [
+            ...state.board.columns,
+            {
+              id: `col-custom-${Date.now()}`,
+              name,
+              boardId: state.board.id,
+              order: maxOrder + 1,
+              wipLimit: null,
+            },
+          ],
+        },
+        projectDetails: state.projectDetails,
+      };
+    }
+
+    case 'RENAME_COLUMN': {
+      const { columnId, name } = action.payload;
+      const trimmedName = name.trim();
+      if (!trimmedName) return state;
+
+      if (state.projectDetails.userRole !== 'PROJECT_ADMIN') {
+        return state;
+      }
+
+      return {
+        board: {
+          ...state.board,
+          columns: state.board.columns.map((column) =>
+            column.id === columnId ? { ...column, name: trimmedName } : column,
+          ),
+          tasks: state.board.tasks.map((task) =>
+            task.columnId === columnId
+              ? { ...task, columnName: trimmedName, updatedAt: new Date().toISOString() }
+              : task,
+          ),
+        },
+        projectDetails: state.projectDetails,
+      };
+    }
+
+    case 'REORDER_COLUMN': {
+      if (state.projectDetails.userRole !== 'PROJECT_ADMIN') {
+        return state;
+      }
+
+      if (action.payload.columnId === 'col-story') {
+        return state;
+      }
+
+      const ordered = [...state.board.columns].sort((a, b) => a.order - b.order);
+      const currentIndex = ordered.findIndex(
+        (column) => column.id === action.payload.columnId,
+      );
+      if (currentIndex < 0) {
+        return state;
+      }
+
+      const targetIndex =
+        action.payload.direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= ordered.length) {
+        return state;
+      }
+      if (ordered[targetIndex]?.id === 'col-story') {
+        return state;
+      }
+
+      const temp = ordered[currentIndex];
+      ordered[currentIndex] = ordered[targetIndex];
+      ordered[targetIndex] = temp;
+
+      return {
+        board: {
+          ...state.board,
+          columns: ordered.map((column, index) => ({ ...column, order: index })),
+        },
+        projectDetails: state.projectDetails,
+      };
+    }
+
+    case 'UPDATE_COLUMN_WIP': {
+      if (state.projectDetails.userRole !== 'PROJECT_ADMIN') {
+        return state;
+      }
+
+      const { columnId, wipLimit } = action.payload;
+      if (wipLimit !== null && (!Number.isInteger(wipLimit) || wipLimit < 1)) {
+        return state;
+      }
+
+      return {
+        board: {
+          ...state.board,
+          columns: state.board.columns.map((column) =>
+            column.id === columnId ? { ...column, wipLimit } : column,
+          ),
+        },
+        projectDetails: state.projectDetails,
+      };
+    }
+
+    case 'DELETE_COLUMN': {
+      if (state.projectDetails.userRole !== 'PROJECT_ADMIN') {
+        return state;
+      }
+
+      const { columnId } = action.payload;
+      if (['col-story', 'col-backlog', 'col-done'].includes(columnId)) {
+        return state;
+      }
+
+      const hasTasks = state.board.tasks.some((task) => task.columnId === columnId);
+      if (hasTasks) {
+        return state;
+      }
+
+      const remainingColumns = state.board.columns
+        .filter((column) => column.id !== columnId)
+        .sort((a, b) => a.order - b.order)
+        .map((column, index) => ({ ...column, order: index }));
+
+      return {
+        board: {
+          ...state.board,
+          columns: remainingColumns,
         },
         projectDetails: state.projectDetails,
       };

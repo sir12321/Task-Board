@@ -1,4 +1,5 @@
 .column {
+  position: relative;
   background: #f6f7f9;
   border-radius: 12px;
   padding: 16px;
@@ -9,21 +10,29 @@
   flex-direction: column;
 }
 
-.column h3 {
+.columnHeader {
   margin: 0 0 12px 0;
+}
+
+.columnTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.columnTitle {
+  margin: 0;
   font-size: 18px;
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   color: #172b4d;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .wip-limit {
-  font-size: 18px;
-  color: #6b778c;
-  margin-left: 8px;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #64748b;
 }
 
 .createButton {
@@ -39,4 +48,66 @@
 
 .createButton:hover {
   background: #f8fafc;
+}
+
+.columnTitle {
+  min-width: 0;
+}
+
+.workflowMenuWrap {
+  position: relative;
+}
+
+.manageButton {
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  background: #ffffff;
+  color: #334155;
+  border-radius: 6px;
+  padding: 3px 9px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.manageButton:hover {
+  background: #f8fafc;
+}
+
+.workflowMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 150px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+  z-index: 30;
+  padding: 6px;
+  display: grid;
+  gap: 4px;
+}
+
+.workflowMenuButton {
+  border: 0;
+  background: transparent;
+  color: #334155;
+  text-align: left;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.workflowMenuButton:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.workflowMenuButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.deleteAction {
+  color: #b91c1c;
 }

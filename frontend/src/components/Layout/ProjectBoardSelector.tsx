@@ -5,6 +5,8 @@ import {
   buildBoardPath,
   defaultBoardId,
   defaultProjectId,
+  createBoardForProject,
+  updateProjectSettings,
   resolveProjectBoardSelection,
 } from '../../pages/MockData/BoardPage';
 import './ProjectBoardSelector.css';
@@ -39,6 +41,62 @@ const ProjectBoardSelector = () => {
     navigate(buildBoardPath(projectKey, boardKey));
   };
 
+  const handleCreateBoard = (projectKey: string): void => {
+    const project = mockProjects.find((p) => p.id === projectKey);
+    if (!project || project.userRole !== 'PROJECT_ADMIN') {
+      alert('Only ProjectAdmin can create a board.');
+      return;
+    }
+
+    const boardName = window.prompt('Enter board name');
+    if (boardName === null) {
+      return;
+    }
+
+    const createdBoard = createBoardForProject(projectKey, boardName);
+    if (!createdBoard) {
+      alert('Board creation failed. Please provide a valid board name.');
+      return;
+    }
+
+    setExpandedProjectId(projectKey);
+    setOpen(false);
+    navigate(buildBoardPath(projectKey, createdBoard.id));
+  };
+
+  const handleEditProjectSettings = (projectKey: string): void => {
+    const project = mockProjects.find((p) => p.id === projectKey);
+    if (!project || project.userRole !== 'PROJECT_ADMIN') {
+      alert('Only ProjectAdmin can edit project settings.');
+      return;
+    }
+
+    const projectName = window.prompt('Project name', project.name);
+    if (projectName === null) {
+      return;
+    }
+
+    const projectDescription = window.prompt(
+      'Project description',
+      project.description ?? '',
+    );
+    if (projectDescription === null) {
+      return;
+    }
+
+    const updatedProject = updateProjectSettings(projectKey, {
+      name: projectName,
+      description: projectDescription,
+    });
+
+    if (!updatedProject) {
+      alert('Project settings update failed. Name cannot be empty.');
+      return;
+    }
+
+    setOpen(false);
+  };
+
   if (!selected) {
     return null;
   }
@@ -70,6 +128,15 @@ const ProjectBoardSelector = () => {
               >
                 {project.name}
               </div>
+              {project.userRole === 'PROJECT_ADMIN' && (
+                <button
+                  type="button"
+                  className="pbs-project-settings"
+                  onClick={() => handleEditProjectSettings(project.id)}
+                >
+                  Edit Project Settings
+                </button>
+              )}
 
               <div
                 className={`pbs-boards ${
@@ -91,6 +158,15 @@ const ProjectBoardSelector = () => {
                     {b.name}
                   </button>
                 ))}
+                {project.userRole === 'PROJECT_ADMIN' && (
+                  <button
+                    type="button"
+                    className="pbs-create-board"
+                    onClick={() => handleCreateBoard(project.id)}
+                  >
+                    + Create New Board
+                  </button>
+                )}
               </div>
             </div>
           ))}

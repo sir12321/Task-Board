@@ -68,6 +68,24 @@
   background: #e2e8f0;
 }
 
+.pbs-project-settings {
+  margin-top: 4px;
+  margin-left: 6px;
+  padding: 4px 6px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 4px;
+  background: #f8fafc;
+  color: #334155;
+  cursor: pointer;
+  font-size: 12px;
+  width: calc(100% - 6px);
+  text-align: left;
+}
+
+.pbs-project-settings:hover {
+  background: #e2e8f0;
+}
+
 .pbs-boards {
   margin-left: 6px;
   margin-top: 6px;
@@ -98,4 +116,20 @@
   background: #dbeafe;
   color: #1d4ed8;
   font-weight: 600;
+}
+
+.pbs-create-board {
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px dashed #93c5fd;
+  width: 100%;
+  text-align: left;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.pbs-create-board:hover {
+  background: #dbeafe;
 }

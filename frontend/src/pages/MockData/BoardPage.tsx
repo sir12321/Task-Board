@@ -46,12 +46,12 @@ export const mockProjects: ProjectDetails[] = [
     id: 'project-1',
     name: 'Demo Project',
     description: 'A demo project for TaskFlow',
-    userRole: 'PROJECT_MEMBER',
+    userRole: 'PROJECT_ADMIN',
     members: [
       {
         id: MockUser1.id,
         name: MockUser1.name,
-        role: 'PROJECT_VIEWER',
+        role: 'PROJECT_ADMIN',
         avatarUrl: MockUser1.avatarUrl,
       },
       {
@@ -294,12 +294,41 @@ const mockBoardTasks: Record<string, Task[]> = {
   ],
 };
 
+let nextBoardId = 4;
+let nextCustomColumnId = 1;
+const mandatoryColumnIds = ['col-story', 'col-backlog', 'col-done'];
+
+const mockBoardColumns: Record<string, BoardColumn[]> = {
+  'board-1': createColumns('board-1'),
+  'board-2': createColumns('board-2'),
+  'board-3': createColumns('board-3'),
+};
+
 /* ===================================== */
 /* Resolver */
 /* ===================================== */
 
 const cloneTasks = (tasks: Task[]): Task[] =>
   tasks.map((task) => ({ ...task }));
+const cloneColumns = (columns: BoardColumn[]): BoardColumn[] =>
+  columns.map((column) => ({ ...column }));
+
+const ensureMandatoryColumns = (boardId: string): void => {
+  const columns = mockBoardColumns[boardId];
+  if (!columns) return;
+
+  const fallbackColumns = createColumns(boardId);
+  for (const mandatoryColumnId of mandatoryColumnIds) {
+    const exists = columns.some((column) => column.id === mandatoryColumnId);
+    if (exists) continue;
+
+    const fallback = fallbackColumns.find((column) => column.id === mandatoryColumnId);
+    if (!fallback) continue;
+
+    const maxOrder = columns.reduce((max, c) => Math.max(max, c.order), -1);
+    columns.push({ ...fallback, order: maxOrder + 1 });
+  }
+};
 
 export const resolveProjectBoardSelection = (
   projectId: string,
@@ -311,15 +340,262 @@ export const resolveProjectBoardSelection = (
   const boardMeta = project.boards.find((b) => b.id === boardId);
   if (!boardMeta) return null;
 
+  ensureMandatoryColumns(boardMeta.id);
+
   const board: Board = {
     id: boardMeta.id,
     name: boardMeta.name,
     projectId: project.id,
-    columns: createColumns(boardMeta.id),
+    columns: cloneColumns(
+      mockBoardColumns[boardMeta.id] ?? createColumns(boardMeta.id),
+    ),
     tasks: cloneTasks(mockBoardTasks[boardMeta.id] ?? []),
   };
 
   return { project, board };
+};
+
+export const createBoardForProject = (
+  projectId: string,
+  boardName: string,
+): { id: string; name: string } | null => {
+  const project = mockProjects.find((p) => p.id === projectId);
+  if (!project || project.userRole !== 'PROJECT_ADMIN') {
+    return null;
+  }
+
+  const name = boardName.trim();
+  if (!name) {
+    return null;
+  }
+
+  let boardId = `board-${nextBoardId}`;
+  while (project.boards.some((b) => b.id === boardId)) {
+    nextBoardId += 1;
+    boardId = `board-${nextBoardId}`;
+  }
+
+  nextBoardId += 1;
+  const newBoard = { id: boardId, name };
+  project.boards.push(newBoard);
+  mockBoardTasks[boardId] = [];
+  mockBoardColumns[boardId] = createColumns(boardId);
+
+  return newBoard;
+};
+
+export const updateProjectSettings = (
+  projectId: string,
+  updates: { name?: string; description?: string },
+): ProjectDetails | null => {
+  const project = mockProjects.find((p) => p.id === projectId);
+  if (!project || project.userRole !== 'PROJECT_ADMIN') {
+    return null;
+  }
+
+  const nextName = updates.name?.trim();
+  const nextDescription = updates.description?.trim();
+
+  if (typeof updates.name === 'string' && !nextName) {
+    return null;
+  }
+
+  if (typeof updates.name === 'string') {
+    project.name = nextName!;
+  }
+
+  if (typeof updates.description === 'string') {
+    project.description = nextDescription ?? '';
+  }
+
+  return { ...project, boards: [...project.boards], members: [...project.members] };
+};
+
+export const addColumnToBoard = (
+  projectId: string,
+  boardId: string,
+  columnName: string,
+): BoardColumn | null => {
+  const project = mockProjects.find((p) => p.id === projectId);
+  if (!project || project.userRole !== 'PROJECT_ADMIN') {
+    return null;
+  }
+
+  const name = columnName.trim();
+  if (!name) {
+    return null;
+  }
+
+  const columns = mockBoardColumns[boardId];
+  if (!columns) {
+    return null;
+  }
+  ensureMandatoryColumns(boardId);
+
+  const maxOrder = columns.reduce((max, c) => Math.max(max, c.order), -1);
+  const newColumn: BoardColumn = {
+    id: `col-custom-${nextCustomColumnId}`,
+    name,
+    boardId,
+    order: maxOrder + 1,
+    wipLimit: null,
+  };
+  nextCustomColumnId += 1;
+  columns.push(newColumn);
+  return { ...newColumn };
+};
+
+export const renameColumnInBoard = (
+  projectId: string,
+  boardId: string,
+  columnId: string,
+  newName: string,
+): BoardColumn | null => {
+  const project = mockProjects.find((p) => p.id === projectId);
+  if (!project || project.userRole !== 'PROJECT_ADMIN') {
+    return null;
+  }
+
+  const name = newName.trim();
+  if (!name) {
+    return null;
+  }
+
+  const columns = mockBoardColumns[boardId];
+  if (!columns) {
+    return null;
+  }
+  ensureMandatoryColumns(boardId);
+
+  const column = columns.find((c) => c.id === columnId);
+  if (!column) {
+    return null;
+  }
+
+  column.name = name;
+  return { ...column };
+};
+
+export const reorderColumnInBoard = (
+  projectId: string,
+  boardId: string,
+  columnId: string,
+  direction: 'left' | 'right',
+): BoardColumn[] | null => {
+  const project = mockProjects.find((p) => p.id === projectId);
+  if (!project || project.userRole !== 'PROJECT_ADMIN') {
+    return null;
+  }
+
+  const columns = mockBoardColumns[boardId];
+  if (!columns) {
+    return null;
+  }
+  ensureMandatoryColumns(boardId);
+
+  const ordered = [...columns].sort((a, b) => a.order - b.order);
+  const storyIndex = ordered.findIndex((column) => column.id === 'col-story');
+  if (storyIndex > 0) {
+    const [storyColumn] = ordered.splice(storyIndex, 1);
+    ordered.unshift(storyColumn);
+  }
+
+  if (columnId === 'col-story') {
+    const normalized = ordered.map((column, index) => ({ ...column, order: index }));
+    mockBoardColumns[boardId] = normalized;
+    return normalized.map((column) => ({ ...column }));
+  }
+
+  const currentIndex = ordered.findIndex((column) => column.id === columnId);
+  if (currentIndex < 0) {
+    return null;
+  }
+
+  const targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+  if (targetIndex < 0 || targetIndex >= ordered.length) {
+    return ordered.map((column) => ({ ...column }));
+  }
+  if (ordered[targetIndex]?.id === 'col-story') {
+    return ordered.map((column) => ({ ...column }));
+  }
+
+  const temp = ordered[currentIndex];
+  ordered[currentIndex] = ordered[targetIndex];
+  ordered[targetIndex] = temp;
+
+  const reordered = ordered.map((column, index) => ({ ...column, order: index }));
+  mockBoardColumns[boardId] = reordered;
+  return reordered.map((column) => ({ ...column }));
+};
+
+export const updateColumnWipInBoard = (
+  projectId: string,
+  boardId: string,
+  columnId: string,
+  wipLimit: number | null,
+): BoardColumn | null => {
+  const project = mockProjects.find((p) => p.id === projectId);
+  if (!project || project.userRole !== 'PROJECT_ADMIN') {
+    return null;
+  }
+
+  const columns = mockBoardColumns[boardId];
+  if (!columns) {
+    return null;
+  }
+  ensureMandatoryColumns(boardId);
+
+  const column = columns.find((c) => c.id === columnId);
+  if (!column) {
+    return null;
+  }
+
+  if (wipLimit !== null && (!Number.isInteger(wipLimit) || wipLimit < 1)) {
+    return null;
+  }
+
+  column.wipLimit = wipLimit;
+  return { ...column };
+};
+
+export const deleteColumnFromBoard = (
+  projectId: string,
+  boardId: string,
+  columnId: string,
+): BoardColumn[] | null => {
+  const project = mockProjects.find((p) => p.id === projectId);
+  if (!project || project.userRole !== 'PROJECT_ADMIN') {
+    return null;
+  }
+
+  if (mandatoryColumnIds.includes(columnId)) {
+    return null;
+  }
+
+  const columns = mockBoardColumns[boardId];
+  if (!columns) {
+    return null;
+  }
+  ensureMandatoryColumns(boardId);
+
+  const hasTasks = (mockBoardTasks[boardId] ?? []).some(
+    (task) => task.columnId === columnId,
+  );
+  if (hasTasks) {
+    return null;
+  }
+
+  const filtered = columns.filter((column) => column.id !== columnId);
+  if (filtered.length === columns.length) {
+    return null;
+  }
+
+  const normalized = filtered
+    .sort((a, b) => a.order - b.order)
+    .map((column, index) => ({ ...column, order: index }));
+
+  mockBoardColumns[boardId] = normalized;
+  return normalized.map((column) => ({ ...column }));
 };
 
 /* ===================================== */
@@ -477,6 +753,146 @@ export default function BoardPage() {
     [board.columns, selection.project],
   );
 
+  const addColumn = useCallback(
+    async (columnName: string): Promise<void> => {
+      if (selection.project.userRole !== 'PROJECT_ADMIN') {
+        alert('Only ProjectAdmin can create columns.');
+        return;
+      }
+
+      const createdColumn = addColumnToBoard(
+        selection.project.id,
+        board.id,
+        columnName,
+      );
+      if (!createdColumn) {
+        alert('Failed to create column. Please enter a valid name.');
+        return;
+      }
+
+      setBoard((prev) => ({
+        ...prev,
+        columns: [...prev.columns, createdColumn].sort((a, b) => a.order - b.order),
+      }));
+    },
+    [board.id, selection.project],
+  );
+
+  const renameColumn = useCallback(
+    async (columnId: string, newName: string): Promise<void> => {
+      if (selection.project.userRole !== 'PROJECT_ADMIN') {
+        alert('Only ProjectAdmin can rename columns.');
+        return;
+      }
+
+      const updatedColumn = renameColumnInBoard(
+        selection.project.id,
+        board.id,
+        columnId,
+        newName,
+      );
+      if (!updatedColumn) {
+        alert('Failed to rename column. Please enter a valid name.');
+        return;
+      }
+
+      setBoard((prev) => ({
+        ...prev,
+        columns: prev.columns.map((column) =>
+          column.id === columnId ? { ...column, name: updatedColumn.name } : column,
+        ),
+        tasks: prev.tasks.map((task) =>
+          task.columnId === columnId ? { ...task, columnName: updatedColumn.name } : task,
+        ),
+      }));
+    },
+    [board.id, selection.project],
+  );
+
+  const reorderColumn = useCallback(
+    async (columnId: string, direction: 'left' | 'right'): Promise<void> => {
+      if (selection.project.userRole !== 'PROJECT_ADMIN') {
+        alert('Only ProjectAdmin can reorder columns.');
+        return;
+      }
+
+      const reorderedColumns = reorderColumnInBoard(
+        selection.project.id,
+        board.id,
+        columnId,
+        direction,
+      );
+
+      if (!reorderedColumns) {
+        alert('Failed to reorder column.');
+        return;
+      }
+
+      setBoard((prev) => ({
+        ...prev,
+        columns: reorderedColumns,
+      }));
+    },
+    [board.id, selection.project],
+  );
+
+  const updateColumnWip = useCallback(
+    async (columnId: string, wipLimit: number | null): Promise<void> => {
+      if (selection.project.userRole !== 'PROJECT_ADMIN') {
+        alert('Only ProjectAdmin can edit WIP limits.');
+        return;
+      }
+
+      const updatedColumn = updateColumnWipInBoard(
+        selection.project.id,
+        board.id,
+        columnId,
+        wipLimit,
+      );
+
+      if (!updatedColumn) {
+        alert('Failed to update WIP. Use empty for no limit or a number >= 1.');
+        return;
+      }
+
+      setBoard((prev) => ({
+        ...prev,
+        columns: prev.columns.map((column) =>
+          column.id === columnId ? { ...column, wipLimit: updatedColumn.wipLimit } : column,
+        ),
+      }));
+    },
+    [board.id, selection.project],
+  );
+
+  const deleteColumn = useCallback(
+    async (columnId: string): Promise<void> => {
+      if (selection.project.userRole !== 'PROJECT_ADMIN') {
+        alert('Only ProjectAdmin can delete columns.');
+        return;
+      }
+
+      const updatedColumns = deleteColumnFromBoard(
+        selection.project.id,
+        board.id,
+        columnId,
+      );
+
+      if (!updatedColumns) {
+        alert(
+          'Delete failed. Story, To Do, Done cannot be deleted and column must be empty.',
+        );
+        return;
+      }
+
+      setBoard((prev) => ({
+        ...prev,
+        columns: updatedColumns,
+      }));
+    },
+    [board.id, selection.project],
+  );
+
   return (
     <Layout>
       <div style={{ padding: '20px' }}>
@@ -488,6 +904,11 @@ export default function BoardPage() {
           onDeleteTask={deleteTask}
           onCreateTask={createTask}
           onUpdateTask={updateTask}
+          onAddColumn={addColumn}
+          onRenameColumn={renameColumn}
+          onReorderColumn={reorderColumn}
+          onUpdateColumnWip={updateColumnWip}
+          onDeleteColumn={deleteColumn}
         />
       </div>
     </Layout>
