@@ -16,6 +16,7 @@ const TaskDetailsModal = ({ task, onClose, onDelete }: Props) => {
   };
 
   const Assignee = task.assigneeId ? task.assigneeId : null;
+  const Reporter = task.reporterId ? task.reporterId : null;
   const taskTypeClass = task.type.toLowerCase();
 
   return (
@@ -31,9 +32,7 @@ const TaskDetailsModal = ({ task, onClose, onDelete }: Props) => {
               <h2 className={styles.title}>{task.title}</h2>
               <div className={styles.headerMeta}>
                 <div className={styles.status}>{task.columnName}</div>
-                <div
-                  className={`${styles.typeBadge} ${styles[taskTypeClass]}`}
-                >
+                <div className={`${styles.typeBadge} ${styles[taskTypeClass]}`}>
                   {task.type}
                 </div>
               </div>
@@ -88,19 +87,40 @@ const TaskDetailsModal = ({ task, onClose, onDelete }: Props) => {
                       <div className={styles.assigneeName}>{Assignee}</div>
                     </div>
                   ) : (
-                    <button className={styles.linkButton}>Assign to me</button>
+                    <div className={styles.detailValue}>Unassigned</div>
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.rowBetween}>
+                <div>
+                  <div className={styles.smallLabel}>Reporter</div>
+                  {Reporter ? (
+                    <div
+                      className={styles.assigneeRow}
+                      title={`Reporter: ${Reporter}`}
+                    >
+                      <div className={styles.avatarSmall}>
+                        {Reporter.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className={styles.assigneeName}>{Reporter}</div>
+                    </div>
+                  ) : (
+                    <div className={styles.detailValue}>Unassigned</div>
                   )}
                 </div>
               </div>
 
               <div className={styles.detailRow}>
-                <div className={styles.detailLabel}>Reporter</div>
-                <div className={styles.detailValue}>{task.reporterId}</div>
+                <div className={styles.detailLabel}>Priority</div>
+                <div className={styles.detailValue}>{task.priority}</div>
               </div>
 
               <div className={styles.detailRow}>
-                <div className={styles.detailLabel}>Priority</div>
-                <div className={styles.detailValue}>{task.priority}</div>
+                <div className={styles.detailLabel}>Created on</div>
+                <div className={styles.detailValue}>
+                  {formatDate(task.createdAt)}
+                </div>
               </div>
 
               <div className={styles.detailRow}>

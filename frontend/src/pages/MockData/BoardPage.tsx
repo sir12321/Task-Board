@@ -114,7 +114,7 @@ const mockBoardTasks: Record<string, Task[]> = {
       columnId: 'col-progress',
       columnName: 'In Progress',
       priority: 'HIGH',
-      assigneeId: MockUser1.id,
+      assigneeId: null,
       reporterId: MockUser1.id,
       parentId: null,
       dueDate: '2026-03-02T00:00:00.000Z',
