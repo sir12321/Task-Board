@@ -1,5 +1,5 @@
 import './Sidebar.css';
-import type { UserSummary } from '../../types/Board';
+import type { User as UserSummary } from '../../types/Types';
 import { useNavigate } from 'react-router-dom';
 
 interface Props {
@@ -19,14 +19,6 @@ const Sidebar = ({ collapsed, toggle, user }: Props) => {
       {!collapsed && <h2 className="logo">TaskFlow</h2>}
 
       <nav>
-        <div className="nav-item active">
-          {!collapsed && <span className="label">Board</span>}
-        </div>
-
-        <div className="nav-item">
-          {!collapsed && <span className="label">Projects</span>}
-        </div>
-
         <div className="nav-item">
           {!collapsed && <span className="label">Notifications</span>}
         </div>

@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Sidebar from './Sidebar';
-import { mockUser } from '../../pages/MockData/user';
+import { MockUser1 } from '../../pages/MockData/BoardPage';
+import ProjectBoardSelector from './ProjectBoardSelector';
 import './Layout.css';
 
 interface Props {
@@ -16,9 +17,16 @@ const Layout = ({ children }: Props) => {
       <Sidebar
         collapsed={collapsed}
         toggle={() => setCollapsed(!collapsed)}
-        user={mockUser}
+        user={MockUser1}
       />
-      <div className="content">{children}</div>
+
+      <div className="main">
+        <header className="layout-header">
+          <ProjectBoardSelector />
+        </header>
+
+        <div className="content">{children}</div>
+      </div>
     </div>
   );
 };

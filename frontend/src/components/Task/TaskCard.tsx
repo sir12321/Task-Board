@@ -1,12 +1,13 @@
-import type { Task } from '../../types/Board';
+import type { Task } from '../../types/Types';
 import './TaskCard.css';
 
-interface Props {
+interface Properties {
   task: Task;
   onClick?: () => void;
+  isDraggable?: boolean;
 }
 
-const TaskCard = ({ task, onClick }: Props) => {
+const TaskCard = ({ task, onClick, isDraggable = true }: Properties) => {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null;
     const d = new Date(dateStr);
@@ -14,15 +15,16 @@ const TaskCard = ({ task, onClick }: Props) => {
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
-  const assignees = task.assigneeId ? [task.assigneeId] : [];
   const avatarInitials = (id: string) => id.slice(0, 2).toUpperCase();
+  const Assignee = task.assigneeId || null;
 
   return (
     <div
-      className="task-card"
-      draggable
+      className={`task-card ${!isDraggable ? 'not-draggable' : ''}`}
+      draggable={isDraggable}
       onClick={onClick}
       onDragStart={(e) => {
+        if (!isDraggable) return;
         e.dataTransfer.setData('taskId', task.id);
       }}
       role={onClick ? 'button' : undefined}
@@ -36,21 +38,15 @@ const TaskCard = ({ task, onClick }: Props) => {
         )}
       </p>
 
-      {assignees.length > 0 && (
+      {Assignee && (
         <div className="assignees" aria-hidden={false}>
-          {assignees.slice(0, 3).map((id) => (
-            <div
-              key={id}
-              className="assignee"
-              title={`Assignee: ${id}`}
-              aria-label={`Assignee ${id}`}
-            >
-              {avatarInitials(id)}
-            </div>
-          ))}
-          {assignees.length > 3 && (
-            <div className="assignee overflow">+{assignees.length - 3}</div>
-          )}
+          <div
+            className="assignee"
+            title={`Assignee: ${Assignee}`}
+            aria-label={`Assignee ${Assignee}`}
+          >
+            {avatarInitials(Assignee)}
+          </div>
         </div>
       )}
     </div>

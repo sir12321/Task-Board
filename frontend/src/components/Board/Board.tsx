@@ -1,5 +1,5 @@
 import { useReducer, useState, useEffect } from 'react';
-import type { Board as BoardType } from '../../types/Board';
+import type { Board as BoardType, ProjectDetails, Task } from '../../types/Types';
 import { BoardReducer } from './BoardReducer';
 import type { BoardState } from './BoardReducer';
 import Column from './Column';
@@ -8,11 +8,20 @@ import styles from './Board.module.css';
 
 interface Props {
   board: BoardType;
+  projectDetails: ProjectDetails;
 }
 
-const Board = ({ board }: Props) => {
+const Board = ({ board, projectDetails }: Props) => {
+  const normalizeBoard = (b: BoardType): BoardType => ({
+    ...b,
+    tasks: b.tasks.map((t) =>
+      t.type === 'STORY' ? { ...t, columnId: 'col-story' } : t,
+    ),
+  });
+
   const [state, dispatch] = useReducer(BoardReducer, {
-    board,
+    board: normalizeBoard(board),
+    projectDetails,
   } as BoardState);
 
   // Toast state for showing short-lived error messages
@@ -36,9 +45,21 @@ const Board = ({ board }: Props) => {
     );
     if (!targetColumn) return false;
 
+    // Disallow non-story tasks from being moved into the dedicated story column
+    if (targetColumn.id === 'col-story' && task.type !== 'STORY') {
+      setToast('Move forbidden: only stories can go into the Stories column');
+      return false;
+    }
+
+    // Prevent STORY tasks from being moved out of the story column
+    if (task.type === 'STORY' && targetColumn.id !== 'col-story') {
+      setToast('Move forbidden: stories must remain in the Stories column');
+      return false;
+    }
+
     // WIP enforcement
     const tasksInColumn = state.board.tasks.filter(
-      (t) => t.status === targetColumnId,
+      (t) => t.columnId === targetColumnId,
     );
     if (
       targetColumn.wipLimit &&
@@ -48,12 +69,15 @@ const Board = ({ board }: Props) => {
       return false;
     }
 
-    // Consecutive move enforcement: only allow moves to adjacent columns
-    const sourceColumn = state.board.columns.find((c) => c.id === task.status);
+    // Column-order enforcement: only allow moves to the adjacent next column
+    // (i.e., move forward by exactly 1). Disallow backward moves or jumps.
+    const sourceColumn = state.board.columns.find(
+      (c) => c.id === task.columnId,
+    );
     if (sourceColumn) {
-      const orderDiff = Math.abs(sourceColumn.order - targetColumn.order);
+      const orderDiff = targetColumn.order - sourceColumn.order;
       if (orderDiff !== 1) {
-        setToast('Move forbidden: only consecutive moves allowed');
+        setToast('Move forbidden: only adjacent forward moves are allowed');
         return false;
       }
     }
@@ -78,7 +102,27 @@ const Board = ({ board }: Props) => {
           <Column
             key={column.id}
             column={column}
-            tasks={state.board.tasks.filter((t) => t.status === column.id)}
+            tasks={state.board.tasks
+              .filter((t) => t.columnId === column.id)
+              .sort((a: Task, b: Task) => {
+                const priorityOrder: Record<string, number> = {
+                  CRITICAL: 4,
+                  HIGH: 3,
+                  MEDIUM: 2,
+                  LOW: 1,
+                };
+
+                const pa = priorityOrder[a.priority] ?? 0;
+                const pb = priorityOrder[b.priority] ?? 0;
+                if (pa !== pb) return pb - pa; // higher priority first
+
+                const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+                const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+                if (da !== db) return da - db; // earlier due date first
+
+                return a.title.localeCompare(b.title);
+              })}
+            isDraggable={state.projectDetails.userRole !== 'PROJECT_VIEWER'}
             onDropTask={handleDrop}
             onTaskClick={(taskId) => setSelectedTaskId(taskId)}
           />

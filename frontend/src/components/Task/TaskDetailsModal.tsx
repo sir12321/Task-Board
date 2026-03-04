@@ -1,4 +1,4 @@
-import type { Task } from '../../types/Board';
+import type { Task } from '../../types/Types';
 import styles from './TaskDetailsModal.module.css';
 
 interface Props {
@@ -14,10 +14,7 @@ const TaskDetailsModal = ({ task, onClose }: Props) => {
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
-  const firstAssignee =
-    task.assigneeIds && task.assigneeIds.length > 0
-      ? task.assigneeIds[0]
-      : null;
+  const Assignee = task.assigneeId ? task.assigneeId : null;
 
   return (
     <div className={styles['modal-overlay']} onClick={onClose}>
@@ -27,38 +24,72 @@ const TaskDetailsModal = ({ task, onClose }: Props) => {
         </button>
 
         <div className={styles.container}>
-          {/* Main content (left) */}
           <div className={styles.content}>
-            <h2 className={styles.title}>{task.title}</h2>
-            <p className={styles.description}>{task.description}</p>
+            <div className={styles.headerRow}>
+              <h2 className={styles.title}>{task.title}</h2>
+              <div className={styles.headerMeta}>
+                <div className={styles.status}>{task.columnName}</div>
+                <div className={styles.priorityBadge}>{task.priority}</div>
+              </div>
+            </div>
+
+            <p className={styles.description}>
+              {task.description || 'No description'}
+            </p>
 
             <section className={styles.section}>
               <h3 className={styles.sectionTitle}>Activity</h3>
-              <div className={styles.activityPlaceholder}>
-                Comments and history go here.
+              <div className={styles.commentList}>
+                {task.comments && task.comments.length > 0 ? (
+                  task.comments.map((c) => (
+                    <div className={styles.comment} key={c.id}>
+                      <div className={styles.commentAvatar}>
+                        {c.authorId.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className={styles.commentBody}>
+                        <div className={styles.commentMeta}>
+                          <strong>{c.authorId}</strong> ·{' '}
+                          <span className={styles.commentTime}>
+                            {new Date(c.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className={styles.commentText}>{c.content}</div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.activityPlaceholder}>
+                    No comments yet.
+                  </div>
+                )}
               </div>
             </section>
           </div>
 
-          {/* Sidebar (right) */}
           <aside className={styles.sidebar}>
-            <div className={styles.detailsCard}>
-              <h4 className={styles.detailsTitle}>Details</h4>
-
-              <div className={styles.detailRow}>
-                <div className={styles.detailLabel}>Assignee</div>
-                <div className={styles.detailValue}>
-                  {firstAssignee ? (
+            <div className={styles.sidebarCard}>
+              <div className={styles.rowBetween}>
+                <div>
+                  <div className={styles.smallLabel}>Assignee</div>
+                  {Assignee ? (
                     <div
-                      className={styles.avatarSmall}
-                      title={`Assignee: ${firstAssignee}`}
+                      className={styles.assigneeRow}
+                      title={`Assignee: ${Assignee}`}
                     >
-                      {firstAssignee.slice(0, 2).toUpperCase()}
+                      <div className={styles.avatarSmall}>
+                        {Assignee.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className={styles.assigneeName}>{Assignee}</div>
                     </div>
                   ) : (
                     <button className={styles.linkButton}>Assign to me</button>
                   )}
                 </div>
+              </div>
+
+              <div className={styles.detailRow}>
+                <div className={styles.detailLabel}>Reporter</div>
+                <div className={styles.detailValue}>{task.reporterId}</div>
               </div>
 
               <div className={styles.detailRow}>
@@ -74,8 +105,21 @@ const TaskDetailsModal = ({ task, onClose }: Props) => {
               </div>
 
               <div className={styles.detailRow}>
-                <div className={styles.detailLabel}>Reporter</div>
-                <div className={styles.detailValue}>{task.reporterId}</div>
+                <div className={styles.detailLabel}>Parent</div>
+                <div className={styles.detailValue}>
+                  {task.parentId || 'None'}
+                </div>
+              </div>
+
+              <div className={styles.detailRow}>
+                <div className={styles.detailLabel}>Activity</div>
+                <div className={styles.detailValue}>
+                  {task.comments ? task.comments.length : 0}
+                </div>
+              </div>
+
+              <div className={styles.detailRow}>
+                <div className={styles.detailLabel}>History</div>
               </div>
             </div>
           </aside>

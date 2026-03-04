@@ -1,15 +1,22 @@
-import type { BoardColumn, Task } from '../../types/Board';
+import type { BoardColumn, Task } from '../../types/Types';
 import TaskCard from '../Task/TaskCard';
 import styles from './Column.module.css';
 
-interface Props {
+interface Properties {
   column: BoardColumn;
   tasks: Task[];
   onDropTask: (taskId: string, columnId: string) => void;
   onTaskClick?: (taskId: string) => void;
+  isDraggable?: boolean;
 }
 
-const Column = ({ column, tasks, onDropTask, onTaskClick }: Props) => {
+const Column = ({
+  column,
+  tasks,
+  onDropTask,
+  onTaskClick,
+  isDraggable,
+}: Properties) => {
   return (
     <div
       className={styles.column}
@@ -20,7 +27,7 @@ const Column = ({ column, tasks, onDropTask, onTaskClick }: Props) => {
       }}
     >
       <h3>
-        {column.title}
+        {column.name}
         <div className={styles['wip-limit']}>
           {column.wipLimit && ` (${tasks.length}/${column.wipLimit})`}
         </div>
@@ -31,6 +38,7 @@ const Column = ({ column, tasks, onDropTask, onTaskClick }: Props) => {
           key={task.id}
           task={task}
           onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
+          isDraggable={Boolean(isDraggable && column.id !== 'col-story')}
         />
       ))}
     </div>

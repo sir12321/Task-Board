@@ -10,9 +10,6 @@
 
 .sidebar.collapsed {
   width: 60px;
-}
-
-.sidebar.collapsed {
   padding-left: 8px;
   padding-right: 8px;
 }
@@ -52,11 +49,6 @@
   white-space: nowrap;
   order: 1;
 }
-
-.sidebar-footer {
-  margin-top: auto;
-}
-
 .collapse-btn {
   align-self: flex-end;
   background: none;
@@ -67,7 +59,6 @@
   margin-bottom: 20px;
 }
 
-/* When sidebar is collapsed, center the top collapse button and footer avatar/logout */
 .sidebar.collapsed .collapse-btn {
   align-self: center;
 }

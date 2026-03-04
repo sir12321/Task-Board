@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './LoginPage.module.css';
+import { defaultBoardPath } from '../MockData/BoardPage';
 
 function LoginPage() {
   const [email, setEmail] = useState<string>('');
@@ -34,7 +35,7 @@ function LoginPage() {
       }
 
       console.log('Login successful:', data.user);
-      navigate('/board');
+      navigate(defaultBoardPath);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
