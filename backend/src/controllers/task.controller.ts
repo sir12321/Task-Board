@@ -49,7 +49,6 @@ export const deleteTask = async (req: AuthRequest, res: Response): Promise<void>
         await removeTask(id);
         res.status(200).json({ message: 'Task deleted successfully' });
     } catch (err: unknown) {
-        // fixing eslint 'any' warning by using unknown + instanceof check
         if (err instanceof Error) {
             res.status(500).json({ error: err.message });
         } else {

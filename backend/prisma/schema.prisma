@@ -6,45 +6,20 @@ datasource db {
   provider = "sqlite"
 }
 
-enum GlobalRole {
-  GLOBAL_ADMIN
-  USER
-}
-
-enum ProjectRole {
-  PROJECT_ADMIN
-  PROJECT_MEMBER
-  PROJECT_VIEWER
-}
-
-enum TaskType {
-  STORY
-  TASK
-  BUG
-}
-
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
-}
-
 model User {
-  id           String     @id @default(uuid())
-  email        String     @unique
-  password     String
-  name         String
-  avatarUrl    String?
-  globalRole   GlobalRole @default(USER)
-  refreshToken String?
-
-  projects      ProjectMember[]
-  reportedTasks Task[]          @relation("Reporter")
-  assignedTasks Task[]          @relation("Assignee")
-  comments      Comment[]
+  id            String          @id @default(uuid())
+  email         String          @unique
+  password      String
+  name          String
+  avatarUrl     String?
+  globalRole    GlobalRole      @default("USER")
+  refreshToken  String?
   auditLogs     AuditLog[]
+  comments      Comment[]
   notifications Notification[]
+  projects      ProjectMember[]
+  assignedTasks Task[]          @relation("Assignee")
+  reportedTasks Task[]          @relation("Reporter")
 }
 
 model Project {
@@ -54,8 +29,8 @@ model Project {
   isArchived  Boolean         @default(false)
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
-  members     ProjectMember[]
   boards      Board[]
+  members     ProjectMember[]
 }
 
 model ProjectMember {
@@ -63,8 +38,8 @@ model ProjectMember {
   userId    String
   projectId String
   role      ProjectRole
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, projectId])
 }
@@ -89,34 +64,29 @@ model Column {
 }
 
 model Task {
-  id          String    @id @default(uuid())
+  id          String     @id @default(uuid())
   title       String
   description String?
   type        TaskType
   priority    Priority
   dueDate     DateTime?
-
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  resolvedAt DateTime?
-  closedAt   DateTime?
-
-  boardId    String
-  columnId   String
-  reporterId String
-  assigneeId String?
-  parentId   String?
-
-  board    Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  column   Column @relation(fields: [columnId], references: [id])
-  reporter User   @relation("Reporter", fields: [reporterId], references: [id])
-  assignee User?  @relation("Assignee", fields: [assigneeId], references: [id])
-
-  parent   Task?  @relation("TaskHierarchy", fields: [parentId], references: [id])
-  children Task[] @relation("TaskHierarchy")
-
-  comments  Comment[]
-  auditLogs AuditLog[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  resolvedAt  DateTime?
+  closedAt    DateTime?
+  boardId     String
+  columnId    String
+  reporterId  String
+  assigneeId  String?
+  parentId    String?
+  auditLogs   AuditLog[]
+  comments    Comment[]
+  parent      Task?      @relation("TaskHierarchy", fields: [parentId], references: [id])
+  children    Task[]     @relation("TaskHierarchy")
+  assignee    User?      @relation("Assignee", fields: [assigneeId], references: [id])
+  reporter    User       @relation("Reporter", fields: [reporterId], references: [id])
+  column      Column     @relation(fields: [columnId], references: [id])
+  board       Board      @relation(fields: [boardId], references: [id], onDelete: Cascade)
 }
 
 model Comment {
@@ -126,9 +96,8 @@ model Comment {
   updatedAt DateTime @updatedAt
   authorId  String
   taskId    String
-
-  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
 model AuditLog {
@@ -139,9 +108,8 @@ model AuditLog {
   oldValue  String?
   newValue  String?
   timestamp DateTime @default(now())
-
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
@@ -150,6 +118,29 @@ model Notification {
   content   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+enum GlobalRole {
+  GLOBAL_ADMIN
+  USER
+}
+
+enum ProjectRole {
+  PROJECT_ADMIN
+  PROJECT_MEMBER
+  PROJECT_VIEWER
+}
+
+enum TaskType {
+  STORY
+  TASK
+  BUG
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }

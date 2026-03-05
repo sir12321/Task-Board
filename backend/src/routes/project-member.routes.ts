@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { addProjectMember, updateProjectMember, removeProjectMember } from '../controllers/project-member.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 
-const router = Router({ mergeParams: true }); // Important: to access :projectId from parent
+const router = Router({ mergeParams: true });
 
 router.use(authenticateToken);
 router.post('/', addProjectMember);
