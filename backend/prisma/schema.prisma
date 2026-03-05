@@ -12,7 +12,7 @@ model User {
   password      String
   name          String
   avatarUrl     String?
-  globalRole    GlobalRole      @default("USER")
+  globalRole    GlobalRole      @default(USER)
   refreshToken  String?
   auditLogs     AuditLog[]
   comments      Comment[]
