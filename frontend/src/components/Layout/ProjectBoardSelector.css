@@ -115,8 +115,8 @@
 }
 
 .pbs-board-item.selected {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: #edebeb;
+  color: #334155;
   font-weight: 600;
 }
 
@@ -124,14 +124,14 @@
   padding: 6px;
   cursor: pointer;
   border-radius: 4px;
-  border: 1px dashed #93c5fd;
+  border: 1px dashed #bac7e3;
   width: 100%;
   text-align: left;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #f2f2f2;
+  color: #303847;
   font-weight: 600;
 }
 
 .pbs-create-board:hover {
-  background: #dbeafe;
+  background: #cbcfd5;
 }

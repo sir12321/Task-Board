@@ -128,15 +128,16 @@ const ProjectBoardSelector = () => {
               >
                 {project.name}
               </div>
-              {project.userRole === 'PROJECT_ADMIN' && (
-                <button
-                  type="button"
-                  className="pbs-project-settings"
-                  onClick={() => handleEditProjectSettings(project.id)}
-                >
-                  Edit Project Settings
-                </button>
-              )}
+              {project.userRole === 'PROJECT_ADMIN' &&
+                project.id === expandedProjectId && (
+                  <button
+                    type="button"
+                    className="pbs-project-settings"
+                    onClick={() => handleEditProjectSettings(project.id)}
+                  >
+                    Edit Project Settings
+                  </button>
+                )}
 
               <div
                 className={`pbs-boards ${
