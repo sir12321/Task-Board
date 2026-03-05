@@ -2,13 +2,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.boardHeader h1 {
-  margin: 0;
-  flex: 1;
 }
 
 .boardWorkspace {
@@ -76,4 +69,20 @@
 .abc {
   display: flex;
   flex-direction: column;
+}
+
+.project-section {
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+}
+
+.project-name {
+  font-size: 40px;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.project-description {
+  font-size: 25px;
+  color: #475569;
+  margin-bottom: 12px;
 }

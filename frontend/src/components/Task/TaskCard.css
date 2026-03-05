@@ -15,7 +15,7 @@
 
 .task-card.task {
   border-color: rgba(59, 130, 246, 0.45);
-  background-color: white !important;
+  background-color: rgb(245, 245, 245) !important;
   background: linear-gradient(
     180deg,
     rgba(59, 130, 246, 0.1) 0%,
@@ -26,7 +26,7 @@
 
 .task-card.story {
   border-color: rgba(139, 92, 246, 0.45);
-  background-color: white !important;
+  background-color: rgb(245, 245, 245) !important;
   background: linear-gradient(
     180deg,
     rgba(139, 92, 246, 0.1) 0%,
@@ -37,7 +37,7 @@
 
 .task-card.bug {
   border-color: rgba(239, 68, 68, 0.45);
-  background-color: white !important;
+  background-color: rgb(245, 245, 245) !important;
   background: linear-gradient(
     180deg,
     rgba(239, 68, 68, 0.1) 0%,
@@ -174,7 +174,7 @@
   right: 10px;
   top: 10px;
   border: 1px solid rgba(15, 23, 42, 0.15);
-  background: #fff;
+  background: #fcfdfd;
   color: #334155;
   border-radius: 6px;
   font-size: 12px;

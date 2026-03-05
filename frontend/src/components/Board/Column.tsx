@@ -80,7 +80,7 @@ const Column = ({
     >
       <div className={styles.columnHeader}>
         <div className={styles.columnTitleRow}>
-          <h3 className={styles.columnTitle}>{column.name.toUpperCase()}</h3>
+          <h3 className={styles.columnTitle}>{column.name}</h3>
           {canManageColumns && (
             <div className={styles.workflowMenuWrap} ref={workflowMenuRef}>
               <button
