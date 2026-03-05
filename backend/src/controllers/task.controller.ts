@@ -7,7 +7,11 @@ export const createTask = async (req: AuthRequest, res: Response) : Promise<void
         const data = req.body;
         const task = await makeTask(data);
         res.status(201).json(task);
-    } catch {
+    } catch (err : unknown) {
+        if (err instanceof Error && err.message === 'Assignee must be a member of the project') {
+            res.status(400).json({ error: err.message });
+            return;
+        }
         res.status(500).json({ error: "Failed to create task" });
     }
 };

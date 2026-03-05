@@ -13,6 +13,28 @@ export const makeTask = async (data: {
     assigneeId?: string | null;
     parentId?: string | null;
 }) => {
+    if (data.assigneeId) {
+        const board = await prisma.board.findUnique({
+            where: { id: data.boardId },
+            select: { projectId: true },
+        });
+
+        if (!board) {
+            throw new Error('Board not found');
+        }
+
+        const isMember = await prisma.projectMember.findFirst({
+            where: {
+                projectId: board.projectId,
+                userId: data.assigneeId,
+            },
+        });
+
+        if (!isMember) {
+            throw new Error('Assignee must be a member of the project');
+        }
+    }
+    
     return prisma.task.create({
         data: {
             title: data.title,
