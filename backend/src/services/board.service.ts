@@ -1,11 +1,17 @@
 import p from '../utils/prisma';
+import { Board, Column, Task, Comment } from '@prisma/client';
 
-export const getBoards = async (boardId: string) => {
+type BoardWithDetails = Board & {
+    columns: Column[];
+    tasks: (Task & { comments: Comment[] })[];
+};
+
+export const getBoards = async (boardId: string): Promise<BoardWithDetails | null> => {
     const board = await p.board.findUnique({
-        where: {id: boardId},
+        where: { id: boardId },
         include: {
             columns: {
-                orderBy: { order : 'asc' },
+                orderBy: { order: 'asc' },
             },
             tasks: {
                 include: {
@@ -16,6 +22,6 @@ export const getBoards = async (boardId: string) => {
             },
         },
     });
-    
+
     return board;
 };

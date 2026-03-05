@@ -1,5 +1,34 @@
 import prisma from '../utils/prisma';
-import { TaskType, Priority } from '@prisma/client';
+import { TaskType, Priority, Task } from '@prisma/client';
+import { createNotification } from './notification.service';
+
+const checkWipLimit = async (columnId: string): Promise<void> => {
+    const column = await prisma.column.findUnique({
+        where: { id: columnId },
+        select: { wipLimit: true },
+    });
+
+    if (column?.wipLimit) {
+        const count = await prisma.task.count({ where: { columnId } });
+        if (count >= column.wipLimit) {
+            throw new Error(`WIP limit (${column.wipLimit}) reached for this column`);
+        }
+    }
+};
+
+const checkStoryChildren = async (taskId: string): Promise<void> => {
+    const task = await prisma.task.findUnique({
+        where: { id: taskId },
+        include: { children: true },
+    });
+
+    if (task?.type === 'STORY') {
+        const incompleteChild = task.children.find(c => !c.resolvedAt && !c.closedAt);
+        if (incompleteChild) {
+            throw new Error('Cannot resolve or close a Story with incomplete subtasks');
+        }
+    }
+};
 
 export const makeTask = async (data: {
     title: string;
@@ -12,7 +41,7 @@ export const makeTask = async (data: {
     reporterId: string;
     assigneeId?: string | null;
     parentId?: string | null;
-}) => {
+}): Promise<Task> => {
     if (data.assigneeId) {
         const board = await prisma.board.findUnique({
             where: { id: data.boardId },
@@ -34,8 +63,10 @@ export const makeTask = async (data: {
             throw new Error('Assignee must be a member of the project');
         }
     }
-    
-    return prisma.task.create({
+
+    await checkWipLimit(data.columnId);
+
+    const task = await prisma.task.create({
         data: {
             title: data.title,
             description: data.description,
@@ -49,9 +80,15 @@ export const makeTask = async (data: {
             parentId: data.parentId,
         },
     });
+
+    if (data.assigneeId) {
+        await createNotification(data.assigneeId, `You have been assigned to task: ${data.title}`);
+    }
+
+    return task;
 };
 
-export const moveTask = async (id: string, cId: string) => {
+export const moveTask = async (id: string, cId: string): Promise<Task> => {
 
     const targetCol = await prisma.column.findUnique({
         where: { id: cId },
@@ -65,16 +102,28 @@ export const moveTask = async (id: string, cId: string) => {
     const columnName = targetCol.name.toLowerCase();
     const isResolved = columnName.includes('done') || columnName.includes('resolved');
 
-    return prisma.task.update({
+    if (isResolved) {
+        await checkStoryChildren(id);
+    } else {
+        await checkWipLimit(cId);
+    }
+
+    const task = await prisma.task.update({
         where: { id },
-        data: { 
+        data: {
             columnId: cId,
             resolvedAt: isResolved ? new Date() : null,
         },
     });
+
+    if (task.assigneeId) {
+        await createNotification(task.assigneeId, `Status changed on your task: ${task.title}`);
+    }
+
+    return task;
 };
 
-export const removeTask = async (id : string) => {
+export const removeTask = async (id: string): Promise<Task> => {
     const c = await prisma.task.count({
         where: { parentId: id },
     });
@@ -85,5 +134,14 @@ export const removeTask = async (id : string) => {
 
     return prisma.task.delete({
         where: { id },
+    });
+};
+
+export const closeTask = async (id: string): Promise<Task> => {
+    await checkStoryChildren(id);
+
+    return prisma.task.update({
+        where: { id },
+        data: { closedAt: new Date() },
     });
 };
