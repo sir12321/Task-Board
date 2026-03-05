@@ -8,7 +8,7 @@ import {
   createBoardForProject,
   updateProjectSettings,
   resolveProjectBoardSelection,
-} from '../../pages/MockData/BoardPage';
+} from '../../pages/MockData';
 import './ProjectBoardSelector.css';
 
 const ProjectBoardSelector = () => {

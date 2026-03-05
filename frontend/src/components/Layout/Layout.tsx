@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Sidebar from './Sidebar';
-import { MockUser1 } from '../../pages/MockData/BoardPage';
+import { MockUser1 } from '../../pages/MockData';
 import ProjectBoardSelector from './ProjectBoardSelector';
 import './Layout.css';
 
