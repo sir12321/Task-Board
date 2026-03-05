@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+/// <reference types="node" />
+import prisma from '../src/utils/prisma';
 import bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
-
-async function main() : Promise<void> {
+async function main(): Promise<void> {
     const hashedPassword = await bcrypt.hash('admin123', 10);
     const admin = await prisma.user.upsert({
         where: { email: 'admin@taskboard.com' },

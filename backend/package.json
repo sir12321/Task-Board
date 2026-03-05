@@ -50,8 +50,5 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1"
   },
-  "test": "jest",
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
-  }
+  "test": "jest"
 }

@@ -18,7 +18,7 @@ export interface LoginInput {
     password: string;
 }
 
-export const registerUser = async (data : RegisterInput) : Promise<User> => {
+export const registerUser = async (data: RegisterInput): Promise<User> => {
     const existingUser = await prisma.user.findUnique({
         where: { email: data.email },
     });
@@ -26,31 +26,35 @@ export const registerUser = async (data : RegisterInput) : Promise<User> => {
     if (existingUser) {
         throw new Error('Email already in use');
     }
-    
+
     const hashedPassword = await hashPassword(data.password);
+
+    const userCount = await prisma.user.count();
+    const isFirstUser = userCount === 0;
 
     const newUser = await prisma.user.create({
         data: {
             email: data.email,
             password: hashedPassword,
             name: data.name,
+            globalRole: isFirstUser ? 'GLOBAL_ADMIN' : 'USER',
         },
     });
 
     return newUser;
 };
 
-export const loginUser = async (data : LoginInput) : Promise<{ user: User; accessToken: string; refreshToken: string }> => {
+export const loginUser = async (data: LoginInput): Promise<{ user: User; accessToken: string; refreshToken: string }> => {
     const user = await prisma.user.findUnique({
         where: { email: data.email },
     });
-    
+
     if (!user) {
         throw new Error('Invalid email or password');
     }
 
     const isPasswordValid = await comparePasswords(data.password, user.password);
-    
+
     if (!isPasswordValid) {
         throw new Error('Invalid email or password');
     }
@@ -67,13 +71,13 @@ export const loginUser = async (data : LoginInput) : Promise<{ user: User; acces
     return { user, accessToken, refreshToken };
 };
 
-export const refreshSession = async (token: string) : Promise<{ accessToken: string }> => {
+export const refreshSession = async (token: string): Promise<{ accessToken: string }> => {
     const decoded = verifyRefreshToken(token) as { userId: string };
 
     const user = await prisma.user.findUnique({
         where: { id: decoded.userId },
     });
-    
+
     if (!user || user.refreshToken !== token) {
         throw new Error('Invalid refresh token');
     }
@@ -84,7 +88,7 @@ export const refreshSession = async (token: string) : Promise<{ accessToken: str
     return { accessToken: newAccessToken };
 };
 
-export const logoutUser = async (userId: string) : Promise<void> => {
+export const logoutUser = async (userId: string): Promise<void> => {
     await prisma.user.update({
         where: { id: userId },
         data: { refreshToken: null },
