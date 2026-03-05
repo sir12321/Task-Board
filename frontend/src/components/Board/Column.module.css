@@ -1,13 +1,15 @@
 .column {
   position: relative;
-  background: #f6f7f9;
+  background: #e8ebed;
   border-radius: 12px;
   padding: 16px;
   width: 260px;
-  min-height: 500px;
+  min-height: 750px;
+  max-height: 70vh;
   box-shadow: inset 0 0 0 1px rgba(9, 30, 66, 0.04);
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 .columnHeader {
@@ -23,20 +25,56 @@
 
 .columnTitle {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   font-family: 'Inter', sans-serif;
-  font-weight: 600;
+  font-weight: 1000;
   color: #172b4d;
 }
 
-.wip-limit {
-  margin-top: 2px;
+.wipIndicator {
+  margin-top: 6px;
+}
+
+.wipProgressTrack {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #d7dee5;
+  overflow: hidden;
+}
+
+.wipProgressTrackFull {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #7f8186;
+  overflow: hidden;
+}
+
+.wipProgressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: #2563eb;
+  transition: width 0.2s ease;
+}
+
+.wipProgressFillFull {
+  background: #ea580c;
+}
+
+.wipCount {
+  margin-top: 6px;
   font-size: 12px;
   color: #64748b;
+  font-weight: 600;
+}
+
+.wipCountFull {
+  color: #c2410c;
 }
 
 .createButton {
-  border: 1px solid rgba(15, 23, 42, 0.15);
+  border: 1px dashed rgba(15, 23, 42, 0.65);
   background: #fff;
   color: #0f172a;
   border-radius: 8px;

@@ -1,7 +1,7 @@
 .sidebar {
   width: 220px;
-  background: #7c7c7d;
-  color: white;
+  background: #1f2937;
+  color: #e5e7eb;
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -23,15 +23,17 @@
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 10px 0;
+  padding: 10px 10px;
   cursor: pointer;
   opacity: 0.8;
   gap: 10px;
-  width: 100%;
+  width: 90%;
 }
 
 .nav-item:hover {
   opacity: 1;
+  background-color: #0d1117;
+  border-radius: 10px;
 }
 
 .icon {

@@ -42,6 +42,16 @@ const Column = ({
 }: Properties) => {
   const [workflowMenuOpen, setWorkflowMenuOpen] = useState(false);
   const workflowMenuRef = useRef<HTMLDivElement | null>(null);
+  const hasWipLimit =
+    typeof column.wipLimit === 'number' && column.wipLimit > 0;
+  const isAtCapacity =
+    hasWipLimit && (column.wipLimit ? tasks.length >= column.wipLimit : false);
+  const wipProgressPercent = hasWipLimit
+    ? Math.min(
+        (tasks.length / (column.wipLimit ? column.wipLimit : 1)) * 100,
+        100,
+      )
+    : 0;
 
   useEffect(() => {
     if (!workflowMenuOpen) return;
@@ -70,7 +80,7 @@ const Column = ({
     >
       <div className={styles.columnHeader}>
         <div className={styles.columnTitleRow}>
-          <h3 className={styles.columnTitle}>{column.name}</h3>
+          <h3 className={styles.columnTitle}>{column.name.toUpperCase()}</h3>
           {canManageColumns && (
             <div className={styles.workflowMenuWrap} ref={workflowMenuRef}>
               <button
@@ -152,9 +162,35 @@ const Column = ({
             </div>
           )}
         </div>
-        <div className={styles['wip-limit']}>
-          {column.wipLimit ? `${tasks.length}/${column.wipLimit}` : 'No WIP limit'}
-        </div>
+        {hasWipLimit ? (
+          <div className={styles.wipIndicator}>
+            <div className={styles.wipProgressTrack} aria-hidden="true">
+              <div
+                className={`${styles.wipProgressFill} ${isAtCapacity ? styles.wipProgressFillFull : ''}`}
+                style={{ width: `${wipProgressPercent}%` }}
+              />
+            </div>
+            <div
+              className={`${styles.wipCount} ${isAtCapacity ? styles.wipCountFull : ''}`}
+            >
+              {tasks.length}/{column.wipLimit} tasks
+            </div>
+          </div>
+        ) : (
+          <div className={styles.wipIndicator}>
+            <div className={styles.wipProgressTrackFull} aria-hidden="true">
+              <div
+                className={`${styles.wipProgressFill} ${isAtCapacity ? styles.wipProgressFillFull : ''}`}
+                style={{ width: `${wipProgressPercent}%` }}
+              />
+            </div>
+            <div
+              className={`${styles.wipCount} ${isAtCapacity ? styles.wipCountFull : ''}`}
+            >
+              No WIP limit
+            </div>
+          </div>
+        )}
       </div>
       {canManageTasks && onCreateTask && (
         <button

@@ -201,11 +201,14 @@ const Board = ({
       return;
     }
 
-    const currentIndex = sortedColumns.findIndex((column) => column.id === columnId);
+    const currentIndex = sortedColumns.findIndex(
+      (column) => column.id === columnId,
+    );
     if (currentIndex === -1) {
       return;
     }
-    const targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+    const targetIndex =
+      direction === 'left' ? currentIndex - 1 : currentIndex + 1;
     if (targetIndex >= 0 && sortedColumns[targetIndex]?.id === 'col-story') {
       setToast('Stories column must stay first');
       return;
@@ -249,7 +252,10 @@ const Board = ({
       return;
     }
 
-    dispatch({ type: 'UPDATE_COLUMN_WIP', payload: { columnId, wipLimit: nextWip } });
+    dispatch({
+      type: 'UPDATE_COLUMN_WIP',
+      payload: { columnId, wipLimit: nextWip },
+    });
   };
 
   const handleDeleteColumn = async (columnId: string) => {
@@ -277,187 +283,213 @@ const Board = ({
   };
 
   return (
-    <div className={styles.boardWorkspace}>
-      {canManageColumns && (
-        <div className={styles.workflowToolbar}>
-          <button
-            type="button"
-            className={styles.workflowModeButton}
-            onClick={() => setWorkflowEditMode((prev) => !prev)}
-          >
-            {workflowEditMode ? 'Done Editing Workflow' : 'Edit Workflow'}
-          </button>
+    <div style={{ padding: '20px' }}>
+      <div className="project-section">
+        <div className="project-info">
+          <h2>{state.projectDetails.name}</h2>
+          <p>{state.projectDetails.description}</p>
         </div>
-      )}
+        <div className="abc">
+          <div className={styles.boardHeader}>
+            <h1>{state.board.name}</h1>
+            {canManageColumns && (
+              <button
+                type="button"
+                className={styles.workflowModeButton}
+                onClick={() => setWorkflowEditMode((prev) => !prev)}
+              >
+                {workflowEditMode ? 'Done Editing Workflow' : 'Edit Workflow'}
+              </button>
+            )}
+          </div>
 
-      <div className={styles.board}>
-        {sortedColumns.map((column, index) => (
-          (() => {
-            const leftNeighbor = index > 0 ? sortedColumns[index - 1] : null;
-            const rightNeighbor =
-              index < sortedColumns.length - 1 ? sortedColumns[index + 1] : null;
-            const isStory = column.id === 'col-story';
-            const canMoveLeft =
-              !isStory && index > 0 && leftNeighbor?.id !== 'col-story';
-            const canMoveRight =
-              !isStory &&
-              index < sortedColumns.length - 1 &&
-              rightNeighbor?.id !== 'col-story';
-            return (
-          <Column
-            key={column.id}
-            column={column}
-            tasks={state.board.tasks
-              .filter((t) => t.columnId === column.id)
-              .sort((a: Task, b: Task) => {
-                const priorityOrder: Record<string, number> = {
-                  CRITICAL: 4,
-                  HIGH: 3,
-                  MEDIUM: 2,
-                  LOW: 1,
-                };
+          <div className={styles.boardWorkspace}></div>
+        </div>
 
-                const pa = priorityOrder[a.priority] ?? 0;
-                const pb = priorityOrder[b.priority] ?? 0;
-                if (pa !== pb) return pb - pa; // higher priority first
+        <div className={styles.board}>
+          {sortedColumns.map((column, index) =>
+            (() => {
+              const leftNeighbor = index > 0 ? sortedColumns[index - 1] : null;
+              const rightNeighbor =
+                index < sortedColumns.length - 1
+                  ? sortedColumns[index + 1]
+                  : null;
+              const isStory = column.id === 'col-story';
+              const canMoveLeft =
+                !isStory && index > 0 && leftNeighbor?.id !== 'col-story';
+              const canMoveRight =
+                !isStory &&
+                index < sortedColumns.length - 1 &&
+                rightNeighbor?.id !== 'col-story';
+              return (
+                <Column
+                  key={column.id}
+                  column={column}
+                  tasks={state.board.tasks
+                    .filter((t) => t.columnId === column.id)
+                    .sort((a: Task, b: Task) => {
+                      const priorityOrder: Record<string, number> = {
+                        CRITICAL: 4,
+                        HIGH: 3,
+                        MEDIUM: 2,
+                        LOW: 1,
+                      };
 
-                const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
-                const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
-                if (da !== db) return da - db; // earlier due date first
+                      const pa = priorityOrder[a.priority] ?? 0;
+                      const pb = priorityOrder[b.priority] ?? 0;
+                      if (pa !== pb) return pb - pa; // higher priority first
 
-                return a.title.localeCompare(b.title);
-              })}
-            isDraggable={state.projectDetails.userRole !== 'PROJECT_VIEWER'}
-            onDropTask={handleDrop}
-            onTaskClick={(taskId) => setSelectedTaskId(taskId)}
-            onTaskEdit={(taskId) => {
-              if (!canManageTasks) {
-                setToast('You do not have permission to edit tasks');
-                return;
+                      const da = a.dueDate
+                        ? new Date(a.dueDate).getTime()
+                        : Infinity;
+                      const db = b.dueDate
+                        ? new Date(b.dueDate).getTime()
+                        : Infinity;
+                      if (da !== db) return da - db; // earlier due date first
+
+                      return a.title.localeCompare(b.title);
+                    })}
+                  isDraggable={
+                    state.projectDetails.userRole !== 'PROJECT_VIEWER'
+                  }
+                  onDropTask={handleDrop}
+                  onTaskClick={(taskId) => setSelectedTaskId(taskId)}
+                  onTaskEdit={(taskId) => {
+                    if (!canManageTasks) {
+                      setToast('You do not have permission to edit tasks');
+                      return;
+                    }
+                    setEditingTaskId(taskId);
+                  }}
+                  canManageTasks={canManageTasks}
+                  onCreateTask={(columnId) => {
+                    if (!canManageTasks) {
+                      setToast('You do not have permission to create tasks');
+                      return;
+                    }
+                    setCreateColumnId(columnId);
+                  }}
+                  canManageColumns={canManageColumns && workflowEditMode}
+                  onRenameColumn={(columnId) =>
+                    handleRenameColumn(columnId, column.name)
+                  }
+                  canMoveLeft={canMoveLeft}
+                  canMoveRight={canMoveRight}
+                  onMoveLeft={(columnId) => handleMoveColumn(columnId, 'left')}
+                  onMoveRight={(columnId) =>
+                    handleMoveColumn(columnId, 'right')
+                  }
+                  onEditWip={(columnId) =>
+                    handleEditWip(columnId, column.wipLimit)
+                  }
+                  onDeleteColumn={(columnId) => handleDeleteColumn(columnId)}
+                />
+              );
+            })(),
+          )}
+          {canManageColumns && workflowEditMode && (
+            <button
+              type="button"
+              className={styles.addColumnButton}
+              onClick={handleAddColumn}
+            >
+              + Add Column
+            </button>
+          )}
+        </div>
+
+        {/* Toast */}
+        {toast && <div className={styles['toast-bottom-right']}>{toast}</div>}
+
+        {/* Modal */}
+        {selectedTaskId && (
+          <TaskDetailsModal
+            task={state.board.tasks.find((t) => t.id === selectedTaskId)!}
+            onClose={() => setSelectedTaskId(null)}
+            onDelete={async (taskId: string) => {
+              if (!projectDetails) return;
+              if (onDeleteTask) {
+                try {
+                  await onDeleteTask(taskId);
+                } catch {
+                  // parent handler failed — surface a toast
+                  setToast('Failed to delete task');
+                }
+              } else {
+                dispatch({ type: 'DELETE_TASK', payload: { taskId } });
               }
-              setEditingTaskId(taskId);
+              setSelectedTaskId(null);
             }}
-            canManageTasks={canManageTasks}
-            onCreateTask={(columnId) => {
-              if (!canManageTasks) {
-                setToast('You do not have permission to create tasks');
-                return;
-              }
-              setCreateColumnId(columnId);
-            }}
-            canManageColumns={canManageColumns && workflowEditMode}
-            onRenameColumn={(columnId) =>
-              handleRenameColumn(columnId, column.name)
-            }
-            canMoveLeft={canMoveLeft}
-            canMoveRight={canMoveRight}
-            onMoveLeft={(columnId) => handleMoveColumn(columnId, 'left')}
-            onMoveRight={(columnId) => handleMoveColumn(columnId, 'right')}
-            onEditWip={(columnId) => handleEditWip(columnId, column.wipLimit)}
-            onDeleteColumn={(columnId) => handleDeleteColumn(columnId)}
           />
-            );
-          })()
-        ))}
-        {canManageColumns && workflowEditMode && (
-          <button
-            type="button"
-            className={styles.addColumnButton}
-            onClick={handleAddColumn}
-          >
-            + Add Column
-          </button>
+        )}
+
+        {createColumnId && (
+          <TaskCreateEditModal
+            mode="create"
+            defaultColumnId={createColumnId}
+            columns={state.board.columns}
+            tasks={state.board.tasks}
+            assignableMembers={assignableMembers}
+            onClose={() => setCreateColumnId(null)}
+            onSave={async (payload) => {
+              if (onCreateTask) {
+                await onCreateTask(payload);
+                return;
+              }
+
+              const column = state.board.columns.find(
+                (c) => c.id === payload.columnId,
+              );
+              const now = new Date().toISOString();
+              dispatch({
+                type: 'ADD_TASK',
+                payload: {
+                  task: {
+                    id: `task-${Date.now()}`,
+                    title: payload.title,
+                    description: payload.description ?? null,
+                    type: payload.type,
+                    priority: payload.priority,
+                    dueDate: payload.dueDate,
+                    createdAt: now,
+                    updatedAt: now,
+                    columnId: payload.columnId,
+                    columnName: column?.name ?? 'Unknown',
+                    reporterId: 'current-user',
+                    assigneeId: payload.assigneeId ?? null,
+                    parentId: payload.parentId ?? null,
+                  },
+                },
+              });
+            }}
+          />
+        )}
+
+        {editingTaskId && (
+          <TaskCreateEditModal
+            mode="edit"
+            task={state.board.tasks.find((t) => t.id === editingTaskId)}
+            defaultColumnId={
+              state.board.tasks.find((t) => t.id === editingTaskId)?.columnId ??
+              'col-backlog'
+            }
+            columns={state.board.columns}
+            tasks={state.board.tasks}
+            assignableMembers={assignableMembers}
+            onClose={() => setEditingTaskId(null)}
+            onSave={async (payload) => {
+              if (onUpdateTask) {
+                await onUpdateTask(editingTaskId, payload);
+                return;
+              }
+              dispatch({
+                type: 'UPDATE_TASK',
+                payload: { taskId: editingTaskId, updates: payload },
+              });
+            }}
+          />
         )}
       </div>
-
-      {/* Toast */}
-      {toast && <div className={styles['toast-bottom-right']}>{toast}</div>}
-
-      {/* Modal */}
-      {selectedTaskId && (
-        <TaskDetailsModal
-          task={state.board.tasks.find((t) => t.id === selectedTaskId)!}
-          onClose={() => setSelectedTaskId(null)}
-          onDelete={async (taskId: string) => {
-            if (!projectDetails) return;
-            if (onDeleteTask) {
-              try {
-                await onDeleteTask(taskId);
-              } catch {
-                // parent handler failed — surface a toast
-                setToast('Failed to delete task');
-              }
-            } else {
-              dispatch({ type: 'DELETE_TASK', payload: { taskId } });
-            }
-            setSelectedTaskId(null);
-          }}
-        />
-      )}
-
-      {createColumnId && (
-        <TaskCreateEditModal
-          mode="create"
-          defaultColumnId={createColumnId}
-          columns={state.board.columns}
-          tasks={state.board.tasks}
-          assignableMembers={assignableMembers}
-          onClose={() => setCreateColumnId(null)}
-          onSave={async (payload) => {
-            if (onCreateTask) {
-              await onCreateTask(payload);
-              return;
-            }
-
-            const column = state.board.columns.find((c) => c.id === payload.columnId);
-            const now = new Date().toISOString();
-            dispatch({
-              type: 'ADD_TASK',
-              payload: {
-                task: {
-                  id: `task-${Date.now()}`,
-                  title: payload.title,
-                  description: payload.description ?? null,
-                  type: payload.type,
-                  priority: payload.priority,
-                  dueDate: payload.dueDate,
-                  createdAt: now,
-                  updatedAt: now,
-                  columnId: payload.columnId,
-                  columnName: column?.name ?? 'Unknown',
-                  reporterId: 'current-user',
-                  assigneeId: payload.assigneeId ?? null,
-                  parentId: payload.parentId ?? null,
-                },
-              },
-            });
-          }}
-        />
-      )}
-
-      {editingTaskId && (
-        <TaskCreateEditModal
-          mode="edit"
-          task={state.board.tasks.find((t) => t.id === editingTaskId)}
-          defaultColumnId={
-            state.board.tasks.find((t) => t.id === editingTaskId)?.columnId ?? 'col-backlog'
-          }
-          columns={state.board.columns}
-          tasks={state.board.tasks}
-          assignableMembers={assignableMembers}
-          onClose={() => setEditingTaskId(null)}
-          onSave={async (payload) => {
-            if (onUpdateTask) {
-              await onUpdateTask(editingTaskId, payload);
-              return;
-            }
-            dispatch({
-              type: 'UPDATE_TASK',
-              payload: { taskId: editingTaskId, updates: payload },
-            });
-          }}
-        />
-      )}
     </div>
   );
 };

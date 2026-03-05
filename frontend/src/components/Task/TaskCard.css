@@ -3,7 +3,7 @@
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 12px;
-  box-shadow: 0 1px 4px rgba(16, 24, 40, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   cursor: grab;
   border: 1px solid rgba(9, 30, 66, 0.06);
   display: flex;
@@ -14,29 +14,62 @@
 }
 
 .task-card.task {
-  border-color: rgba(14, 165, 233, 0.45);
+  border-color: rgba(59, 130, 246, 0.45);
+  background-color: white !important;
   background: linear-gradient(
     180deg,
-    rgba(14, 165, 233, 0.12) 0%,
-    rgba(14, 165, 233, 0.04) 100%
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(59, 130, 246, 0.03) 100%
   );
+  border-left: 4px solid #3b82f6;
 }
 
 .task-card.story {
   border-color: rgba(139, 92, 246, 0.45);
+  background-color: white !important;
   background: linear-gradient(
     180deg,
-    rgba(139, 92, 246, 0.13) 0%,
-    rgba(139, 92, 246, 0.04) 100%
+    rgba(139, 92, 246, 0.1) 0%,
+    rgba(139, 92, 246, 0.03) 100%
   );
+  border-left: 4px solid #8b5cf6;
 }
 
 .task-card.bug {
   border-color: rgba(239, 68, 68, 0.45);
+  background-color: white !important;
   background: linear-gradient(
     180deg,
-    rgba(239, 68, 68, 0.12) 0%,
-    rgba(239, 68, 68, 0.04) 100%
+    rgba(239, 68, 68, 0.1) 0%,
+    rgba(239, 68, 68, 0.03) 100%
+  );
+  border-left: 4px solid #ef4444;
+}
+
+.task-card.task:hover {
+  border-color: rgba(59, 130, 246, 0.65);
+  background: linear-gradient(
+    180deg,
+    rgba(59, 130, 246, 0.18) 0%,
+    rgba(59, 130, 246, 0.06) 100%
+  );
+}
+
+.task-card.story:hover {
+  border-color: rgba(139, 92, 246, 0.65);
+  background: linear-gradient(
+    180deg,
+    rgba(139, 92, 246, 0.18) 0%,
+    rgba(139, 92, 246, 0.06) 100%
+  );
+}
+
+.task-card.bug:hover {
+  border-color: rgba(239, 68, 68, 0.65);
+  background: linear-gradient(
+    180deg,
+    rgba(239, 68, 68, 0.18) 0%,
+    rgba(239, 68, 68, 0.06) 100%
   );
 }
 
@@ -80,19 +113,31 @@
 .task-card .priority.task {
   color: #0366d6;
   border-color: rgba(14, 165, 233, 0.45);
-  background: linear-gradient(180deg, rgba(14, 165, 233, 0.2) 0%, rgba(14, 165, 233, 0.08) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(14, 165, 233, 0.2) 0%,
+    rgba(14, 165, 233, 0.08) 100%
+  );
 }
 
 .task-card .priority.story {
   color: #6d28d9;
   border-color: rgba(139, 92, 246, 0.45);
-  background: linear-gradient(180deg, rgba(139, 92, 246, 0.24) 0%, rgba(139, 92, 246, 0.09) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(139, 92, 246, 0.24) 0%,
+    rgba(139, 92, 246, 0.09) 100%
+  );
 }
 
 .task-card .priority.bug {
   color: #b91c1c;
   border-color: rgba(239, 68, 68, 0.45);
-  background: linear-gradient(180deg, rgba(239, 68, 68, 0.22) 0%, rgba(239, 68, 68, 0.08) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(239, 68, 68, 0.22) 0%,
+    rgba(239, 68, 68, 0.08) 100%
+  );
 }
 
 .task-card .due-date {

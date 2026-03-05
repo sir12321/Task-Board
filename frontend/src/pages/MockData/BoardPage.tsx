@@ -1,6 +1,4 @@
-import type {
-  TaskUpsertInput,
-} from '../../types/Types';
+import type { TaskUpsertInput } from '../../types/Types';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '../../components/Layout/Layout';
@@ -14,10 +12,7 @@ import {
   deleteColumnFromBoard,
 } from './boardOperations';
 import { MockUser1 } from './mockData';
-import {
-  defaultProjectId,
-  defaultBoardId,
-} from './routingHelpers';
+import { defaultProjectId, defaultBoardId } from './routingHelpers';
 
 /* ===================================== */
 /* Page Component */
@@ -174,7 +169,9 @@ export default function BoardPage() {
 
       setBoard((prev) => ({
         ...prev,
-        columns: [...prev.columns, createdColumn].sort((a, b) => a.order - b.order),
+        columns: [...prev.columns, createdColumn].sort(
+          (a, b) => a.order - b.order,
+        ),
       }));
     },
     [board.id, selection.project],
@@ -201,10 +198,14 @@ export default function BoardPage() {
       setBoard((prev) => ({
         ...prev,
         columns: prev.columns.map((column) =>
-          column.id === columnId ? { ...column, name: updatedColumn.name } : column,
+          column.id === columnId
+            ? { ...column, name: updatedColumn.name }
+            : column,
         ),
         tasks: prev.tasks.map((task) =>
-          task.columnId === columnId ? { ...task, columnName: updatedColumn.name } : task,
+          task.columnId === columnId
+            ? { ...task, columnName: updatedColumn.name }
+            : task,
         ),
       }));
     },
@@ -260,7 +261,9 @@ export default function BoardPage() {
       setBoard((prev) => ({
         ...prev,
         columns: prev.columns.map((column) =>
-          column.id === columnId ? { ...column, wipLimit: updatedColumn.wipLimit } : column,
+          column.id === columnId
+            ? { ...column, wipLimit: updatedColumn.wipLimit }
+            : column,
         ),
       }));
     },
@@ -297,22 +300,19 @@ export default function BoardPage() {
 
   return (
     <Layout>
-      <div style={{ padding: '20px' }}>
-        <h1>TaskFlow Platform</h1>
-        <BoardView
-          key={`${selection.project.id}:${board.id}`}
-          board={board}
-          projectDetails={selection.project}
-          onDeleteTask={deleteTask}
-          onCreateTask={createTask}
-          onUpdateTask={updateTask}
-          onAddColumn={addColumn}
-          onRenameColumn={renameColumn}
-          onReorderColumn={reorderColumn}
-          onUpdateColumnWip={updateColumnWip}
-          onDeleteColumn={deleteColumn}
-        />
-      </div>
+      <BoardView
+        key={`${selection.project.id}:${board.id}`}
+        board={board}
+        projectDetails={selection.project}
+        onDeleteTask={deleteTask}
+        onCreateTask={createTask}
+        onUpdateTask={updateTask}
+        onAddColumn={addColumn}
+        onRenameColumn={renameColumn}
+        onReorderColumn={reorderColumn}
+        onUpdateColumnWip={updateColumnWip}
+        onDeleteColumn={deleteColumn}
+      />
     </Layout>
   );
 }
