@@ -28,6 +28,11 @@ export const createNewProject = async (req: AuthRequest, res: Response) : Promis
             return;
         }
 
+        if (req.user?.globalRole !== 'GLOBAL_ADMIN') {
+            res.status(403).json({ error: 'Forbidden: Only Global Admins can create projects.' });
+            return;
+        }
+
         if (! name) {
             res.status(400).json({ error: 'Project name is required' });
             return;
