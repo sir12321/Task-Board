@@ -19,16 +19,20 @@ export const createTask = async (req: AuthRequest, res: Response) : Promise<void
 export const updateColumn = async (req: AuthRequest, res: Response) : Promise<void> => {
     try {
         const id = req.params.id;
-        const { targetColumnId } = req.body;
+        const { targetColumnId: cId } = req.body;
 
         if (!id || typeof id != "string") {
             res.status(400).json({ error: "Invalid task ID" });
             return;
         }
 
-        const task = await moveTask(id, targetColumnId);
+        const task = await moveTask(id, cId);
         res.status(200).json(task);
-    } catch {
+    } catch (err : unknown) {
+        if (err instanceof Error && err.message === 'Target column not found') {
+            res.status(400).json({ error: err.message });
+            return;
+        }
         res.status(500).json({ error: "Failed to move task" });
     }
 };

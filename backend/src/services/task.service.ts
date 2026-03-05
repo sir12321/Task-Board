@@ -52,10 +52,26 @@ export const makeTask = async (data: {
 };
 
 export const moveTask = async (id: string, cId: string) => {
-  return prisma.task.update({
-    where: { id },
-    data: { columnId: cId },
-  });
+
+    const targetCol = await prisma.column.findUnique({
+        where: { id: cId },
+        select: { name: true },
+    });
+
+    if (!targetCol) {
+        throw new Error('Target column not found');
+    }
+
+    const columnName = targetCol.name.toLowerCase();
+    const isResolved = columnName.includes('done') || columnName.includes('resolved');
+
+    return prisma.task.update({
+        where: { id },
+        data: { 
+            columnId: cId,
+            resolvedAt: isResolved ? new Date() : null,
+        },
+    });
 };
 
 export const removeTask = async (id : string) => {
