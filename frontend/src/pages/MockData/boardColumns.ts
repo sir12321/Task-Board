@@ -26,6 +26,7 @@ export const mockBoardColumns: Record<string, BoardColumn[]> = {
 /* Helper Functions */
 /* ===================================== */
 
+
 export const cloneTasks = (tasks: any[]): any[] =>
   tasks.map((task) => ({ ...task }));
 
