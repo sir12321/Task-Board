@@ -1,8 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
-import BoardPage from './pages/MockData/BoardPage';
-import { defaultBoardPath } from './pages/MockData/BoardPage';
+import { BoardPage, defaultBoardPath } from './pages/MockData';
 
 function App() {
   return (
