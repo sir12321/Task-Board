@@ -8,8 +8,8 @@ import type {
 import { BoardReducer } from './BoardReducer';
 import type { BoardState } from './BoardReducer';
 import Column from './Column';
-import TaskDetailsModal from '../Task/TaskDetailsModal';
-import TaskCreateEditModal from '../Task/TaskCreateEditModal';
+import TaskDetailsModal from '../Task/TaskDetailsModal/TaskDetailsModal';
+import TaskCreateEditModal from '../Task/TaskCreate/TaskCreateEditModal';
 import styles from './Board.module.css';
 
 interface Props {
@@ -327,6 +327,7 @@ const Board = ({
             return (
               <Column
                 key={column.id}
+                userRole={state.projectDetails.userRole}
                 column={column}
                 tasks={state.board.tasks
                   .filter((t) => t.columnId === column.id)
@@ -404,6 +405,7 @@ const Board = ({
       {selectedTaskId && (
         <TaskDetailsModal
           task={state.board.tasks.find((t) => t.id === selectedTaskId)!}
+          userRole={state.projectDetails.userRole}
           onClose={() => setSelectedTaskId(null)}
           onDelete={async (taskId: string) => {
             if (!projectDetails) return;
@@ -453,7 +455,7 @@ const Board = ({
                   createdAt: now,
                   updatedAt: now,
                   columnId: payload.columnId,
-                  columnName: column?.name ?? 'Unknown',
+                  status: column?.name ?? 'Unknown',
                   reporterId: 'current-user',
                   assigneeId: payload.assigneeId ?? null,
                   parentId: payload.parentId ?? null,

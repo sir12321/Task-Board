@@ -11,8 +11,7 @@ export interface Comment {
   content: string;
   createdAt: string;
   updatedAt: string;
-  authorId: string;
-  taskId: string;
+  authorId: string; // @notation left
 }
 
 export interface Task {
@@ -29,7 +28,7 @@ export interface Task {
   closedAt?: string | null;
 
   columnId: string;
-  columnName: string;
+  status: string; // #column name for easy access
   reporterId: string;
   assigneeId?: string | null;
   parentId?: string | null;
@@ -46,7 +45,7 @@ export interface TaskUpsertInput {
   columnId: string;
   assigneeId?: string | null;
   parentId?: string | null;
-}
+}                                     
 
 export interface BoardColumn {
   id: string;
@@ -64,12 +63,30 @@ export interface Board {
   tasks: Task[];
 }
 
-export interface User {
-  id: string;
-  email: string;
+export interface UserProfile {
   name: string;
-  role: GlobalRole;
+  email: string;
   avatarUrl?: string | null;
+}
+
+export interface User extends UserProfile {
+  id: string;
+  globalRole: GlobalRole;
+  notifications: Notification[];
+  projects: ProjectMember[];
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface ProjectMember {
+  projectId: string;
+  role: ProjectRole;
 }
 
 export interface Project {
@@ -90,6 +107,6 @@ export interface ProjectDetails extends Project {
 export interface ProjectMemberSummary {
   id: string;
   name: string;
+  email: string; // what if multiple users have same email, must be handled
   role: ProjectRole;
-  avatarUrl?: string | null;
 }

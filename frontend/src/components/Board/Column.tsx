@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import type { BoardColumn, Task } from '../../types/Types';
-import TaskCard from '../Task/TaskCard';
+import type {
+  BoardColumn,
+  Task,
+  ProjectRole as ProjectRole,
+} from '../../types/Types';
+import TaskCard from '../Task/TaskCard/TaskCard';
 import styles from './Column.module.css';
 
 interface Properties {
+  userRole: ProjectRole;
   column: BoardColumn;
   tasks: Task[];
   onDropTask: (taskId: string, columnId: string) => void;
@@ -23,6 +28,7 @@ interface Properties {
 }
 
 const Column = ({
+  userRole,
   column,
   tasks,
   onDropTask,
@@ -209,6 +215,7 @@ const Column = ({
           onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
           onEdit={onTaskEdit ? () => onTaskEdit(task.id) : undefined}
           isDraggable={Boolean(isDraggable && column.id !== 'col-story')}
+          projectRole={userRole}
         />
       ))}
     </div>

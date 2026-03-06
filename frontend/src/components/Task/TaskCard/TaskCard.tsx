@@ -1,4 +1,7 @@
-import type { Task } from '../../types/Types';
+import type {
+  Task as Task,
+  ProjectRole as ProjectRole,
+} from '../../../types/Types';
 import './TaskCard.css';
 
 interface Properties {
@@ -6,9 +9,16 @@ interface Properties {
   onClick?: () => void;
   isDraggable?: boolean;
   onEdit?: () => void;
+  projectRole: ProjectRole;
 }
 
-const TaskCard = ({ task, onClick, isDraggable = true, onEdit }: Properties) => {
+const TaskCard = ({
+  task,
+  onClick,
+  isDraggable = true,
+  onEdit,
+  projectRole,
+}: Properties) => {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null;
     const d = new Date(dateStr);
@@ -17,14 +27,19 @@ const TaskCard = ({ task, onClick, isDraggable = true, onEdit }: Properties) => 
   };
 
   const avatarInitials = (id: string) => id.slice(0, 2).toUpperCase();
-  const Assignee = task.assigneeId || null;
-  const taskTypeClass = task.type.toLowerCase();
+
+  const assignee = task.assigneeId || null;
+
+  // Normalize task type to use as a CSS class.
+  const taskType = task.type.toLowerCase();
 
   return (
     <div
-      className={`task-card ${taskTypeClass} ${!isDraggable ? 'not-draggable' : ''}`}
+      className={`task-card ${taskType} ${!isDraggable ? 'not-draggable' : ''}`}
       draggable={isDraggable}
       onClick={onClick}
+      // When dragging starts, place the task id on the dataTransfer so
+      // drop targets can identify which task is being moved.
       onDragStart={(e) => {
         if (!isDraggable) return;
         e.dataTransfer.setData('taskId', task.id);
@@ -33,7 +48,10 @@ const TaskCard = ({ task, onClick, isDraggable = true, onEdit }: Properties) => 
       tabIndex={onClick ? 0 : undefined}
     >
       <h4>{task.title}</h4>
-      {onEdit && (
+
+      {/* Optional edit button; stopPropagation prevents the card click
+          handler from also firing when editing. */}
+      {projectRole !== 'PROJECT_VIEWER' && onEdit && (
         <button
           type="button"
           className="edit-task-btn"
@@ -46,21 +64,22 @@ const TaskCard = ({ task, onClick, isDraggable = true, onEdit }: Properties) => 
           Edit
         </button>
       )}
+
       <p className="meta">
-        <span className={`priority ${taskTypeClass}`}>{task.type}</span>
+        <span className={`priority ${taskType}`}>{task.type}</span>
         {task.dueDate && (
           <span className="due-date">Due {formatDate(task.dueDate)}</span>
         )}
       </p>
 
-      {Assignee && (
+      {assignee && (
         <div className="assignees" aria-hidden={false}>
           <div
             className="assignee"
-            title={`Assignee: ${Assignee}`}
-            aria-label={`Assignee ${Assignee}`}
+            title={`Assignee: ${assignee}`}
+            aria-label={`Assignee ${assignee}`}
           >
-            {avatarInitials(Assignee)}
+            {avatarInitials(assignee)}
           </div>
         </div>
       )}

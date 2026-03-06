@@ -9,8 +9,10 @@
 
 .modal {
   background: white;
-  width: 1000px;
+  width: 1200px;
   max-width: 96%;
+  max-height: 90vh;
+  overflow-y: auto;
   padding: 20px;
   border-radius: 10px;
   position: relative;
@@ -65,19 +67,31 @@
 .task {
   color: #0366d6;
   border-color: rgba(14, 165, 233, 0.45);
-  background: linear-gradient(180deg, rgba(14, 165, 233, 0.2) 0%, rgba(14, 165, 233, 0.08) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(14, 165, 233, 0.2) 0%,
+    rgba(14, 165, 233, 0.08) 100%
+  );
 }
 
 .story {
   color: #6d28d9;
   border-color: rgba(139, 92, 246, 0.45);
-  background: linear-gradient(180deg, rgba(139, 92, 246, 0.24) 0%, rgba(139, 92, 246, 0.09) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(139, 92, 246, 0.24) 0%,
+    rgba(139, 92, 246, 0.09) 100%
+  );
 }
 
 .bug {
   color: #b91c1c;
   border-color: rgba(239, 68, 68, 0.45);
-  background: linear-gradient(180deg, rgba(239, 68, 68, 0.22) 0%, rgba(239, 68, 68, 0.08) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(239, 68, 68, 0.22) 0%,
+    rgba(239, 68, 68, 0.08) 100%
+  );
 }
 
 .container {
@@ -225,4 +239,54 @@
 
 .deleteButton:hover {
   background: #dc2626;
+}
+
+.commentComposer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.commentInput {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.commentInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.commentActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.addCommentButton {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.addCommentButton:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.addCommentButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
 }

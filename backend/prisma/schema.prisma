@@ -9,17 +9,17 @@ datasource db {
 model User {
   id            String          @id @default(uuid())
   email         String          @unique
-  password      String
+  password      String // not for manya
   name          String
   avatarUrl     String?
   globalRole    GlobalRole      @default(USER)
-  refreshToken  String?
-  auditLogs     AuditLog[]
+  refreshToken  String? // not for manya
+  auditLogs     AuditLog[] // no linking to frontend
   comments      Comment[]
   notifications Notification[]
   projects      ProjectMember[]
-  assignedTasks Task[]          @relation("Assignee")
-  reportedTasks Task[]          @relation("Reporter")
+  assignedTasks Task[]          @relation("Assignee") // not for manya
+  reportedTasks Task[]          @relation("Reporter") // not for manya
 }
 
 model Project {
@@ -82,11 +82,11 @@ model Task {
   auditLogs   AuditLog[]
   comments    Comment[]
   parent      Task?      @relation("TaskHierarchy", fields: [parentId], references: [id])
-  children    Task[]     @relation("TaskHierarchy")
+  children    Task[]     @relation("TaskHierarchy") // only story can have children
   assignee    User?      @relation("Assignee", fields: [assigneeId], references: [id])
   reporter    User       @relation("Reporter", fields: [reporterId], references: [id])
   column      Column     @relation(fields: [columnId], references: [id])
-  board       Board      @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  board       Board      @relation(fields: [boardId], references: [id], onDelete: Cascade) // what about status of a task, would it be deriver from columnId?, i am using columnName for status
 }
 
 model Comment {

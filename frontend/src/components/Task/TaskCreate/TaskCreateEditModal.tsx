@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { SyntheticEvent } from 'react';
 import type {
   BoardColumn,
   ProjectMemberSummary,
   Task,
   TaskUpsertInput,
-} from '../../types/Types';
+} from '../../../types/Types';
 import styles from './TaskCreateEditModal.module.css';
 
 interface Props {
@@ -37,7 +37,8 @@ const TaskCreateEditModal = ({
   onSave,
 }: Props) => {
   const initialColumnId = task?.columnId ?? defaultColumnId;
-  const initialType = task?.type ?? (initialColumnId === 'col-story' ? 'STORY' : 'TASK');
+  const initialType =
+    task?.type ?? (initialColumnId === 'col-story' ? 'STORY' : 'TASK');
 
   const [title, setTitle] = useState(task?.title ?? '');
   const [description, setDescription] = useState(task?.description ?? '');
@@ -57,11 +58,14 @@ const TaskCreateEditModal = ({
   );
 
   const candidateParents = useMemo(
-    () => tasks.filter((candidate) => candidate.id !== task?.id && candidate.type === 'STORY'),
+    () =>
+      tasks.filter(
+        (candidate) => candidate.id !== task?.id && candidate.type === 'STORY',
+      ),
     [task?.id, tasks],
   );
 
-  const submit = async (e: FormEvent<HTMLFormElement>) => {
+  const submit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
@@ -87,7 +91,9 @@ const TaskCreateEditModal = ({
         description: description.trim() || null,
         type,
         priority,
-        dueDate: dueDate ? new Date(`${dueDate}T00:00:00.000Z`).toISOString() : null,
+        dueDate: dueDate
+          ? new Date(`${dueDate}T00:00:00.000Z`).toISOString()
+          : null,
         columnId: initialColumnId,
         assigneeId: assigneeId.trim() || null,
         parentId: parentId || null,
@@ -138,7 +144,9 @@ const TaskCreateEditModal = ({
               Type
               <select
                 value={type}
-                onChange={(e) => setType(e.target.value as TaskUpsertInput['type'])}
+                onChange={(e) =>
+                  setType(e.target.value as TaskUpsertInput['type'])
+                }
               >
                 <option value="TASK">TASK</option>
                 <option value="BUG">BUG</option>
@@ -190,7 +198,10 @@ const TaskCreateEditModal = ({
 
           <label>
             Parent Story
-            <select value={parentId} onChange={(e) => setParentId(e.target.value)}>
+            <select
+              value={parentId}
+              onChange={(e) => setParentId(e.target.value)}
+            >
               <option value="">None</option>
               {candidateParents.map((parentTask) => (
                 <option key={parentTask.id} value={parentTask.id}>
