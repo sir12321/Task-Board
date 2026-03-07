@@ -4,23 +4,30 @@ import type {
   ProjectDetails,
   Task,
   TaskUpsertInput,
-} from '../../types/Types';
+} from '../../../types/Types';
 import { BoardReducer } from './BoardReducer';
 import type { BoardState } from './BoardReducer';
-import Column from './Column';
+import Column from '../Column/Column';
+import { handleDrop as handleDropTask } from './HandleDropTask';
+import HandleRenameColumn from './RenameColumn';
 import TaskDetailsModal from '../Task/TaskDetailsModal/TaskDetailsModal';
 import TaskCreateEditModal from '../Task/TaskCreate/TaskCreateEditModal';
 import styles from './Board.module.css';
 
+// Props accepted by the Board component. All handler callbacks are optional to allow
+// the board to function in both controlled (parent-managed) and internal state
+// modes (useful for mock data or offline usage).
 interface Props {
   board: BoardType;
   projectDetails: ProjectDetails;
+  // task CRUD handlers
   onDeleteTask?: (taskId: string) => Promise<void> | void;
   onCreateTask?: (payload: TaskUpsertInput) => Promise<void> | void;
   onUpdateTask?: (
     taskId: string,
     payload: TaskUpsertInput,
   ) => Promise<void> | void;
+  // column workflow handlers
   onAddColumn?: (columnName: string) => Promise<void> | void;
   onRenameColumn?: (columnId: string, newName: string) => Promise<void> | void;
   onReorderColumn?: (
@@ -46,6 +53,9 @@ const Board = ({
   onUpdateColumnWip,
   onDeleteColumn,
 }: Props) => {
+  // Normalization helper that ensures all story-type tasks are assigned to the
+  // reserved "Stories" column (col-story). This simplifies downstream logic by
+  // guaranteeing that story tasks won't appear elsewhere.
   const normalizeBoard = (b: BoardType): BoardType => ({
     ...b,
     tasks: b.tasks.map((t) =>
@@ -53,98 +63,89 @@ const Board = ({
     ),
   });
 
+  // Reducer state manages the board and project details locally. This enables
+  // complex state transitions (task moves, column edits) while still allowing a
+  // parent component to override via props handlers.
   const [state, dispatch] = useReducer(BoardReducer, {
     board: normalizeBoard(board),
     projectDetails,
   } as BoardState);
 
-  // Sync external board prop into reducer state when it changes
+  // If the `board` prop changes from the parent we need to update the reducer
+  // state accordingly. This keeps the UI in sync with remote data loads.
   useEffect(() => {
     dispatch({ type: 'SET_BOARD', payload: { board: normalizeBoard(board) } });
   }, [board]);
 
   // Toast state for showing short-lived error messages
-  const [toast, setToast] = useState<string | null>(null);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [createColumnId, setCreateColumnId] = useState<string | null>(null);
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  const [workflowEditMode, setWorkflowEditMode] = useState(false);
+  // UI state
+  const [toast, setToast] = useState<string | null>(null); // short-lived notifications
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null); // open details modal
+  const [createColumnId, setCreateColumnId] = useState<string | null>(null); // open create modal
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null); // open edit modal
+  const [workflowEditMode, setWorkflowEditMode] = useState(false); // toggle workflow editing
 
+  // Compute permissions derived from the user's role. Viewer-only users
+  // cannot modify anything while members and admins have incremental access.
   const canManageTasks =
     state.projectDetails.userRole === 'PROJECT_ADMIN' ||
     state.projectDetails.userRole === 'PROJECT_MEMBER';
   const canManageColumns = state.projectDetails.userRole === 'PROJECT_ADMIN';
+  // Only admins/members should be assigned tasks
   const assignableMembers = state.projectDetails.members.filter(
     (member) =>
       member.role === 'PROJECT_ADMIN' || member.role === 'PROJECT_MEMBER',
   );
 
+  // Automatically clear toast messages after a brief interval
   useEffect(() => {
     if (!toast) return;
     const id = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(id);
   }, [toast]);
 
-  // Validate whether a task can move to the target column.
-  // Returns true if move is allowed; otherwise shows toast and returns false.
-  const canMoveTask = (taskId: string, targetColumnId: string) => {
-    const task = state.board.tasks.find((t) => t.id === taskId);
-    if (!task) return false;
+  // move validation logic lives in ./MoveTask.tsx now; import and use it
 
-    const targetColumn = state.board.columns.find(
-      (c) => c.id === targetColumnId,
-    );
-    if (!targetColumn) return false;
+  // state used only for the rename dialog
+  const [renameColumn, setRenameColumn] = useState<{
+    columnId: string;
+    currentName: string;
+  } | null>(null);
 
-    // Disallow non-story tasks from being moved into the dedicated story column
-    if (targetColumn.id === 'col-story' && task.type !== 'STORY') {
-      setToast('Move forbidden: only stories can go into the Stories column');
-      return false;
+  // perform a rename; same semantics that previously existed inline
+  const handleRenameColumn = async (columnId: string, newName: string) => {
+    if (!canManageColumns) {
+      setToast('Only ProjectAdmin can rename columns');
+      return;
     }
 
-    // Prevent STORY tasks from being moved out of the story column
-    if (task.type === 'STORY' && targetColumn.id !== 'col-story') {
-      setToast('Move forbidden: stories must remain in the Stories column');
-      return false;
+    if (onRenameColumn) {
+      await onRenameColumn(columnId, newName);
+      return;
     }
 
-    // WIP enforcement
-    const tasksInColumn = state.board.tasks.filter(
-      (t) => t.columnId === targetColumnId,
-    );
-    if (
-      targetColumn.wipLimit &&
-      tasksInColumn.length >= targetColumn.wipLimit
-    ) {
-      setToast('Move forbidden: WIP limit reached');
-      return false;
-    }
-
-    // Column-order enforcement: only allow moves to the adjacent next column
-    // (i.e., move forward by exactly 1). Disallow backward moves or jumps.
-    const sourceColumn = state.board.columns.find(
-      (c) => c.id === task.columnId,
-    );
-    if (sourceColumn) {
-      const orderDiff = targetColumn.order - sourceColumn.order;
-      if (orderDiff !== 1) {
-        setToast('Move forbidden: only adjacent forward moves are allowed');
-        return false;
-      }
-    }
-
-    return true;
+    dispatch({ type: 'RENAME_COLUMN', payload: { columnId, name: newName } });
   };
 
-  const handleDrop = (taskId: string, columnId: string) => {
-    if (!canMoveTask(taskId, columnId)) return;
-
-    dispatch({
-      type: 'MOVE_TASK',
-      payload: { taskId, targetColumnId: columnId },
-    });
+  const openRenameColumn = (columnId: string, currentName: string) => {
+    setRenameColumn({ columnId, currentName });
   };
 
+  // Task drop logic has been moved to the MoveTask helper. The component
+  // simply forwards necessary state/dispatch to that function when a drop
+  // occurs (see `onDropTask` prop further below).
+
+  // Maintain a sorted copy of columns based on their order property. This
+  // is used throughout the rendering logic to ensure columns appear in the
+  // correct sequence, independent of the underlying array order.
+  const sortedColumns = state.board.columns
+    .slice()
+    .sort((a, b) => a.order - b.order);
+
+  // Add a new column to the board. This function shows a prompt, checks
+  // permissions, and either calls a parent handler or updates the reducer
+  // directly. The async signature allows parent handlers to perform network
+  // requests before updating state.
   const handleAddColumn = async () => {
     if (!canManageColumns) {
       setToast('Only ProjectAdmin can create columns');
@@ -164,29 +165,11 @@ const Board = ({
     dispatch({ type: 'ADD_COLUMN', payload: { name: columnName } });
   };
 
-  const handleRenameColumn = async (columnId: string, currentName: string) => {
-    if (!canManageColumns) {
-      setToast('Only ProjectAdmin can rename columns');
-      return;
-    }
-
-    const newName = window.prompt('Rename column', currentName);
-    if (newName === null) {
-      return;
-    }
-
-    if (onRenameColumn) {
-      await onRenameColumn(columnId, newName);
-      return;
-    }
-
-    dispatch({ type: 'RENAME_COLUMN', payload: { columnId, name: newName } });
-  };
-
-  const sortedColumns = state.board.columns
-    .slice()
-    .sort((a, b) => a.order - b.order);
-
+  // Move a column left or right in the workflow. There are several guards:
+  // 1. Only admins can perform it.
+  // 2. The special 'Stories' column cannot be moved past first.
+  // 3. We don't allow swapping with the story column.
+  // After validation either call parent handler or update state directly.
   const handleMoveColumn = async (
     columnId: string,
     direction: 'left' | 'right',
@@ -222,6 +205,9 @@ const Board = ({
     dispatch({ type: 'REORDER_COLUMN', payload: { columnId, direction } });
   };
 
+  // Prompt the user to update the WIP (work-in-progress) limit on a column.
+  // Performs input validation to ensure the limit is a positive integer or
+  // left empty. Delegates to parent or reducer accordingly.
   const handleEditWip = async (columnId: string, currentWip: number | null) => {
     if (!canManageColumns) {
       setToast('Only ProjectAdmin can edit WIP limits');
@@ -258,6 +244,8 @@ const Board = ({
     });
   };
 
+  // Delete a column after confirming with the user. Only admins may
+  // perform this action. The confirmation step avoids accidental data loss.
   const handleDeleteColumn = async (columnId: string) => {
     if (!canManageColumns) {
       setToast('Only ProjectAdmin can delete columns');
@@ -284,6 +272,7 @@ const Board = ({
 
   return (
     <div style={{ padding: '20px' }}>
+      {/* Project header section showing name/description and workflow toggle */}
       <div className={styles.projectSection}>
         <div className={styles['project-name']}>
           {state.projectDetails.name}
@@ -309,9 +298,11 @@ const Board = ({
         </div>
       </div>
 
+      {/* Columns and tasks area */}
       <div className={styles.board}>
         {sortedColumns.map((column, index) =>
           (() => {
+            // compute adjacency flags for move buttons
             const leftNeighbor = index > 0 ? sortedColumns[index - 1] : null;
             const rightNeighbor =
               index < sortedColumns.length - 1
@@ -329,6 +320,7 @@ const Board = ({
                 key={column.id}
                 userRole={state.projectDetails.userRole}
                 column={column}
+                // sort tasks within column by priority, due date, title
                 tasks={state.board.tasks
                   .filter((t) => t.columnId === column.id)
                   .sort((a: Task, b: Task) => {
@@ -354,7 +346,9 @@ const Board = ({
                     return a.title.localeCompare(b.title);
                   })}
                 isDraggable={state.projectDetails.userRole !== 'PROJECT_VIEWER'}
-                onDropTask={handleDrop}
+                onDropTask={(taskId, colId) =>
+                  handleDropTask(state, dispatch, taskId, colId, setToast)
+                }
                 onTaskClick={(taskId) => setSelectedTaskId(taskId)}
                 onTaskEdit={(taskId) => {
                   if (!canManageTasks) {
@@ -373,7 +367,7 @@ const Board = ({
                 }}
                 canManageColumns={canManageColumns && workflowEditMode}
                 onRenameColumn={(columnId) =>
-                  handleRenameColumn(columnId, column.name)
+                  openRenameColumn(columnId, column.name)
                 }
                 canMoveLeft={canMoveLeft}
                 canMoveRight={canMoveRight}
@@ -398,10 +392,22 @@ const Board = ({
         )}
       </div>
 
-      {/* Toast */}
+      {/* Toast notification area at bottom-right */}
       {toast && <div className={styles['toast-bottom-right']}>{toast}</div>}
 
-      {/* Modal */}
+      {/* column rename modal */}
+      {renameColumn && (
+        <HandleRenameColumn
+          columnId={renameColumn.columnId}
+          currentName={renameColumn.currentName}
+          canManageColumns={canManageColumns && workflowEditMode}
+          onSubmit={handleRenameColumn}
+          onCancel={() => setRenameColumn(null)}
+          setToast={setToast}
+        />
+      )}
+
+      {/* Task details modal, shown when a task is selected */}
       {selectedTaskId && (
         <TaskDetailsModal
           task={state.board.tasks.find((t) => t.id === selectedTaskId)!}
@@ -424,6 +430,7 @@ const Board = ({
         />
       )}
 
+      {/* Create task modal triggered by column create action */}
       {createColumnId && (
         <TaskCreateEditModal
           mode="create"
@@ -466,6 +473,7 @@ const Board = ({
         />
       )}
 
+      {/* Edit task modal shown when editingTaskId is set */}
       {editingTaskId && (
         <TaskCreateEditModal
           mode="edit"

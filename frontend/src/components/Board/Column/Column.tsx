@@ -3,20 +3,26 @@ import type {
   BoardColumn,
   Task,
   ProjectRole as ProjectRole,
-} from '../../types/Types';
+} from '../../../types/Types';
 import TaskCard from '../Task/TaskCard/TaskCard';
 import styles from './Column.module.css';
 
+// Props for the Column component. This acts as a versatile UI piece used by
+// the Board to display a workflow column. Many callbacks are optional as the
+// board may operate in read-only or limited-permission modes.
 interface Properties {
   userRole: ProjectRole;
   column: BoardColumn;
   tasks: Task[];
+  // drag/drop handler to inform parent that a task has been dropped here
   onDropTask: (taskId: string, columnId: string) => void;
+  // task interactions
   onTaskClick?: (taskId: string) => void;
   onTaskEdit?: (taskId: string) => void;
   isDraggable?: boolean;
   canManageTasks?: boolean;
   onCreateTask?: (columnId: string) => void;
+  // workflow management callbacks
   canManageColumns?: boolean;
   onRenameColumn?: (columnId: string) => void;
   canMoveLeft?: boolean;
@@ -46,8 +52,11 @@ const Column = ({
   onEditWip,
   onDeleteColumn,
 }: Properties) => {
+  // UI state for the workflow management dropdown
   const [workflowMenuOpen, setWorkflowMenuOpen] = useState(false);
   const workflowMenuRef = useRef<HTMLDivElement | null>(null);
+
+  // WIP limit calculations used to render the indicator bar
   const hasWipLimit =
     typeof column.wipLimit === 'number' && column.wipLimit > 0;
   const isAtCapacity =
@@ -59,6 +68,9 @@ const Column = ({
       )
     : 0;
 
+  // Close the workflow menu when clicking anywhere outside of it. This
+  // effect attaches a global listener when the menu is open and cleans up
+  // afterward to avoid memory leaks.
   useEffect(() => {
     if (!workflowMenuOpen) return;
 
@@ -85,6 +97,7 @@ const Column = ({
       }}
     >
       <div className={styles.columnHeader}>
+        {/* title row contains name and optional manage button */}
         <div className={styles.columnTitleRow}>
           <h3 className={styles.columnTitle}>{column.name}</h3>
           {canManageColumns && (
@@ -101,6 +114,7 @@ const Column = ({
 
               {workflowMenuOpen && (
                 <div className={styles.workflowMenu}>
+                  {/* workflow action buttons shown conditionally */}
                   {onMoveLeft && (
                     <button
                       type="button"
@@ -168,6 +182,7 @@ const Column = ({
             </div>
           )}
         </div>
+        {/* WIP indicator shows task count vs limit or an unlimited message */}
         {hasWipLimit ? (
           <div className={styles.wipIndicator}>
             <div className={styles.wipProgressTrack} aria-hidden="true">

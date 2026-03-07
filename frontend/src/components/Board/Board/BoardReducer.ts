@@ -3,7 +3,7 @@ import type {
   Board,
   Task,
   TaskUpsertInput,
-} from '../../types/Types';
+} from '../../../types/Types';
 
 export interface BoardState {
   board: Board;

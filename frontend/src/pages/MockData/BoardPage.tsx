@@ -2,7 +2,7 @@ import type { TaskUpsertInput } from '../../types/Types';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '../../components/Layout/Layout';
-import BoardView from '../../components/Board/Board';
+import BoardView from '../../components/Board/Board/Board';
 import {
   resolveProjectBoardSelection,
   addColumnToBoard,

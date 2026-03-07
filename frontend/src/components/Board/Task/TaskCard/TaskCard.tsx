@@ -1,7 +1,7 @@
 import type {
   Task as Task,
   ProjectRole as ProjectRole,
-} from '../../../types/Types';
+} from '../../../../types/Types';
 import './TaskCard.css';
 
 interface Properties {

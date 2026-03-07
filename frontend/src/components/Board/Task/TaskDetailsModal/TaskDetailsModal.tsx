@@ -195,7 +195,6 @@ const TaskDetailsModal = ({
                 </div>
               </div>
 
-              {/* Metadata rows */}
               <div className={styles.detailRow}>
                 <div className={styles.detailLabel}>Priority</div>
                 <div className={styles.detailValue}>{task.priority}</div>

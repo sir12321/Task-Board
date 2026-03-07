@@ -10,7 +10,9 @@ function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.SyntheticEvent<HTMLFormElement>,
+  ): Promise<void> => {
     e.preventDefault();
 
     if (!name || !email || !password || !confirmPassword) {
