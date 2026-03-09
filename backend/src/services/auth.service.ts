@@ -71,7 +71,7 @@ export const loginUser = async (data: LoginInput): Promise<{ user: User; accessT
     return { user, accessToken, refreshToken };
 };
 
-export const refreshSession = async (token: string): Promise<{ accessToken: string }> => {
+export const refreshSession = async (token: string): Promise<{ accessToken: string; user: { id: string; email: string; name: string; avatarUrl: string | null; globalRole: string } }> => {
     const decoded = verifyRefreshToken(token) as { userId: string };
 
     const user = await prisma.user.findUnique({
@@ -85,7 +85,16 @@ export const refreshSession = async (token: string): Promise<{ accessToken: stri
     const payload = { userId: user.id, globalRole: user.globalRole };
     const newAccessToken = generateAccessToken(payload);
 
-    return { accessToken: newAccessToken };
+    return {
+        accessToken: newAccessToken,
+        user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            avatarUrl: user.avatarUrl,
+            globalRole: user.globalRole,
+        },
+    };
 };
 
 export const logoutUser = async (userId: string): Promise<void> => {

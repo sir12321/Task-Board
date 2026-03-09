@@ -1,15 +1,23 @@
 import './Sidebar.css';
-import type { User as UserSummary } from '../../types/Types';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 interface Props {
   collapsed: boolean;
   toggle: () => void;
-  user: UserSummary;
 }
 
-const Sidebar = ({ collapsed, toggle, user }: Props) => {
+const Sidebar = ({ collapsed, toggle }: Props) => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  if (!user) return null;
+
   return (
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <button className="collapse-btn" onClick={toggle}>
@@ -46,7 +54,7 @@ const Sidebar = ({ collapsed, toggle, user }: Props) => {
           )}
         </div>
 
-        <div className="nav-item logout" onClick={() => navigate('/login')}>
+        <div className="nav-item logout" onClick={handleLogout}>
           <span className="icon">
             <svg
               xmlns="http://www.w3.org/2000/svg"

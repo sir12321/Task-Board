@@ -74,11 +74,11 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) :
             return;
         }
 
-        const { accessToken } = await authService.refreshSession(refreshToken);
+        const { accessToken, user } = await authService.refreshSession(refreshToken);
 
         res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 }); // 15 minutes
 
-        res.status(200).json({ message: 'Session refreshed successfully' });
+        res.status(200).json({ message: 'Session refreshed successfully', user });
     } catch (error) {
         if (error instanceof Error && error.message === 'Invalid refresh token') {
             res.status(403).json({ error: error.message });

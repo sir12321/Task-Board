@@ -1,4 +1,4 @@
-import type { BoardColumn } from '../../types/Types';
+import type { BoardColumn, Task } from '../../types/Types';
 
 /* ===================================== */
 /* Column Generator */
@@ -27,7 +27,7 @@ export const mockBoardColumns: Record<string, BoardColumn[]> = {
 /* ===================================== */
 
 
-export const cloneTasks = (tasks: any[]): any[] =>
+export const cloneTasks = (tasks: Task[]): Task[] =>
   tasks.map((task) => ({ ...task }));
 
 export const cloneColumns = (columns: BoardColumn[]): BoardColumn[] =>

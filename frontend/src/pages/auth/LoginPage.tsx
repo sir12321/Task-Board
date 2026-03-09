@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './LoginPage.module.css';
-import { defaultBoardPath } from '../MockData';
 import { apiClient } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 
 function LoginPage() {
   const [email, setEmail] = useState<string>('');
@@ -10,6 +10,7 @@ function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -22,11 +23,12 @@ function LoginPage() {
     setError(null);
 
     try {
-      await apiClient('/auth/login', {
+      const data = await apiClient('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
-      navigate(defaultBoardPath);
+      setUser(data.user);
+      navigate('/board');
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

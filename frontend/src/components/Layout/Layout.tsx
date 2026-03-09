@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Sidebar from './Sidebar';
-import { MockUser1 } from '../../pages/MockData';
 import ProjectBoardSelector from './ProjectBoardSelector';
 import './Layout.css';
 
@@ -17,7 +16,6 @@ const Layout = ({ children }: Props) => {
       <Sidebar
         collapsed={collapsed}
         toggle={() => setCollapsed(!collapsed)}
-        user={MockUser1}
       />
 
       <div className="main">
