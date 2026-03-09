@@ -28,7 +28,7 @@ export interface Task {
   closedAt?: string | null;
 
   columnId: string;
-  status: string; // #column name for easy access
+  columnName: string;
   reporterId: string;
   assigneeId?: string | null;
   parentId?: string | null;

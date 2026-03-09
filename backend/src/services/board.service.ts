@@ -1,12 +1,14 @@
 import p from '../utils/prisma';
 import { Board, Column, Task, Comment } from '@prisma/client';
 
-type BoardWithDetails = Board & {
+type TaskWithColumnName = Task & { comments: Comment[]; columnName: string };
+
+type BoardResponse = Board & {
     columns: Column[];
-    tasks: (Task & { comments: Comment[] })[];
+    tasks: TaskWithColumnName[];
 };
 
-export const getBoards = async (boardId: string): Promise<BoardWithDetails | null> => {
+export const getBoards = async (boardId: string): Promise<BoardResponse | null> => {
     const board = await p.board.findUnique({
         where: { id: boardId },
         include: {
@@ -15,6 +17,7 @@ export const getBoards = async (boardId: string): Promise<BoardWithDetails | nul
             },
             tasks: {
                 include: {
+                    column: { select: { name: true } },
                     comments: {
                         orderBy: { createdAt: 'asc' },
                     },
@@ -23,5 +26,13 @@ export const getBoards = async (boardId: string): Promise<BoardWithDetails | nul
         },
     });
 
-    return board;
+    if (!board) return null;
+
+    return {
+        ...board,
+        tasks: board.tasks.map((task) => {
+            const { column, ...rest } = task;
+            return { ...rest, columnName: column.name };
+        }),
+    };
 };

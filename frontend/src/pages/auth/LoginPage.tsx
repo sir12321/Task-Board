@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './LoginPage.module.css';
 import { defaultBoardPath } from '../MockData';
+import { apiClient } from '../../utils/api';
 
 function LoginPage() {
   const [email, setEmail] = useState<string>('');
@@ -21,20 +22,10 @@ function LoginPage() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login', {
+      await apiClient('/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-        credentials: 'include',
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed.');
-      }
-
-      console.log('Login successful:', data.user);
       navigate(defaultBoardPath);
     } catch (err: unknown) {
       if (err instanceof Error) {

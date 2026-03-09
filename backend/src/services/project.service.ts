@@ -9,6 +9,7 @@ interface ProjectSummary {
     members: {
         id: string;
         name: string;
+        email: string;
         role: string;
         avatarUrl: string | null;
     }[];
@@ -27,7 +28,7 @@ export const getUserProjects = async (userId: string): Promise<ProjectSummary[]>
             members: {
                 include: {
                     user: {
-                        select: { id: true, name: true, avatarUrl: true },
+                        select: { id: true, name: true, email: true, avatarUrl: true },
                     },
                 },
             },
@@ -48,6 +49,7 @@ export const getUserProjects = async (userId: string): Promise<ProjectSummary[]>
             members: project.members.map((m) => ({
                 id: m.user.id,
                 name: m.user.name,
+                email: m.user.email,
                 role: m.role,
                 avatarUrl: m.user.avatarUrl,
             })),
