@@ -137,40 +137,47 @@ export default function BoardPage() {
         return;
       }
 
-      // Move task to a different column if columnId changed
-      const existingTask = board.tasks.find((t) => t.id === taskId);
-      if (existingTask && existingTask.columnId !== payload.columnId) {
-        await apiClient(`/tasks/${taskId}/move`, {
-          method: 'PUT',
-          body: JSON.stringify({ targetColumnId: payload.columnId }),
-        });
-      }
+      try {
+        const existingTask = board.tasks.find((t) => t.id === taskId);
+        if (existingTask && existingTask.columnId !== payload.columnId) {
+          await apiClient(`/tasks/${taskId}/move`, {
+            method: 'PUT',
+            body: JSON.stringify({ targetColumnId: payload.columnId }),
+          });
+        }
 
-      const column = board.columns.find((c) => c.id === payload.columnId);
-      setBoard((prev) =>
-        prev
-          ? {
-              ...prev,
-              tasks: prev.tasks.map((task) =>
-                task.id === taskId
-                  ? {
-                      ...task,
-                      title: payload.title,
-                      description: payload.description ?? null,
-                      type: payload.type,
-                      priority: payload.priority,
-                      dueDate: payload.dueDate,
-                      columnId: payload.columnId,
-                      columnName: column?.name ?? task.columnName,
-                      assigneeId: payload.assigneeId ?? null,
-                      parentId: payload.parentId ?? null,
-                      updatedAt: new Date().toISOString(),
-                    }
-                  : task,
-              ),
-            }
-          : prev,
-      );
+        const updatedTask = await apiClient(`/tasks/${taskId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              title: payload.title,
+              description: payload.description,
+              priority: payload.priority,
+              dueDate: payload.dueDate,
+              assigneeId: payload.assigneeId
+            }),
+          });
+
+        const column = board.columns.find((c) => c.id === payload.columnId);
+          setBoard((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  tasks: prev.tasks.map((task) =>
+                    task.id === taskId
+                      ? {
+                          ...task,
+                          ...updatedTask,
+                          columnName: column?.name ?? task.columnName,
+                        }
+                      : task
+                  ),
+                }
+              : prev
+          );
+      } catch (err) {
+        console.error('Failed to update task:', err);
+        alert('Action failed. Transition may be invalid or WIP limit reached.');
+      }
     },
     [board, project],
   );
@@ -188,15 +195,33 @@ export default function BoardPage() {
   );
 
   const renameColumn = useCallback(
-    async (): Promise<void> => {
-      if (!project) return;
+    async (columnId: string): Promise<void> => {
+      if (!project || !board) return;
       if (project.userRole !== 'PROJECT_ADMIN') {
         alert('Only ProjectAdmin can rename columns.');
         return;
       }
-      alert('Column rename via API is not yet supported.');
+      
+      const newName = prompt('Enter the new column name:');
+      if (!newName) return;
+
+      try {
+        await apiClient(`/columns/${columnId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ name: newName }),
+        });
+
+        setBoard((prev) => prev ? {
+            ...prev,
+            columns: prev.columns.map((c) => c.id === columnId ? { ...c, name: newName } : c),
+            tasks: prev.tasks.map((t) => t.columnId === columnId ? { ...t, columnName: newName } : t)
+        } : prev);
+      } catch (error) {
+        console.error('Failed to rename column:', error);
+        alert('Failed to rename column.');
+      }
     },
-    [project],
+    [project, board],
   );
 
   const reorderColumn = useCallback(
@@ -212,27 +237,59 @@ export default function BoardPage() {
   );
 
   const updateColumnWip = useCallback(
-    async (): Promise<void> => {
-      if (!project) return;
+    async (columnId: string): Promise<void> => {
+      if (!project || !board) return;
       if (project.userRole !== 'PROJECT_ADMIN') {
         alert('Only ProjectAdmin can edit WIP limits.');
         return;
       }
-      alert('Column WIP update via API is not yet supported.');
+
+      const limitInput = prompt('Enter new WIP limit (or leave blank to remove limit):');
+      // Treat cancel as abort. Empty string means remove limit.
+      if (limitInput === null) return; 
+      const newWipLimit = limitInput.trim() === '' ? null : parseInt(limitInput, 10);
+
+      try {
+        await apiClient(`/columns/${columnId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ wipLimit: newWipLimit }),
+        });
+
+        setBoard((prev) => prev ? {
+            ...prev,
+            columns: prev.columns.map((c) => c.id === columnId ? { ...c, wipLimit: newWipLimit } : c)
+        } : prev);
+      } catch (error) {
+        console.error('Failed to update WIP limit:', error);
+        alert('Failed to update WIP limit.');
+      }
     },
-    [project],
+    [project, board],
   );
 
   const deleteColumn = useCallback(
-    async (): Promise<void> => {
-      if (!project) return;
+    async (columnId: string): Promise<void> => {
+      if (!project || !board) return;
       if (project.userRole !== 'PROJECT_ADMIN') {
         alert('Only ProjectAdmin can delete columns.');
         return;
       }
-      alert('Column delete via API is not yet supported.');
+
+      if (!confirm('Are you sure you want to delete this column?')) return;
+
+      try {
+        await apiClient(`/columns/${columnId}`, { method: 'DELETE' });
+
+        setBoard((prev) => prev ? {
+            ...prev,
+            columns: prev.columns.filter((c) => c.id !== columnId)
+        } : prev);
+      } catch (error) {
+        console.error('Failed to delete column:', error);
+        alert('Cannot delete a column that contains tasks. Move or delete them first.');
+      }
     },
-    [project],
+    [project, board],
   );
 
   if (loading) {

@@ -5,6 +5,17 @@ import bcrypt from 'bcrypt';
 async function main(): Promise<void> {
     const commonPassword = await bcrypt.hash('111', 10);
 
+    const admin = await prisma.user.upsert({
+        where: { email: 'admin@taskboard.com' },
+        update: {},
+        create: {
+            email: 'admin@taskboard.com',
+            name: 'Global Admin',
+            password: commonPassword,
+            globalRole: 'GLOBAL_ADMIN',
+        }
+    });
+
     // Create users matching mock data
     const manya = await prisma.user.upsert({
         where: { email: 'manya@iitd.ac.in' },
@@ -52,6 +63,7 @@ async function main(): Promise<void> {
                 description: 'A demo project for TaskFlow',
                 members: {
                     create: [
+                        { user: { connect: { id: admin.id } }, role: 'PROJECT_ADMIN' },
                         { user: { connect: { id: manya.id } }, role: 'PROJECT_ADMIN' },
                         { user: { connect: { id: john.id } }, role: 'PROJECT_MEMBER' },
                         { user: { connect: { id: alice.id } }, role: 'PROJECT_VIEWER' },
@@ -175,11 +187,11 @@ async function main(): Promise<void> {
         });
     }
 
-    let task3 = await prisma.task.findFirst({
+    const task3 = await prisma.task.findFirst({
         where: { title: 'Configure CI', boardId: demoBoard.id },
     });
     if (!task3) {
-        task3 = await prisma.task.create({
+        await prisma.task.create({
             data: {
                 title: 'Configure CI',
                 description: 'Add lint and build steps',
@@ -214,11 +226,11 @@ async function main(): Promise<void> {
         });
     }
 
-    let task5 = await prisma.task.findFirst({
+    const task5 = await prisma.task.findFirst({
         where: { title: 'Setup database migrations', boardId: demoBoard.id },
     });
     if (!task5) {
-        task5 = await prisma.task.create({
+        await prisma.task.create({
             data: {
                 title: 'Setup database migrations',
                 description: 'Configure Prisma migrations and seed scripts',
@@ -342,13 +354,13 @@ async function main(): Promise<void> {
         });
     }
 
-    console.log('✓ Seeded comments');
     console.log('\n════════════════════════════════════════════');
     console.log('📧 Login credentials (password: 111)');
     console.log('════════════════════════════════════════════');
-    console.log('  manya@iitd.ac.in   → PROJECT_ADMIN');
-    console.log('  john@iitd.ac.in    → PROJECT_MEMBER');
-    console.log('  alice@iitd.ac.in   → PROJECT_VIEWER');
+    console.log('  admin@taskboard.com → GLOBAL_ADMIN');
+    console.log('  manya@iitd.ac.in    → PROJECT_ADMIN');
+    console.log('  john@iitd.ac.in     → PROJECT_MEMBER');
+    console.log('  alice@iitd.ac.in    → PROJECT_VIEWER');
     console.log('════════════════════════════════════════════\n');
     console.log('✨ Seed completed successfully!\n');
 }

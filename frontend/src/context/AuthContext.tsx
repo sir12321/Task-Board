@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { apiClient } from '../utils/api';
 
@@ -21,6 +21,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const logout = useCallback(async () => {
     try {
@@ -41,8 +42,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch {
       setUser(null);
+    } finally {
+      setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  if (loading) {
+    return <div style={{ padding: '20px' }}>Loading session...</div>; 
+  }
 
   return (
     <AuthContext.Provider value={{ user, setUser, logout, fetchUser }}>

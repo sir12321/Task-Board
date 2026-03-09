@@ -5,6 +5,9 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
         credentials: 'include', // Include cookies for authentication
         headers: {
             'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
             ...options.headers,
         },
     };
@@ -16,7 +19,7 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'API request failed');
+        throw new Error(errorData.error || errorData.message || 'API request failed');
     }
 
     return response.json();
