@@ -1,4 +1,4 @@
-.modal-overlay {
+.overall-modal {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
@@ -111,6 +111,18 @@
   gap: 12px;
 }
 
+/* comments authored by current user get right-aligned layout */
+.commentMine {
+  justify-content: flex-end;
+}
+.commentMine .commentBody {
+  text-align: right;
+}
+/* optionally move avatar to the right for own messages */
+.commentMine .commentAvatar {
+  order: 2;
+}
+
 .commentAvatar {
   width: 40px;
   height: 40px;
@@ -186,11 +198,6 @@
   font-size: 14px;
 }
 
-.detailsTitle {
-  margin: 0 0 12px 0;
-  font-size: 15px;
-  font-weight: 700;
-}
 
 .detailRow {
   display: flex;
@@ -203,6 +210,14 @@
 .detailLabel {
   color: #667085;
   font-size: 14px;
+}
+
+.detailValue {
+  color: #0f172a;
+  font-size: 14px;
+  /* values are right-aligned within the row for readability */
+  text-align: right;
+  flex: 1;
 }
 
 .avatarSmall {
@@ -218,14 +233,6 @@
   border: 1px solid rgba(9, 30, 66, 0.06);
 }
 
-.linkButton {
-  background: none;
-  border: none;
-  color: #2563eb;
-  cursor: pointer;
-  padding: 0;
-  font-size: 13px;
-}
 
 .deleteButton {
   background: #ef4444;

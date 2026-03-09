@@ -15,6 +15,7 @@ import styles from './TaskDetailsModal.module.css';
 interface Properties {
   userRole: ProjectRole;
   task: Task;
+  currentUserId: string;
   onClose: () => void;
   onDelete?: (taskId: string) => Promise<void> | void;
   onAddComment?: (content: string) => Promise<void> | void;
@@ -29,6 +30,7 @@ interface Properties {
 const TaskDetailsModal = ({
   userRole,
   task,
+  currentUserId,
   onClose,
   onDelete,
   onAddComment,
@@ -71,7 +73,7 @@ const TaskDetailsModal = ({
   return (
     // Clicking the overlay closes the modal. The inner modal stops
     // propagation so clicks inside do not close it unintentionally.
-    <div className={styles['modal-overlay']} onClick={onClose}>
+    <div className={styles['overall-modal']} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <button className={styles['close-btn']} onClick={onClose}>
           ✕
@@ -83,7 +85,6 @@ const TaskDetailsModal = ({
               <h2 className={styles.title}>{task.title}</h2>
               <div className={styles.headerMeta}>
                 <div className={styles.status}>{task.columnName}</div>
-                {/* Type badge styled by task type class */}
                 <div className={`${styles.typeBadge} ${styles[taskTypeClass]}`}>
                   {task.type}
                 </div>
@@ -98,24 +99,31 @@ const TaskDetailsModal = ({
             <section className={styles.section}>
               <h3 className={styles.sectionTitle}>Activity</h3>
               <div className={styles.commentList}>
-                {/* Render list of comments when present, otherwise a placeholder */}
                 {task.comments && task.comments.length > 0 ? (
-                  task.comments.map((c) => (
-                    <div className={styles.comment} key={c.id}>
-                      <div className={styles.commentAvatar}>
-                        {c.authorId.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div className={styles.commentBody}>
-                        <div className={styles.commentMeta}>
-                          <strong>{c.authorId}</strong> ·{' '}
-                          <span className={styles.commentTime}>
-                            {new Date(c.createdAt).toLocaleString()}
-                          </span>
+                  task.comments.map((c) => {
+                    const isMine = c.authorId === currentUserId;
+                    return (
+                      <div
+                        className={`${styles.comment} ${
+                          isMine ? styles.commentMine : ''
+                        }`}
+                        key={c.id}
+                      >
+                        <div className={styles.commentAvatar}>
+                          {c.authorId.slice(0, 2).toUpperCase()}
                         </div>
-                        <div className={styles.commentText}>{c.content}</div>
+                        <div className={styles.commentBody}>
+                          <div className={styles.commentMeta}>
+                            <strong>{c.authorId}</strong> · {/*bold*/}
+                            <span className={styles.commentTime}>
+                              {new Date(c.createdAt).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className={styles.commentText}>{c.content}</div>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className={styles.activityPlaceholder}>
                     No comments yet.
@@ -123,10 +131,6 @@ const TaskDetailsModal = ({
                 )}
               </div>
 
-              {/* Add-comment area: simple textarea + button placed at the
-                  bottom of the activity column. When a parent supplies
-                  `onAddComment`, it's called; otherwise the content is
-                  logged as a best-effort fallback. */}
               {userRole !== 'PROJECT_VIEWER' && (
                 <div className={styles.commentComposer}>
                   <textarea

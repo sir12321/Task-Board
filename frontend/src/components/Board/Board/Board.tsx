@@ -1,4 +1,5 @@
 import { useReducer, useState, useEffect } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import type {
   Board as BoardType,
   ProjectDetails,
@@ -53,6 +54,8 @@ const Board = ({
   onUpdateColumnWip,
   onDeleteColumn,
 }: Props) => {
+  const { user } = useAuth();
+
   // Normalization helper that ensures all story-type tasks are assigned to the
   // reserved "Stories" column (col-story). This simplifies downstream logic by
   // guaranteeing that story tasks won't appear elsewhere.
@@ -412,6 +415,7 @@ const Board = ({
         <TaskDetailsModal
           task={state.board.tasks.find((t) => t.id === selectedTaskId)!}
           userRole={state.projectDetails.userRole}
+          currentUserId={user?.id}
           onClose={() => setSelectedTaskId(null)}
           onDelete={async (taskId: string) => {
             if (!projectDetails) return;
