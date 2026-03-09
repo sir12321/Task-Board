@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only --ignore-watch prisma src/server.ts",
     "build": "prisma generate && tsc",
     "start": "node dist/server.js",
     "test": "jest",
