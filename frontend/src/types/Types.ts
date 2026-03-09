@@ -36,7 +36,7 @@ export interface Task {
   comments?: Comment[];
 }
 
-export interface TaskUpsertInput {
+export interface NewTaskInput {
   title: string;
   description?: string | null;
   type: TaskType;

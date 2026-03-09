@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type {
   Task as Task,
   ProjectRole as ProjectRole,
-} from '../../../types/Types';
+} from '../../../../types/Types';
 import styles from './TaskDetailsModal.module.css';
 
 /**

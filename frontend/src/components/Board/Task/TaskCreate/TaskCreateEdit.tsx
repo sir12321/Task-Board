@@ -4,9 +4,9 @@ import type {
   BoardColumn,
   ProjectMemberSummary,
   Task,
-  TaskUpsertInput,
-} from '../../../types/Types';
-import styles from './TaskCreateEditModal.module.css';
+  NewTaskInput,
+} from '../../../../types/Types';
+import styles from './TaskCreateEdit.module.css';
 
 interface Props {
   mode: 'create' | 'edit';
@@ -16,7 +16,7 @@ interface Props {
   tasks: Task[];
   assignableMembers: ProjectMemberSummary[];
   onClose: () => void;
-  onSave: (values: TaskUpsertInput) => Promise<void> | void;
+  onSave: (values: NewTaskInput) => Promise<void> | void;
 }
 
 const toDateInput = (dateValue: string | null): string => {
@@ -39,11 +39,12 @@ const TaskCreateEditModal = ({
   const initialColumnId = task?.columnId ?? defaultColumnId;
   const initialType =
     task?.type ?? (initialColumnId === 'col-story' ? 'STORY' : 'TASK');
-
-  const [title, setTitle] = useState(task?.title ?? '');
-  const [description, setDescription] = useState(task?.description ?? '');
-  const [type, setType] = useState<TaskUpsertInput['type']>(initialType);
-  const [priority, setPriority] = useState<TaskUpsertInput['priority']>(
+  const [title, setTitle] = useState(task?.title ?? 'Issue');
+  const [description, setDescription] = useState(
+    task?.description ?? 'Description',
+  );
+  const [type, setType] = useState<NewTaskInput['type']>(initialType);
+  const [priority, setPriority] = useState<NewTaskInput['priority']>(
     task?.priority ?? 'MEDIUM',
   );
   const [dueDate, setDueDate] = useState(toDateInput(task?.dueDate ?? null));
@@ -119,6 +120,7 @@ const TaskCreateEditModal = ({
         <p className={styles.subtitle}>Column: {columnName}</p>
 
         <form className={styles.form} onSubmit={submit}>
+          {/*Title*/}
           <label>
             Title
             <input
@@ -129,6 +131,7 @@ const TaskCreateEditModal = ({
             />
           </label>
 
+          {/*Description*/}
           <label>
             Description
             <textarea
@@ -140,12 +143,13 @@ const TaskCreateEditModal = ({
           </label>
 
           <div className={styles.grid2}>
+            {/*Type*/}
             <label>
               Type
               <select
                 value={type}
                 onChange={(e) =>
-                  setType(e.target.value as TaskUpsertInput['type'])
+                  setType(e.target.value as NewTaskInput['type'])
                 }
               >
                 <option value="TASK">TASK</option>
@@ -154,12 +158,13 @@ const TaskCreateEditModal = ({
               </select>
             </label>
 
+            {/*Priority*/}
             <label>
               Priority
               <select
                 value={priority}
                 onChange={(e) =>
-                  setPriority(e.target.value as TaskUpsertInput['priority'])
+                  setPriority(e.target.value as NewTaskInput['priority'])
                 }
               >
                 <option value="LOW">LOW</option>
@@ -171,6 +176,7 @@ const TaskCreateEditModal = ({
           </div>
 
           <div className={styles.grid2}>
+            {/*Due Date*/}
             <label>
               Due Date
               <input
@@ -180,6 +186,7 @@ const TaskCreateEditModal = ({
               />
             </label>
 
+            {/*Assignee*/}
             <label>
               Assignee ID
               <select
@@ -196,8 +203,9 @@ const TaskCreateEditModal = ({
             </label>
           </div>
 
+          {/*Parent*/}
           <label>
-            Parent Story
+            Parent
             <select
               value={parentId}
               onChange={(e) => setParentId(e.target.value)}
@@ -213,6 +221,7 @@ const TaskCreateEditModal = ({
 
           {error && <div className={styles.error}>{error}</div>}
 
+          {/*Submit Button*/}
           <div className={styles.actions}>
             <button type="button" onClick={onClose}>
               Cancel

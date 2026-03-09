@@ -1,4 +1,4 @@
-.task-card {
+.taskCard {
   background: #ffffff;
   padding: 12px;
   border-radius: 8px;
@@ -13,7 +13,7 @@
   padding-right: 56px;
 }
 
-.task-card.task {
+.taskCard.task {
   border-color: rgba(59, 130, 246, 0.45);
   background-color: rgb(245, 245, 245) !important;
   background: linear-gradient(
@@ -24,7 +24,7 @@
   border-left: 4px solid #3b82f6;
 }
 
-.task-card.story {
+.taskCard.story {
   border-color: rgba(139, 92, 246, 0.45);
   background-color: rgb(245, 245, 245) !important;
   background: linear-gradient(
@@ -35,7 +35,7 @@
   border-left: 4px solid #8b5cf6;
 }
 
-.task-card.bug {
+.taskCard.bug {
   border-color: rgba(239, 68, 68, 0.45);
   background-color: rgb(245, 245, 245) !important;
   background: linear-gradient(
@@ -46,7 +46,7 @@
   border-left: 4px solid #ef4444;
 }
 
-.task-card.task:hover {
+.taskCard.task:hover {
   border-color: rgba(59, 130, 246, 0.65);
   background: linear-gradient(
     180deg,
@@ -55,7 +55,7 @@
   );
 }
 
-.task-card.story:hover {
+.taskCard.story:hover {
   border-color: rgba(139, 92, 246, 0.65);
   background: linear-gradient(
     180deg,
@@ -64,7 +64,7 @@
   );
 }
 
-.task-card.bug:hover {
+.taskCard.bug:hover {
   border-color: rgba(239, 68, 68, 0.65);
   background: linear-gradient(
     180deg,
@@ -73,26 +73,26 @@
   );
 }
 
-.task-card:active {
+.taskCard:active {
   cursor: grabbing;
 }
 
-.task-card.not-draggable {
+.taskCard.notDraggable {
   cursor: default;
 }
 
-.task-card.not-draggable:active {
+.taskCard.notDraggable:active {
   cursor: default;
 }
 
-.task-card h4 {
+.taskCard h4 {
   margin: 0;
   font-size: 18px;
   color: #172b4d;
   font-weight: 600;
 }
 
-.task-card .meta {
+.taskCard .meta {
   margin: 0;
   font-size: 14px;
   color: #6b778c;
@@ -102,7 +102,7 @@
   gap: 8px;
 }
 
-.task-card .priority {
+.taskCard .priority {
   padding: 4px 8px;
   border-radius: 8px;
   font-weight: 600;
@@ -110,7 +110,7 @@
   border: 1px solid transparent;
 }
 
-.task-card .priority.task {
+.taskCard .priority.task {
   color: #0366d6;
   border-color: rgba(14, 165, 233, 0.45);
   background: linear-gradient(
@@ -120,7 +120,7 @@
   );
 }
 
-.task-card .priority.story {
+.taskCard .priority.story {
   color: #6d28d9;
   border-color: rgba(139, 92, 246, 0.45);
   background: linear-gradient(
@@ -130,7 +130,7 @@
   );
 }
 
-.task-card .priority.bug {
+.taskCard .priority.bug {
   color: #b91c1c;
   border-color: rgba(239, 68, 68, 0.45);
   background: linear-gradient(
@@ -140,12 +140,12 @@
   );
 }
 
-.task-card .due-date {
+.taskCard .due-date {
   font-size: 14px;
   color: #555f6a;
 }
 
-.task-card .assignees {
+.taskCard .assignees {
   position: absolute;
   right: 12px;
   bottom: 12px;
@@ -154,7 +154,7 @@
   align-items: center;
 }
 
-.task-card .assignee {
+.taskCard .assignee {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -169,7 +169,7 @@
   border: 1px solid rgba(9, 30, 66, 0.06);
 }
 
-.task-card .edit-task-btn {
+.taskCard .editTaskBtn {
   position: absolute;
   right: 10px;
   top: 10px;
@@ -183,6 +183,6 @@
   cursor: pointer;
 }
 
-.task-card .edit-task-btn:hover {
+.taskCard .editTaskBtn:hover {
   background: #f8fafc;
 }

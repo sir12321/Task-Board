@@ -1,4 +1,4 @@
-import type { TaskUpsertInput } from '../../types/Types';
+import type { NewTaskInput } from '../../types/Types';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '../../components/Layout/Layout';
@@ -77,7 +77,7 @@ export default function BoardPage() {
   );
 
   const createTask = useCallback(
-    async (payload: TaskUpsertInput): Promise<void> => {
+    async (payload: NewTaskInput): Promise<void> => {
       const projectDetails = selection.project;
       if (projectDetails.userRole === 'PROJECT_VIEWER') {
         alert('You do not have permission to create tasks.');
@@ -116,7 +116,7 @@ export default function BoardPage() {
   );
 
   const updateTask = useCallback(
-    async (taskId: string, payload: TaskUpsertInput): Promise<void> => {
+    async (taskId: string, payload: NewTaskInput): Promise<void> => {
       const projectDetails = selection.project;
       if (projectDetails.userRole === 'PROJECT_VIEWER') {
         alert('You do not have permission to edit tasks.');

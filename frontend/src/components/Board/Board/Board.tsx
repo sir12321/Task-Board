@@ -3,7 +3,7 @@ import type {
   Board as BoardType,
   ProjectDetails,
   Task,
-  TaskUpsertInput,
+  NewTaskInput,
 } from '../../../types/Types';
 import { BoardReducer } from './BoardReducer';
 import type { BoardState } from './BoardReducer';
@@ -11,7 +11,7 @@ import Column from '../Column/Column';
 import { handleDrop as handleDropTask } from './HandleDropTask';
 import HandleRenameColumn from './RenameColumn';
 import TaskDetailsModal from '../Task/TaskDetailsModal/TaskDetailsModal';
-import TaskCreateEditModal from '../Task/TaskCreate/TaskCreateEditModal';
+import TaskCreateEditModal from '../Task/TaskCreate/TaskCreateEdit';
 import styles from './Board.module.css';
 
 // Props accepted by the Board component. All handler callbacks are optional to allow
@@ -22,10 +22,10 @@ interface Props {
   projectDetails: ProjectDetails;
   // task CRUD handlers
   onDeleteTask?: (taskId: string) => Promise<void> | void;
-  onCreateTask?: (payload: TaskUpsertInput) => Promise<void> | void;
+  onCreateTask?: (payload: NewTaskInput) => Promise<void> | void;
   onUpdateTask?: (
     taskId: string,
-    payload: TaskUpsertInput,
+    payload: NewTaskInput,
   ) => Promise<void> | void;
   // column workflow handlers
   onAddColumn?: (columnName: string) => Promise<void> | void;

@@ -2,7 +2,7 @@ import type {
   Task as Task,
   ProjectRole as ProjectRole,
 } from '../../../../types/Types';
-import './TaskCard.css';
+import styles from './TaskCard.module.css';
 
 interface Properties {
   task: Task;
@@ -35,7 +35,7 @@ const TaskCard = ({
 
   return (
     <div
-      className={`task-card ${taskType} ${!isDraggable ? 'not-draggable' : ''}`}
+      className={`${styles.taskCard} ${styles[taskType]} ${!isDraggable ? styles.notDraggable : ''}`}
       draggable={isDraggable}
       onClick={onClick}
       // When dragging starts, place the task id on the dataTransfer so
@@ -54,7 +54,7 @@ const TaskCard = ({
       {projectRole !== 'PROJECT_VIEWER' && onEdit && (
         <button
           type="button"
-          className="edit-task-btn"
+          className={styles.editTaskBtn}
           onClick={(e) => {
             e.stopPropagation();
             onEdit();
@@ -65,17 +65,19 @@ const TaskCard = ({
         </button>
       )}
 
-      <p className="meta">
-        <span className={`priority ${taskType}`}>{task.type}</span>
+      <p className={styles.meta}>
+        <span className={`${styles.priority} ${styles[taskType]}`}>
+          {task.type}
+        </span>
         {task.dueDate && (
-          <span className="due-date">Due {formatDate(task.dueDate)}</span>
+          <span className={styles.dueDate}>Due {formatDate(task.dueDate)}</span>
         )}
       </p>
 
       {assignee && (
-        <div className="assignees" aria-hidden={false}>
+        <div className={styles.assignees}>
           <div
-            className="assignee"
+            className={styles.assignee}
             title={`Assignee: ${assignee}`}
             aria-label={`Assignee ${assignee}`}
           >
