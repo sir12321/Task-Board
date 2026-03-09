@@ -7,6 +7,7 @@ import boardRoutes from './routes/board.routes';
 import taskRoutes from './routes/task.routes';
 import commentRoutes from './routes/comment.routes';
 import notificationRoutes from './routes/notification.routes';
+import columnRoutes from './routes/column.routes';
 
 const app: Express = express();
 
@@ -24,6 +25,7 @@ app.use('/api/boards', boardRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/columns', columnRoutes);
 
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });

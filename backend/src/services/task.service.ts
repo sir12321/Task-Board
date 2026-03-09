@@ -2,6 +2,29 @@ import prisma from '../utils/prisma';
 import { TaskType, Priority, Task } from '@prisma/client';
 import { createNotification } from './notification.service';
 
+const verifyTaskPermissions = async (userId: string, boardId: string, globalRole?: string) : Promise<void> => {
+    if (globalRole === 'GLOBAL_ADMIN') {
+        return;
+    }
+
+    const board = await prisma.board.findUnique({ where: { id: boardId }, select: { projectId: true }});
+    if (!board) {
+        throw new Error('Board not found');
+    }
+
+    const member = await prisma.projectMember.findUnique({
+        where: { userId_projectId: { userId, projectId: board.projectId } },
+    });
+
+    if (!member) {
+        throw new Error('Forbidden: You are not a member of this project');
+    }
+
+    if (member.role === 'PROJECT_VIEWER') {
+        throw new Error('Forbidden: Viewers cannot modify tasks');
+    }
+};
+
 const checkWipLimit = async (columnId: string): Promise<void> => {
     const column = await prisma.column.findUnique({
         where: { id: columnId },
@@ -41,7 +64,9 @@ export const makeTask = async (data: {
     reporterId: string;
     assigneeId?: string | null;
     parentId?: string | null;
-}): Promise<Task> => {
+}, userId: string, globalRole?: string): Promise<Task> => {
+    await verifyTaskPermissions(userId, data.boardId, globalRole);
+
     if (data.assigneeId) {
         const board = await prisma.board.findUnique({
             where: { id: data.boardId },
@@ -88,15 +113,34 @@ export const makeTask = async (data: {
     return task;
 };
 
-export const moveTask = async (id: string, cId: string): Promise<Task> => {
+export const moveTask = async (id: string, cId: string, userId: string, globalRole?: string): Promise<Task> => {
+    const task = await prisma.task.findUnique({
+        where: { id },
+        include: { column: true, board: true },
+    });
+
+    if (!task) {
+        throw new Error('Task not found');
+    }
+
+    await verifyTaskPermissions(userId, cId, globalRole);
 
     const targetCol = await prisma.column.findUnique({
         where: { id: cId },
-        select: { name: true },
     });
 
     if (!targetCol) {
         throw new Error('Target column not found');
+    }
+
+    if (task.type !== 'STORY') {
+        const currentOrder = task.column.order;
+        const targetOrder = targetCol.order;
+
+        if (Math.abs(currentOrder - targetOrder) > 1) {
+            throw new Error('Invalid Transition: Tasks can only be moved to adjacent columns');
+        }
+        await checkWipLimit(cId);
     }
 
     const columnName = targetCol.name.toLowerCase();
@@ -104,11 +148,9 @@ export const moveTask = async (id: string, cId: string): Promise<Task> => {
 
     if (isResolved) {
         await checkStoryChildren(id);
-    } else {
-        await checkWipLimit(cId);
     }
 
-    const task = await prisma.task.update({
+    const updatedTask = await prisma.task.update({
         where: { id },
         data: {
             columnId: cId,
@@ -116,14 +158,25 @@ export const moveTask = async (id: string, cId: string): Promise<Task> => {
         },
     });
 
-    if (task.assigneeId) {
-        await createNotification(task.assigneeId, `Status changed on your task: ${task.title}`);
+    if (updatedTask.assigneeId && updatedTask.assigneeId !== userId) {
+        await createNotification(updatedTask.assigneeId, `Status changed on your task: ${updatedTask.title}`);
     }
 
-    return task;
+    return updatedTask;
 };
 
-export const removeTask = async (id: string): Promise<Task> => {
+export const removeTask = async (id: string, userId: string, globalRole?: string): Promise<Task> => {
+    const task = await prisma.task.findUnique({
+        where: { id },
+        select: { boardId: true },
+    });
+
+    if (!task) {
+        throw new Error('Task not found');
+    }
+
+    await verifyTaskPermissions(userId, task.boardId, globalRole);
+
     const c = await prisma.task.count({
         where: { parentId: id },
     });
@@ -137,11 +190,87 @@ export const removeTask = async (id: string): Promise<Task> => {
     });
 };
 
-export const closeTask = async (id: string): Promise<Task> => {
+export const closeTask = async (id: string, userId: string, globalRole?: string): Promise<Task> => {
+    const task = await prisma.task.findUnique({
+        where: { id },
+        select: { boardId: true },
+    });
+
+    if (!task) {
+        throw new Error('Task not found');
+    }
+
+    await verifyTaskPermissions(userId, task.boardId, globalRole);
+
     await checkStoryChildren(id);
 
     return prisma.task.update({
         where: { id },
         data: { closedAt: new Date() },
     });
+};
+
+export const updateTask = async (
+    id: string, 
+    data: Partial<{
+        title: string;
+        description: string | null;
+        priority: Priority;
+        dueDate: string | null;
+        assigneeId: string | null;
+    }>, 
+    userId: string, 
+    globalRole?: string
+): Promise<Task> => {
+    const task = await prisma.task.findUnique({
+        where: { id },
+        select: { boardId: true, assigneeId: true, type: true },
+    });
+
+    if (!task) {
+        throw new Error('Task not found');
+    }
+
+    await verifyTaskPermissions(userId, task.boardId, globalRole);
+
+    if (data.assigneeId !== undefined && data.assigneeId !== task.assigneeId) {
+        if (data.assigneeId) {
+            const board = await prisma.board.findUnique({
+                where: { id: task.boardId },
+                select: { projectId: true },
+            });
+            
+            if (!board) {
+                throw new Error('Board not found');
+            }
+
+            const isMember = await prisma.projectMember.findFirst({
+                where: {
+                    projectId: board.projectId,
+                    userId: data.assigneeId,
+                },
+            });
+
+            if (!isMember) {
+                throw new Error('Assignee must be a member of the project');
+            }
+        }
+    }
+
+    const updatedTask = await prisma.task.update({
+        where: { id },
+        data: {
+            title: data.title,
+            description: data.description,
+            priority: data.priority,
+            dueDate: data.dueDate ? new Date(data.dueDate) : data.dueDate === null ? null : undefined,
+            assigneeId: data.assigneeId,
+        },
+    });
+
+    if (data.assigneeId && data.assigneeId !== task.assigneeId && data.assigneeId !== userId) {
+        await createNotification(data.assigneeId, `You have been assigned to task: ${updatedTask.title}`);
+    }
+    
+    return updatedTask;
 };
