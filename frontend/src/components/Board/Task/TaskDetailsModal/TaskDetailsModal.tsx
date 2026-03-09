@@ -56,7 +56,7 @@ const TaskDetailsModal = ({
     const content = newComment.trim();
     if (!content) return;
     if (!onAddComment) {
-      // No handler provided by parent — best-effort fallback.
+      // to be removed in future when onAddComment is guaranteed to be provided
       console.log('New comment:', content);
       setNewComment('');
       return;
@@ -65,6 +65,8 @@ const TaskDetailsModal = ({
       setIsSubmitting(true);
       await onAddComment(content);
       setNewComment('');
+    } catch (error) {
+      console.error('Failed to add comment:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -264,10 +266,10 @@ const TaskDetailsModal = ({
                       if (!ok) return;
                       try {
                         await onDelete(task.id);
-                      } catch {
-                        // parent will handle errors/toasts
+                        onClose();
+                      } catch (error) {
+                        console.error('Failed to delete task:', error);
                       }
-                      onClose();
                     }}
                   >
                     Delete task
