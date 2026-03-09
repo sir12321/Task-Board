@@ -88,7 +88,7 @@ const TaskDetailsModal = ({
             <div className={styles.headerRow}>
               <h2 className={styles.title}>{task.title}</h2>
               <div className={styles.headerMeta}>
-                <div className={styles.status}>{task.status}</div>
+                <div className={styles.status}>{task.columnName}</div>
                 {/* Type badge styled by task type class */}
                 <div className={`${styles.typeBadge} ${styles[taskTypeClass]}`}>
                   {task.type}

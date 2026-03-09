@@ -131,7 +131,7 @@ export const BoardReducer = (
 
       const updatedTasks = state.board.tasks.map((t) =>
         t.id === taskId
-          ? { ...t, columnId: targetColumnId, columnName: column?.name || t.status }
+          ? { ...t, columnId: targetColumnId, columnName: column?.name || t.columnName }
           : t
       );
 

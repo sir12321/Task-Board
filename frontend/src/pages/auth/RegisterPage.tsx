@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './RegisterPage.module.css';
+import { apiClient } from '../../utils/api';
 
 function RegisterPage() {
   const [name, setName] = useState<string>('');
@@ -28,19 +29,10 @@ function RegisterPage() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/register', {
+      await apiClient('/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed.');
-      }
-
-      console.log('Registration successful:', data.user);
       navigate('/login');
     } catch (err: unknown) {
       if (err instanceof Error) {

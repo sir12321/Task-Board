@@ -6,9 +6,9 @@ const router = Router();
 
 router.use(authenticateToken);
 
-router.post('/tasks', createTask);
-router.put('/tasks/:id/move', updateColumn);
-router.patch('/tasks/:id/close', closeTaskHandler);
-router.delete('/tasks/:id', deleteTask);
+router.post('/', createTask);
+router.put('/:id/move', updateColumn);
+router.patch('/:id/close', closeTaskHandler);
+router.delete('/:id', deleteTask);
 
 export default router;
