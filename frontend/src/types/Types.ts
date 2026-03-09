@@ -11,7 +11,7 @@ export interface Comment {
   content: string;
   createdAt: string;
   updatedAt: string;
-  authorId: string; // @notation left
+  authorId: string;
 }
 
 export interface Task {
@@ -29,6 +29,7 @@ export interface Task {
 
   columnId: string;
   columnName: string;
+  status: string;
   reporterId: string;
   assigneeId?: string | null;
   parentId?: string | null;

@@ -2,7 +2,7 @@ import type {
   ProjectDetails,
   Board,
   Task,
-  TaskUpsertInput,
+  NewTaskInput,
 } from '../../../types/Types';
 
 export interface BoardState {
@@ -40,7 +40,7 @@ export type BoardAction =
       type: 'UPDATE_TASK';
       payload: {
         taskId: string;
-        updates: TaskUpsertInput;
+        updates: NewTaskInput;
       };
     }
   | {

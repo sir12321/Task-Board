@@ -463,6 +463,10 @@ const Board = ({
                   updatedAt: now,
                   columnId: payload.columnId,
                   columnName: column?.name ?? 'Unknown',
+                  status:
+                    payload.type === 'STORY'
+                      ? 'In-progress'
+                      : (column?.name ?? 'Unknown'),
                   reporterId: 'current-user',
                   assigneeId: payload.assigneeId ?? null,
                   parentId: payload.parentId ?? null,

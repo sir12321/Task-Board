@@ -45,7 +45,6 @@ const TaskCard = ({
         e.dataTransfer.setData('taskId', task.id);
       }}
       role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
     >
       <h4>{task.title}</h4>
 
@@ -56,10 +55,10 @@ const TaskCard = ({
           type="button"
           className={styles.editTaskBtn}
           onClick={(e) => {
-            e.stopPropagation();
+            e.stopPropagation(); // stops the trigger to bubble up to parent DOM elements, preventing unintended side effects.
             onEdit();
           }}
-          onMouseDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()} // prevents the event to get bubbling up to parent DOM elements, preventing unintended side effects.
         >
           Edit
         </button>
@@ -67,6 +66,8 @@ const TaskCard = ({
 
       <p className={styles.meta}>
         <span className={`${styles.priority} ${styles[taskType]}`}>
+          {' '}
+          {/* span : <span> is an inline element, meaning: It does not start on a new line*/}
           {task.type}
         </span>
         {task.dueDate && (
@@ -76,11 +77,7 @@ const TaskCard = ({
 
       {assignee && (
         <div className={styles.assignees}>
-          <div
-            className={styles.assignee}
-            title={`Assignee: ${assignee}`}
-            aria-label={`Assignee ${assignee}`}
-          >
+          <div className={styles.assignee} title={`Assignee: ${assignee}`}>
             {avatarInitials(assignee)}
           </div>
         </div>

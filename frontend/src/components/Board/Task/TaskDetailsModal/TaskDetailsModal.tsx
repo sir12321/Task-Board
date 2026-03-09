@@ -17,8 +17,6 @@ interface Properties {
   task: Task;
   onClose: () => void;
   onDelete?: (taskId: string) => Promise<void> | void;
-  // Optional callback invoked when user adds a comment. Parent may
-  // persist the comment and refresh the task's comments list.
   onAddComment?: (content: string) => Promise<void> | void;
 }
 
@@ -35,9 +33,6 @@ const TaskDetailsModal = ({
   onDelete,
   onAddComment,
 }: Properties) => {
-  // Format date to a short human-readable string.
-  // When there is no value, show "In progress" rather than a literal "None".
-  // If parsing fails, fall back to the raw string.
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'In progress';
     const d = new Date(dateStr);
@@ -45,7 +40,6 @@ const TaskDetailsModal = ({
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
-  // Simplify optional fields for clearer conditional rendering below.
   const assignee = task.assigneeId ? task.assigneeId : null;
   const reporter = task.reporterId ? task.reporterId : null;
   // Use lowercased type as a CSS class key (matches module CSS entries).
@@ -133,25 +127,27 @@ const TaskDetailsModal = ({
                   bottom of the activity column. When a parent supplies
                   `onAddComment`, it's called; otherwise the content is
                   logged as a best-effort fallback. */}
-              <div className={styles.commentComposer}>
-                <textarea
-                  className={styles.commentInput}
-                  placeholder="Write a comment..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  rows={3}
-                />
-                <div className={styles.commentActions}>
-                  <button
-                    type="button"
-                    className={styles.addCommentButton}
-                    onClick={handleAddComment}
-                    disabled={isSubmitting || newComment.trim() === ''}
-                  >
-                    {isSubmitting ? 'Adding…' : 'Add comment'}
-                  </button>
+              {userRole !== 'PROJECT_VIEWER' && (
+                <div className={styles.commentComposer}>
+                  <textarea
+                    className={styles.commentInput}
+                    placeholder="Write a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    rows={3}
+                  />
+                  <div className={styles.commentActions}>
+                    <button
+                      type="button"
+                      className={styles.addCommentButton}
+                      onClick={handleAddComment}
+                      disabled={isSubmitting || newComment.trim() === ''}
+                    >
+                      {isSubmitting ? 'Adding…' : 'Add comment'}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </section>
           </div>
 
