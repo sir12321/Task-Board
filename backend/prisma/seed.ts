@@ -3,7 +3,7 @@ import prisma from '../src/utils/prisma';
 import bcrypt from 'bcrypt';
 
 async function main(): Promise<void> {
-    const commonPassword = await bcrypt.hash('password123', 10);
+    const commonPassword = await bcrypt.hash('111', 10);
 
     // Create users matching mock data
     const manya = await prisma.user.upsert({
@@ -344,7 +344,7 @@ async function main(): Promise<void> {
 
     console.log('✓ Seeded comments');
     console.log('\n════════════════════════════════════════════');
-    console.log('📧 Login credentials (password: password123)');
+    console.log('📧 Login credentials (password: 111)');
     console.log('════════════════════════════════════════════');
     console.log('  manya@iitd.ac.in   → PROJECT_ADMIN');
     console.log('  john@iitd.ac.in    → PROJECT_MEMBER');

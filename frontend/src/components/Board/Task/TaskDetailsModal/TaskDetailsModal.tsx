@@ -15,7 +15,7 @@ import styles from './TaskDetailsModal.module.css';
 interface Properties {
   userRole: ProjectRole;
   task: Task;
-  currentUserId: string;
+  currentUserId?: string | null;
   onClose: () => void;
   onDelete?: (taskId: string) => Promise<void> | void;
   onAddComment?: (content: string) => Promise<void> | void;
