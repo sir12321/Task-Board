@@ -42,8 +42,8 @@ const TaskDetailsModal = ({
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
-  const assignee = task.assigneeId ? task.assigneeId : null;
-  const reporter = task.reporterId ? task.reporterId : null;
+  const assigneeName = task.assigneeName || 'Unassigned';
+  const reporterName = task.reporterName || 'Unassigned';
   // Use lowercased type as a CSS class key (matches module CSS entries).
   const taskTypeClass = task.type.toLowerCase();
 
@@ -112,11 +112,11 @@ const TaskDetailsModal = ({
                         key={c.id}
                       >
                         <div className={styles.commentAvatar}>
-                          {c.authorId.slice(0, 2).toUpperCase()}
+                          {c.authorName.slice(0, 2).toUpperCase()}
                         </div>
                         <div className={styles.commentBody}>
                           <div className={styles.commentMeta}>
-                            <strong>{c.authorId}</strong> · {/*bold*/}
+                            <strong>{c.authorName}</strong> · {/*bold*/}
                             <span className={styles.commentTime}>
                               {new Date(c.createdAt).toLocaleString()}
                             </span>
@@ -162,15 +162,15 @@ const TaskDetailsModal = ({
               <div className={styles.rowBetween}>
                 <div>
                   <div className={styles.smallLabel}>Assignee</div>
-                  {assignee ? (
+                  {assigneeName ? (
                     <div
                       className={styles.assigneeRow}
-                      title={`Assignee: ${assignee}`}
+                      title={`Assignee: ${assigneeName}`}
                     >
                       <div className={styles.avatarSmall}>
-                        {assignee.slice(0, 2).toUpperCase()}
+                        {assigneeName.slice(0, 2).toUpperCase()}
                       </div>
-                      <div className={styles.assigneeName}>{assignee}</div>
+                      <div className={styles.assigneeName}>{assigneeName}</div>
                     </div>
                   ) : (
                     <div className={styles.detailValue}>Unassigned</div>
@@ -181,15 +181,15 @@ const TaskDetailsModal = ({
               <div className={styles.rowBetween}>
                 <div>
                   <div className={styles.smallLabel}>Reporter</div>
-                  {reporter ? (
+                  {reporterName ? (
                     <div
                       className={styles.assigneeRow}
-                      title={`Reporter: ${reporter}`}
+                      title={`Reporter: ${reporterName}`}
                     >
                       <div className={styles.avatarSmall}>
-                        {reporter.slice(0, 2).toUpperCase()}
+                        {reporterName.slice(0, 2).toUpperCase()}
                       </div>
-                      <div className={styles.assigneeName}>{reporter}</div>
+                      <div className={styles.assigneeName}>{reporterName}</div>
                     </div>
                   ) : (
                     <div className={styles.detailValue}>Unassigned</div>
@@ -200,6 +200,13 @@ const TaskDetailsModal = ({
               <div className={styles.detailRow}>
                 <div className={styles.detailLabel}>Priority</div>
                 <div className={styles.detailValue}>{task.priority}</div>
+              </div>
+
+              <div className={styles.detailRow}>
+                <div className={styles.detailLabel}>Status</div>
+                <div className={styles.detailValue}>
+                  {task.type === 'STORY' ? task.status : task.columnName}
+                </div>
               </div>
 
               <div className={styles.detailRow}>
@@ -240,7 +247,7 @@ const TaskDetailsModal = ({
               <div className={styles.detailRow}>
                 <div className={styles.detailLabel}>Parent</div>
                 <div className={styles.detailValue}>
-                  {task.parentId || 'None'}
+                  {task.parentName || 'None'}
                 </div>
               </div>
 
@@ -251,9 +258,6 @@ const TaskDetailsModal = ({
                 </div>
               </div>
 
-              <div className={styles.detailRow}>
-                <div className={styles.detailLabel}>History</div>
-              </div>
               {/* Only show delete button when user has sufficient role and a
                   delete handler is provided. The parent component handles
                   any error reporting for deletions. */}

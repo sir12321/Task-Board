@@ -472,7 +472,11 @@ const Board = ({
                       ? 'In-progress'
                       : (column?.name ?? 'Unknown'),
                   reporterId: 'current-user',
+                  reporterName: 'Current User',
                   assigneeId: payload.assigneeId ?? null,
+                  assigneeName:
+                    assignableMembers.find((m) => m.id === payload.assigneeId)
+                      ?.name ?? null,
                   parentId: payload.parentId ?? null,
                 },
               },

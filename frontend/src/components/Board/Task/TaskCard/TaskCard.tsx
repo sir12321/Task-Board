@@ -28,7 +28,7 @@ const TaskCard = ({
 
   const avatarInitials = (id: string) => id.slice(0, 2).toUpperCase();
 
-  const assignee = task.assigneeId || null;
+  const assignee = task.assigneeName || null;
 
   // Normalize task type to use as a CSS class.
   const taskType = task.type.toLowerCase();

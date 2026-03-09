@@ -12,6 +12,7 @@ export interface Comment {
   createdAt: string;
   updatedAt: string;
   authorId: string;
+  authorName: string;
 }
 
 export interface Task {
@@ -31,8 +32,11 @@ export interface Task {
   columnName: string;
   status: string;
   reporterId: string;
+  reporterName: string;
   assigneeId?: string | null;
+  assigneeName?: string | null;
   parentId?: string | null;
+  parentName?: string | null;
 
   comments?: Comment[];
 }
