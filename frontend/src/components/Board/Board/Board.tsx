@@ -9,7 +9,7 @@ import type {
 import { BoardReducer } from './BoardReducer';
 import type { BoardState } from './BoardReducer';
 import Column from '../Column/Column';
-import { handleDrop as handleDropTask } from './HandleDropTask';
+import { handleDrop as handleDropTask, canMoveTask } from './HandleDropTask';
 import HandleRenameColumn from './RenameColumn';
 import TaskDetailsModal from '../Task/TaskDetailsModal/TaskDetailsModal';
 import TaskCreateEditModal from '../Task/TaskCreate/TaskCreateEdit';
@@ -351,9 +351,43 @@ const Board = ({
                     return a.title.localeCompare(b.title);
                   })}
                 isDraggable={state.projectDetails.userRole !== 'PROJECT_VIEWER'}
-                onDropTask={(taskId, colId) =>
+                onDropTask={async (taskId, colId) => {
+                  if (!canManageTasks) {
+                    setToast('You do not have permission to move tasks.');
+                    return;
+                  }
+
+                  if (!canMoveTask(state.board, taskId, colId, setToast)) {
+                    return;
+                  }
+
+                  const task = state.board.tasks.find((t) => t.id === taskId);
+                  if (!task) {
+                    return;
+                  }
+
+                  const previousBoard = state.board;
+
                   handleDropTask(state, dispatch, taskId, colId, setToast)
-                }
+
+                  if (onUpdateTask) {
+                    try {
+                      await onUpdateTask(taskId, {
+                        title: task.title,
+                        description: task.description,
+                        type: task.type,
+                        priority: task.priority,
+                        dueDate: task.dueDate,
+                        assigneeId: task.assigneeId,
+                        parentId: task.parentId,
+                        columnId: colId,
+                      });
+                    } catch {
+                      setToast('Move rejected by server. Reverting...');
+                      dispatch({ type: 'SET_BOARD', payload: { board: previousBoard } });
+                    }
+                  }
+                }}
                 onTaskClick={(taskId) => setSelectedTaskId(taskId)}
                 onTaskEdit={(taskId) => {
                   if (!canManageTasks) {

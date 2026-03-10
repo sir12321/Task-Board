@@ -111,12 +111,12 @@ export const editTask = async (req: AuthRequest, res: Response): Promise<void> =
             return;
         }
 
-        const { title, description, priority, dueDate, assigneeId } = req.body;
+        const { title, description, type, priority, dueDate, assigneeId, parentId } = req.body;
         const { updateTask } = await import('../services/task.service');
 
         const task = await updateTask(
             id, 
-            { title, description, priority, dueDate, assigneeId }, 
+            { title, description, type, priority, dueDate, assigneeId, parentId }, 
             userId, 
             globalRole
         );
