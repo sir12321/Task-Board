@@ -14,15 +14,12 @@ interface Properties {
   userRole: ProjectRole;
   column: BoardColumn;
   tasks: Task[];
-  // drag/drop handler to inform parent that a task has been dropped here
   onDropTask: (taskId: string, columnId: string) => void;
-  // task interactions
   onTaskClick?: (taskId: string) => void;
   onTaskEdit?: (taskId: string) => void;
   isDraggable?: boolean;
   canManageTasks?: boolean;
   onCreateTask?: (columnId: string) => void;
-  // workflow management callbacks
   canManageColumns?: boolean;
   onRenameColumn?: (columnId: string) => void;
   canMoveLeft?: boolean;
@@ -90,6 +87,7 @@ const Column = ({
   return (
     <div
       className={styles.column}
+      // In the HTML drag‑and‑drop API the browser’s default behaviour for a dragged item over an element is “not a valid drop target”.
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         const taskId = e.dataTransfer.getData('taskId');
@@ -106,8 +104,6 @@ const Column = ({
                 type="button"
                 className={styles.manageButton}
                 onClick={() => setWorkflowMenuOpen((prev) => !prev)}
-                aria-expanded={workflowMenuOpen}
-                aria-label={`Manage ${column.name} workflow`}
               >
                 Manage
               </button>
@@ -185,7 +181,7 @@ const Column = ({
         {/* WIP indicator shows task count vs limit or an unlimited message */}
         {hasWipLimit ? (
           <div className={styles.wipIndicator}>
-            <div className={styles.wipProgressTrack} aria-hidden="true">
+            <div className={styles.wipProgressTrack}>
               <div
                 className={`${styles.wipProgressFill} ${isAtCapacity ? styles.wipProgressFillFull : ''}`}
                 style={{ width: `${wipProgressPercent}%` }}
@@ -199,7 +195,7 @@ const Column = ({
           </div>
         ) : (
           <div className={styles.wipIndicator}>
-            <div className={styles.wipProgressTrackFull} aria-hidden="true">
+            <div className={styles.wipProgressTrackFull}>
               <div
                 className={`${styles.wipProgressFill} ${isAtCapacity ? styles.wipProgressFillFull : ''}`}
                 style={{ width: `${wipProgressPercent}%` }}
@@ -229,7 +225,7 @@ const Column = ({
           task={task}
           onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
           onEdit={onTaskEdit ? () => onTaskEdit(task.id) : undefined}
-          isDraggable={Boolean(isDraggable && column.id !== 'col-story')}
+          isDraggable={Boolean(isDraggable)}
           projectRole={userRole}
         />
       ))}
