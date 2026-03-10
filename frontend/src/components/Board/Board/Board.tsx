@@ -58,7 +58,7 @@ const Board = ({
 }: Props) => {
   const { user } = useAuth();
 
-  const StoryColumnId = board.columns.find((c) => c.order === 0)?.id!;
+  const StoryColumnId = board.columns.find((c) => c.order === 0)?.id ?? 'col-story';
 
   // Normalization helper that ensures all story-type tasks are assigned to the
   // reserved "Stories" column (col-story). This simplifies downstream logic by

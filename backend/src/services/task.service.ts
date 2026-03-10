@@ -182,7 +182,14 @@ export const removeTask = async (id: string, userId: string, globalRole?: string
     });
 
     if (c > 0) {
-        throw new Error('Cannot delete task with subtasks');
+        const children = await prisma.task.findMany({
+            where: { parentId: id },
+            select: { id: true },
+        });
+        
+        for (const child of children) {
+            await removeTask(child.id, userId, globalRole);
+        }
     }
 
     return prisma.task.delete({
@@ -246,10 +253,12 @@ export const updateTask = async (
                 throw new Error('Board not found');
             }
 
-            const isMember = await prisma.projectMember.findFirst({
+            const isMember = await prisma.projectMember.findUnique({
                 where: {
-                    projectId: board.projectId,
-                    userId: data.assigneeId,
+                    userId_projectId: {
+                        projectId: board.projectId,
+                        userId: data.assigneeId,
+                    },
                 },
             });
 
@@ -273,7 +282,7 @@ export const updateTask = async (
     });
 
     if (data.assigneeId && data.assigneeId !== task.assigneeId && data.assigneeId !== userId) {
-        await createNotification(data.assigneeId, `You have been assigned to task: ${updatedTask.title}`);
+        await createNotification(data.assigneeId, `Your assigned task has been updated: ${updatedTask.title}`);
     }
     
     return updatedTask;
