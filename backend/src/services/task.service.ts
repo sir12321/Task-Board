@@ -215,9 +215,11 @@ export const updateTask = async (
     data: Partial<{
         title: string;
         description: string | null;
+        type: TaskType;
         priority: Priority;
         dueDate: string | null;
         assigneeId: string | null;
+        parentId: string | null;
     }>, 
     userId: string, 
     globalRole?: string
@@ -262,9 +264,11 @@ export const updateTask = async (
         data: {
             title: data.title,
             description: data.description,
+            type: data.type,
             priority: data.priority,
             dueDate: data.dueDate ? new Date(data.dueDate) : data.dueDate === null ? null : undefined,
             assigneeId: data.assigneeId,
+            parentId: data.parentId,
         },
     });
 

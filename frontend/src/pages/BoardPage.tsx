@@ -183,28 +183,34 @@ export default function BoardPage() {
   );
 
   const addColumn = useCallback(
-    async (): Promise<void> => {
-      if (!project) return;
-      if (project.userRole !== 'PROJECT_ADMIN') {
-        alert('Only ProjectAdmin can create columns.');
-        return;
+    async (columnName: string): Promise<void> => {
+      if (!project || !board) return;
+      try {
+        const newColumn = await apiClient('/columns', {
+          method: 'POST',
+          body: JSON.stringify({ name: columnName, boardId: board.id, wipLimit: null }),
+        });
+
+        setBoard((prev) => prev ? {
+            ...prev,
+            columns: [...prev.columns, newColumn]
+        } : prev);
+      } catch (error) {
+        console.error('Failed to create column:', error);
+        alert('Failed to create column. Check console for details.');   
       }
-      alert('Column creation via API is not yet supported.');
     },
-    [project],
+    [project, board],
   );
 
   const renameColumn = useCallback(
-    async (columnId: string): Promise<void> => {
+    async (columnId: string, newName: string): Promise<void> => {
       if (!project || !board) return;
       if (project.userRole !== 'PROJECT_ADMIN') {
         alert('Only ProjectAdmin can rename columns.');
         return;
       }
       
-      const newName = prompt('Enter the new column name:');
-      if (!newName) return;
-
       try {
         await apiClient(`/columns/${columnId}`, {
           method: 'PATCH',
