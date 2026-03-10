@@ -56,13 +56,15 @@ const Board = ({
 }: Props) => {
   const { user } = useAuth();
 
+  const StoryColumnId = board.columns.find((c) => c.order === 0)?.id!;
+
   // Normalization helper that ensures all story-type tasks are assigned to the
   // reserved "Stories" column (col-story). This simplifies downstream logic by
   // guaranteeing that story tasks won't appear elsewhere.
   const normalizeBoard = (b: BoardType): BoardType => ({
     ...b,
     tasks: b.tasks.map((t) =>
-      t.type === 'STORY' ? { ...t, columnId: 'col-story' } : t,
+      t.type === 'STORY' ? { ...t, columnId: StoryColumnId } : t,
     ),
   });
 
@@ -417,20 +419,6 @@ const Board = ({
           userRole={state.projectDetails.userRole}
           currentUserId={user?.id}
           onClose={() => setSelectedTaskId(null)}
-          onDelete={async (taskId: string) => {
-            if (!projectDetails) return;
-            if (onDeleteTask) {
-              try {
-                await onDeleteTask(taskId);
-              } catch {
-                // parent handler failed — surface a toast
-                setToast('Failed to delete task');
-              }
-            } else {
-              dispatch({ type: 'DELETE_TASK', payload: { taskId } });
-            }
-            setSelectedTaskId(null);
-          }}
         />
       )}
 
@@ -438,6 +426,7 @@ const Board = ({
       {createColumnId && (
         <TaskCreateEditModal
           mode="create"
+          defaultStoryColumnId={StoryColumnId}
           defaultColumnId={createColumnId}
           columns={state.board.columns}
           tasks={state.board.tasks}
@@ -490,6 +479,7 @@ const Board = ({
         <TaskCreateEditModal
           mode="edit"
           task={state.board.tasks.find((t) => t.id === editingTaskId)}
+          defaultStoryColumnId={StoryColumnId}
           defaultColumnId={
             state.board.tasks.find((t) => t.id === editingTaskId)?.columnId ??
             'col-backlog'
@@ -507,6 +497,20 @@ const Board = ({
               type: 'UPDATE_TASK',
               payload: { taskId: editingTaskId, updates: payload },
             });
+          }}
+          onDelete={async (taskId: string) => {
+            if (!projectDetails) return;
+            if (onDeleteTask) {
+              try {
+                await onDeleteTask(taskId);
+              } catch {
+                // parent handler failed — surface a toast
+                setToast('Failed to delete task');
+              }
+            } else {
+              dispatch({ type: 'DELETE_TASK', payload: { taskId } });
+            }
+            setSelectedTaskId(null);
           }}
         />
       )}

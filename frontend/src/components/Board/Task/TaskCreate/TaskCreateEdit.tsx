@@ -11,34 +11,42 @@ import styles from './TaskCreateEdit.module.css';
 interface Props {
   mode: 'create' | 'edit';
   task?: Task;
+  defaultStoryColumnId: string;
   defaultColumnId: string;
   columns: BoardColumn[];
   tasks: Task[];
   assignableMembers: ProjectMemberSummary[];
   onClose: () => void;
   onSave: (values: NewTaskInput) => Promise<void> | void;
+  onDelete?: (taskId: string) => Promise<void> | void;
 }
 
 const toDateInput = (dateValue: string | null): string => {
   if (!dateValue) return '';
   const d = new Date(dateValue);
   if (Number.isNaN(d.getTime())) return '';
-  return d.toISOString().slice(0, 10);
+  // Extract date in UTC to avoid timezone shifting
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 const TaskCreateEditModal = ({
   mode,
   task,
+  defaultStoryColumnId,
   defaultColumnId,
   columns,
   tasks,
   assignableMembers,
   onClose,
   onSave,
+  onDelete,
 }: Props) => {
   const initialColumnId = task?.columnId ?? defaultColumnId;
   const initialType =
-    task?.type ?? (initialColumnId === 'col-story' ? 'STORY' : 'TASK');
+    task?.type ?? (initialColumnId === defaultStoryColumnId ? 'STORY' : 'TASK');
   const [title, setTitle] = useState(task?.title ?? 'Issue');
   const [description, setDescription] = useState(
     task?.description ?? 'Description',
@@ -50,6 +58,7 @@ const TaskCreateEditModal = ({
   const [dueDate, setDueDate] = useState(toDateInput(task?.dueDate ?? null));
   const [assigneeId, setAssigneeId] = useState(task?.assigneeId ?? '');
   const [parentId, setParentId] = useState(task?.parentId ?? '');
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,14 +84,22 @@ const TaskCreateEditModal = ({
       return;
     }
 
-    if (initialColumnId === 'col-story' && type !== 'STORY') {
+    if (initialColumnId === defaultStoryColumnId && type !== 'STORY') {
       setError('Only STORY tasks are allowed in the Stories column.');
       return;
     }
 
-    if (initialColumnId !== 'col-story' && type === 'STORY') {
+    if (initialColumnId !== defaultStoryColumnId && type === 'STORY') {
       setError('STORY tasks can only be created in the Stories column.');
       return;
+    }
+
+    if (dueDate) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (dueDate < today) {
+        setError('Due date cannot be in the past.');
+        return;
+      }
     }
 
     setSaving(true);
@@ -93,7 +110,7 @@ const TaskCreateEditModal = ({
         type,
         priority,
         dueDate: dueDate
-          ? new Date(`${dueDate}T00:00:00.000Z`).toISOString()
+          ? new Date(`${dueDate}T12:00:00.000Z`).toISOString()
           : null,
         columnId: initialColumnId,
         assigneeId: assigneeId.trim() || null,
@@ -108,7 +125,7 @@ const TaskCreateEditModal = ({
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overall} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <button className={styles.closeButton} onClick={onClose}>
           ✕
@@ -148,13 +165,19 @@ const TaskCreateEditModal = ({
               Type
               <select
                 value={type}
-                onChange={(e) =>
-                  setType(e.target.value as NewTaskInput['type'])
+                onChange={
+                  (e) => setType(e.target.value as NewTaskInput['type']) // to narrow down the possibility of type
                 }
               >
-                <option value="TASK">TASK</option>
-                <option value="BUG">BUG</option>
-                <option value="STORY">STORY</option>
+                {defaultStoryColumnId !== initialColumnId && (
+                  <option value="TASK">TASK</option>
+                )}
+                {defaultStoryColumnId !== initialColumnId && (
+                  <option value="BUG">BUG</option>
+                )}
+                {defaultStoryColumnId === initialColumnId && (
+                  <option value="STORY">STORY</option>
+                )}
               </select>
             </label>
 
@@ -183,6 +206,7 @@ const TaskCreateEditModal = ({
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
+                min={new Date().toISOString().slice(0, 10)}
               />
             </label>
 
@@ -208,12 +232,14 @@ const TaskCreateEditModal = ({
             Parent
             <select
               value={parentId}
-              onChange={(e) => setParentId(e.target.value)}
+              onChange={(e) => {
+                setParentId(e.target.value);
+              }}
             >
               <option value="">None</option>
               {candidateParents.map((parentTask) => (
                 <option key={parentTask.id} value={parentTask.id}>
-                  {parentTask.title} ({parentTask.id})
+                  {parentTask.title}
                 </option>
               ))}
             </select>
@@ -223,6 +249,25 @@ const TaskCreateEditModal = ({
 
           {/*Submit Button*/}
           <div className={styles.actions}>
+            {mode === 'edit' && onDelete && task && (
+              <button
+                type="button"
+                className={styles.deleteButton}
+                onClick={async () => {
+                  const ok = window.confirm('Delete this task?');
+                  if (!ok) return;
+                  try {
+                    await onDelete(task.id);
+                    onClose();
+                  } catch (error) {
+                    console.error('Failed to delete task:', error);
+                    setError('Failed to delete task.');
+                  }
+                }}
+              >
+                Delete task
+              </button>
+            )}
             <button type="button" onClick={onClose}>
               Cancel
             </button>

@@ -17,7 +17,6 @@ interface Properties {
   task: Task;
   currentUserId?: string | null;
   onClose: () => void;
-  onDelete?: (taskId: string) => Promise<void> | void;
   onAddComment?: (content: string) => Promise<void> | void;
 }
 
@@ -32,14 +31,19 @@ const TaskDetailsModal = ({
   task,
   currentUserId,
   onClose,
-  onDelete,
+
   onAddComment,
 }: Properties) => {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'In progress';
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    // Use UTC to avoid timezone shifting for dates stored at noon UTC
+    return d.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
   };
 
   const assigneeName = task.assigneeName || 'Unassigned';
@@ -261,25 +265,6 @@ const TaskDetailsModal = ({
               {/* Only show delete button when user has sufficient role and a
                   delete handler is provided. The parent component handles
                   any error reporting for deletions. */}
-              {userRole !== 'PROJECT_VIEWER' && onDelete && (
-                <div style={{ marginTop: 12 }}>
-                  <button
-                    className={styles.deleteButton}
-                    onClick={async () => {
-                      const ok = window.confirm('Delete this task?');
-                      if (!ok) return;
-                      try {
-                        await onDelete(task.id);
-                        onClose();
-                      } catch (error) {
-                        console.error('Failed to delete task:', error);
-                      }
-                    }}
-                  >
-                    Delete task
-                  </button>
-                </div>
-              )}
             </div>
           </aside>
         </div>

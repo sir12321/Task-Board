@@ -1,4 +1,4 @@
-.overlay {
+.overall {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
@@ -80,9 +80,15 @@
   justify-content: flex-end;
   gap: 8px;
   margin-top: 6px;
+  align-items: center;
 }
 
-.actions button {
+/* when delete button is present we push other actions to the right */
+.actions .deleteButton {
+  margin-right: auto;
+}
+
+.actions button:not(.deleteButton) {
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 8px 12px;
@@ -94,4 +100,19 @@
   background: #2563eb;
   border-color: #2563eb;
   color: #fff;
+}
+
+/* delete button reused by both create/edit modals */
+.deleteButton {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+.deleteButton:hover {
+  background: #dc2626;
 }

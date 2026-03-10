@@ -147,33 +147,55 @@ export default function BoardPage() {
         }
 
         const updatedTask = await apiClient(`/tasks/${taskId}`, {
-            method: 'PATCH',
-            body: JSON.stringify({
-              title: payload.title,
-              description: payload.description,
-              priority: payload.priority,
-              dueDate: payload.dueDate,
-              assigneeId: payload.assigneeId
-            }),
-          });
+          method: 'PATCH',
+          body: JSON.stringify({
+            title: payload.title,
+            description: payload.description,
+            type: payload.type,
+            priority: payload.priority,
+            dueDate: payload.dueDate,
+            assigneeId: payload.assigneeId,
+            parentId: payload.parentId,
+          }),
+        });
 
         const column = board.columns.find((c) => c.id === payload.columnId);
-          setBoard((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  tasks: prev.tasks.map((task) =>
-                    task.id === taskId
-                      ? {
-                          ...task,
-                          ...updatedTask,
-                          columnName: column?.name ?? task.columnName,
-                        }
-                      : task
-                  ),
-                }
-              : prev
-          );
+        const assigneeName =
+          project.members.find((member) => member.id === payload.assigneeId)
+            ?.name ?? null;
+        const parentName =
+          board.tasks.find((task) => task.id === payload.parentId)?.title ??
+          null;
+        setBoard((prev) =>
+          prev
+            ? {
+                ...prev,
+                tasks: prev.tasks.map((task) =>
+                  task.id === taskId
+                    ? {
+                        ...task,
+                        ...updatedTask,
+                        title: payload.title,
+                        description: payload.description ?? null,
+                        type: payload.type,
+                        priority: payload.priority,
+                        dueDate: payload.dueDate,
+                        assigneeId: payload.assigneeId ?? null,
+                        assigneeName: updatedTask.assigneeName ?? assigneeName,
+                        parentId: payload.parentId ?? null,
+                        parentName: updatedTask.parentName ?? parentName,
+                        columnName:
+                          column?.name ??
+                          updatedTask.columnName ??
+                          task.columnName,
+                        updatedAt:
+                          updatedTask.updatedAt ?? new Date().toISOString(),
+                      }
+                    : task,
+                ),
+              }
+            : prev,
+        );
       } catch (err) {
         console.error('Failed to update task:', err);
         alert('Action failed. Transition may be invalid or WIP limit reached.');

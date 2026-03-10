@@ -23,7 +23,12 @@ const TaskCard = ({
     if (!dateStr) return null;
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    // Use UTC methods to avoid timezone shifting
+    return d.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
   };
 
   const avatarInitials = (id: string) => id.slice(0, 2).toUpperCase();

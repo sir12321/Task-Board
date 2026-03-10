@@ -232,22 +232,6 @@
   font-weight: 700;
   border: 1px solid rgba(9, 30, 66, 0.06);
 }
-
-
-.deleteButton {
-  background: #ef4444;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  padding: 8px 12px;
-  font-size: 13px;
-  border-radius: 6px;
-}
-
-.deleteButton:hover {
-  background: #dc2626;
-}
-
 .commentComposer {
   margin-top: 16px;
   padding-top: 16px;

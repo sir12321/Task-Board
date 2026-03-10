@@ -177,18 +177,33 @@ export const BoardReducer = (
       return {
         board: {
           ...state.board,
-          tasks: state.board.tasks.map((task) =>
-            task.id === taskId
-              ? {
-                  ...task,
-                  ...updates,
-                  description: updates.description ?? null,
-                  assigneeId: updates.assigneeId ?? null,
-                  parentId: updates.parentId ?? null,
-                  updatedAt: new Date().toISOString(),
-                }
-              : task,
-          ),
+          tasks: state.board.tasks.map((task) => {
+            if (task.id !== taskId) return task;
+
+            const assigneeName =
+              updates.assigneeId === undefined
+                ? task.assigneeName
+                : state.projectDetails.members.find(
+                    (member) => member.id === updates.assigneeId,
+                  )?.name ?? null;
+
+            const parentName =
+              updates.parentId === undefined
+                ? task.parentName
+                : state.board.tasks.find((candidate) => candidate.id === updates.parentId)
+                    ?.title ?? null;
+
+            return {
+              ...task,
+              ...updates,
+              description: updates.description ?? null,
+              assigneeId: updates.assigneeId ?? null,
+              assigneeName,
+              parentId: updates.parentId ?? null,
+              parentName,
+              updatedAt: new Date().toISOString(),
+            };
+          }),
         },
         projectDetails: state.projectDetails,
       };
