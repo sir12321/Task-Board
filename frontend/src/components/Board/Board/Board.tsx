@@ -28,6 +28,7 @@ interface Props {
     taskId: string,
     payload: NewTaskInput,
   ) => Promise<void> | void;
+  onAddComment?: (taskId: string, content: string) => Promise<void> | void;
   // column workflow handlers
   onAddColumn?: (columnName: string) => Promise<void> | void;
   onRenameColumn?: (columnId: string, newName: string) => Promise<void> | void;
@@ -48,6 +49,7 @@ const Board = ({
   onDeleteTask,
   onCreateTask,
   onUpdateTask,
+  onAddComment,
   onAddColumn,
   onRenameColumn,
   onReorderColumn,
@@ -453,6 +455,41 @@ const Board = ({
           userRole={state.projectDetails.userRole}
           currentUserId={user?.id}
           onClose={() => setSelectedTaskId(null)}
+          onAddComment={async (content: string) => {
+            if (onAddComment) {
+              await onAddComment(selectedTaskId, content);
+              return;
+            }
+
+            const now = new Date().toISOString();
+            dispatch({
+              type: 'SET_BOARD',
+              payload: {
+                board: {
+                  ...state.board,
+                  tasks: state.board.tasks.map((task) =>
+                    task.id === selectedTaskId
+                      ? {
+                          ...task,
+                          comments: [
+                            ...(task.comments ?? []),
+                            {
+                              id: `comment-${Date.now()}`,
+                              content,
+                              createdAt: now,
+                              updatedAt: now,
+                              authorId: user?.id ?? 'current-user',
+                              authorName: user?.name ?? 'Current User',
+                              taskId: selectedTaskId,
+                            },
+                          ],
+                        }
+                      : task,
+                  ),
+                },
+              },
+            });
+          }}
         />
       )}
 

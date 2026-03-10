@@ -204,6 +204,53 @@ export default function BoardPage() {
     [board, project],
   );
 
+  const addComment = useCallback(
+    async (taskId: string, content: string): Promise<void> => {
+      if (!project) return;
+      if (project.userRole === 'PROJECT_VIEWER') {
+        alert('You do not have permission to add comments.');
+        return;
+      }
+
+      const createdComment = await apiClient('/comments', {
+        method: 'POST',
+        body: JSON.stringify({
+          taskId,
+          content,
+        }),
+      });
+
+      const authorName =
+        project.members.find((member) => member.id === createdComment.authorId)
+          ?.name ??
+        user?.name ??
+        'Unknown User';
+
+      setBoard((prev) =>
+        prev
+          ? {
+              ...prev,
+              tasks: prev.tasks.map((task) =>
+                task.id === taskId
+                  ? {
+                      ...task,
+                      comments: [
+                        ...(task.comments ?? []),
+                        {
+                          ...createdComment,
+                          authorName,
+                        },
+                      ],
+                    }
+                  : task,
+              ),
+            }
+          : prev,
+      );
+    },
+    [project, user],
+  );
+
   const addColumn = useCallback(
     async (columnName: string): Promise<void> => {
       if (!project || !board) return;
@@ -345,6 +392,7 @@ export default function BoardPage() {
         onDeleteTask={deleteTask}
         onCreateTask={createTask}
         onUpdateTask={updateTask}
+        onAddComment={addComment}
         onAddColumn={addColumn}
         onRenameColumn={renameColumn}
         onReorderColumn={reorderColumn}

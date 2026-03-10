@@ -272,6 +272,8 @@ const TaskCreateEditModal = ({
               Cancel
             </button>
             <button type="submit" disabled={saving}>
+              {' '}
+              {/* Disable submit while saving to prevent duplicate requests*/}
               {saving
                 ? 'Saving...'
                 : mode === 'create'

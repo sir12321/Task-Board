@@ -11,14 +11,39 @@
   background: white;
   width: 1200px;
   max-width: 96%;
+  height: 90vh;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 20px;
   border-radius: 10px;
   position: relative;
   box-shadow: 0 20px 40px rgba(16, 24, 40, 0.2);
   /* improve legibility */
   font-size: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: #e2e8f0;
 }
 .title {
   margin: 0 0 8px 0;
@@ -32,6 +57,10 @@
 }
 .section {
   margin-top: 12px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .headerRow {
@@ -98,12 +127,30 @@
   display: grid;
   grid-template-columns: 1fr 320px;
   gap: 20px;
+  min-height: 0;
+  flex: 1;
 }
 
 .commentList {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+  padding-right: 4px;
+}
+
+.content {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sidebar {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .comment {

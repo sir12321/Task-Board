@@ -328,7 +328,7 @@ async function main(): Promise<void> {
             data: [
                 {
                     content: 'Working on the API documentation. Should have a draft ready by tomorrow.',
-                    authorId: alice.id,
+                    authorId: john.id,
                     taskId: task4.id,
                     createdAt: new Date('2026-03-08T14:00:00.000Z'),
                 },
@@ -340,7 +340,7 @@ async function main(): Promise<void> {
                 },
                 {
                     content: 'Will do! Also adding authentication flow diagrams.',
-                    authorId: alice.id,
+                    authorId: john.id,
                     taskId: task4.id,
                     createdAt: new Date('2026-03-08T15:00:00.000Z'),
                 },
