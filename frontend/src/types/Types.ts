@@ -13,6 +13,7 @@ export interface Comment {
   updatedAt: string;
   authorId: string;
   authorName: string;
+  taskId: string;
 }
 
 export interface Task {

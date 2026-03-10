@@ -18,7 +18,13 @@ export const getBoards = async (boardId: string): Promise<BoardResponse | null> 
             tasks: {
                 include: {
                     column: { select: { name: true } },
+                    assignee: { select: { name: true } },
+                    reporter: { select: { name: true } },
+                    parent: { select: { title: true } },
                     comments: {
+                        include: {
+                            author: { select: { id: true, name: true, email: true } },
+                        },
                         orderBy: { createdAt: 'asc' },
                     },
                 },
@@ -31,8 +37,22 @@ export const getBoards = async (boardId: string): Promise<BoardResponse | null> 
     return {
         ...board,
         tasks: board.tasks.map((task) => {
-            const { column, ...rest } = task;
-            return { ...rest, columnName: column.name };
+            const { column, assignee, reporter, parent, comments, ...rest } = task;
+            return { 
+                ...rest, 
+                columnName: column.name,
+                assigneeName: assignee?.name || null,
+                reporterName: reporter?.name || 'Unknown',
+                parentName: parent?.title || null,
+                status: rest.type === 'STORY' ? 'In Progress' : column.name,
+                comments: comments.map((comment) => {
+                    const { author, ...commentRest } = comment;
+                    return {
+                        ...commentRest,
+                        authorName: author.name,
+                    };
+                }),
+            };
         }),
     };
 };

@@ -4,15 +4,15 @@ import { AuthRequest } from "./auth.controller";
 
 export const createTask = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const userId = req.user?.id;
+        const reporterId = req.user?.id;
         const globalRole = req.user?.globalRole;
 
-        if (!userId) {
+        if (!reporterId || typeof reporterId != "string") {
             res.status(401).json({ error: "Unauthorized" });
             return;
         }
 
-        const task = await makeTask(req.body, userId, globalRole);
+        const task = await makeTask(req.body, reporterId, globalRole);
         res.status(201).json(task);
     } catch (err: unknown) {
         if (err instanceof Error) {
