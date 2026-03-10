@@ -7,7 +7,7 @@ import type { Board as BoardType } from '../../../types/Types';
 import type { Dispatch } from 'react';
 import type { BoardState, BoardAction } from './BoardReducer';
 
-const canMoveTask = (
+export const canMoveTask = (
   board: BoardType,
   taskId: string,
   targetColumnId: string,
