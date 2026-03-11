@@ -251,6 +251,29 @@ export default function BoardPage() {
     [project, user],
   );
 
+  const deleteComment = useCallback(
+    async (commentId: string): Promise<void> => {
+      if (!project || !board) return;
+      try {
+        await apiClient(`/comments/${commentId}`, { method: 'DELETE' });
+        setBoard((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            tasks: prev.tasks.map((task) => ({
+              ...task,
+              comments: task.comments?.filter((c) => c.id !== commentId),
+            })),
+          };
+        });
+      } catch (error) {
+        console.error('Failed to delete comment:', error);
+        alert('Failed to delete comment.');
+      }
+    },
+    [board, project]
+  );
+
   const addColumn = useCallback(
     async (columnName: string): Promise<void> => {
       if (!project || !board) return;
@@ -282,7 +305,7 @@ export default function BoardPage() {
       
       try {
         await apiClient(`/columns/${columnId}`, {
-          method: 'PATCH',
+          method: 'PUT',
           body: JSON.stringify({ name: newName }),
         });
 
@@ -326,7 +349,7 @@ export default function BoardPage() {
 
       try {
         await apiClient(`/columns/${columnId}`, {
-          method: 'PATCH',
+          method: 'PUT',
           body: JSON.stringify({ wipLimit: newWipLimit }),
         });
 
@@ -393,6 +416,7 @@ export default function BoardPage() {
         onCreateTask={createTask}
         onUpdateTask={updateTask}
         onAddComment={addComment}
+        onDeleteComment={deleteComment}
         onAddColumn={addColumn}
         onRenameColumn={renameColumn}
         onReorderColumn={reorderColumn}
