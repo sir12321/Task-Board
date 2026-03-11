@@ -103,17 +103,19 @@ export const BoardReducer = (
         (c) => c.id === task.columnId
       );
 
+      const storyColumnId = state.board.columns.find((c) => c.order === 0)?.id || 'col-story';
+
       if (sourceColumn && column) {
         const orderDiff = column.order - sourceColumn.order;
         if (orderDiff !== 1) {
           return state;
         }
 
-        if (column.id === 'col-story' && task.type !== 'STORY') {
+        if (column.id === storyColumnId && task.type !== 'STORY') {
           return state;
         }
 
-        if (task.type === 'STORY' && column.id !== 'col-story') {
+        if (task.type === 'STORY' && column.id !== storyColumnId) {
           return state;
         }
       }

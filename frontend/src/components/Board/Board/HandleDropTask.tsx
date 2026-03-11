@@ -19,8 +19,10 @@ export const canMoveTask = (
   const targetColumn = board.columns.find((c) => c.id === targetColumnId);
   if (!targetColumn) return false;
 
+  const storyColID = board.columns.find((c) => c.order === 0)?.id || 'col-story';
+
   // Disallow non-story tasks from being moved into the dedicated story column
-  if (targetColumn.id === 'col-story' && task.type !== 'STORY') {
+  if (targetColumn.id === storyColID && task.type !== 'STORY') {
     setshortError(
       'Move forbidden: only stories can go into the Stories column',
     );
@@ -28,7 +30,7 @@ export const canMoveTask = (
   }
 
   // Prevent STORY tasks from being moved out of the story column
-  if (task.type === 'STORY' && targetColumn.id !== 'col-story') {
+  if (task.type === 'STORY' && targetColumn.id !== storyColID) {
     setshortError('Move forbidden: stories must remain in the Stories column');
     return false;
   }
