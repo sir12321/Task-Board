@@ -36,7 +36,10 @@ export default function BoardPage() {
 
         // Resolve board id
         let resolvedBoardId = boardId;
-        if (!resolvedBoardId || !resolvedProject.boards.find((b) => b.id === resolvedBoardId)) {
+        if (
+          !resolvedBoardId ||
+          !resolvedProject.boards.find((b) => b.id === resolvedBoardId)
+        ) {
           resolvedBoardId = resolvedProject.boards[0]?.id;
         }
 
@@ -49,7 +52,10 @@ export default function BoardPage() {
 
         // If we resolved to a different URL, redirect
         if (resolvedProject.id !== projectId || resolvedBoardId !== boardId) {
-          navigate(`/projects/${resolvedProject.id}/boards/${resolvedBoardId}`, { replace: true });
+          navigate(
+            `/projects/${resolvedProject.id}/boards/${resolvedBoardId}`,
+            { replace: true },
+          );
           return;
         }
 
@@ -67,7 +73,9 @@ export default function BoardPage() {
     };
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [projectId, boardId, navigate]);
 
   const deleteTask = useCallback(
@@ -86,7 +94,9 @@ export default function BoardPage() {
 
       await apiClient(`/tasks/${taskId}`, { method: 'DELETE' });
       setBoard((prev) =>
-        prev ? { ...prev, tasks: prev.tasks.filter((t) => t.id !== taskId) } : prev,
+        prev
+          ? { ...prev, tasks: prev.tasks.filter((t) => t.id !== taskId) }
+          : prev,
       );
     },
     [board, project],
@@ -271,7 +281,7 @@ export default function BoardPage() {
         alert('Failed to delete comment.');
       }
     },
-    [board, project]
+    [board, project],
   );
 
   const addColumn = useCallback(
@@ -280,16 +290,24 @@ export default function BoardPage() {
       try {
         const newColumn = await apiClient('/columns', {
           method: 'POST',
-          body: JSON.stringify({ name: columnName, boardId: board.id, wipLimit: null }),
+          body: JSON.stringify({
+            name: columnName,
+            boardId: board.id,
+            wipLimit: null,
+          }),
         });
 
-        setBoard((prev) => prev ? {
-            ...prev,
-            columns: [...prev.columns, newColumn]
-        } : prev);
+        setBoard((prev) =>
+          prev
+            ? {
+                ...prev,
+                columns: [...prev.columns, newColumn],
+              }
+            : prev,
+        );
       } catch (error) {
         console.error('Failed to create column:', error);
-        alert('Failed to create column. Check console for details.');   
+        alert('Failed to create column. Check console for details.');
       }
     },
     [project, board],
@@ -302,18 +320,26 @@ export default function BoardPage() {
         alert('Only ProjectAdmin can rename columns.');
         return;
       }
-      
+
       try {
         await apiClient(`/columns/${columnId}`, {
           method: 'PUT',
           body: JSON.stringify({ name: newName }),
         });
 
-        setBoard((prev) => prev ? {
-            ...prev,
-            columns: prev.columns.map((c) => c.id === columnId ? { ...c, name: newName } : c),
-            tasks: prev.tasks.map((t) => t.columnId === columnId ? { ...t, columnName: newName } : t)
-        } : prev);
+        setBoard((prev) =>
+          prev
+            ? {
+                ...prev,
+                columns: prev.columns.map((c) =>
+                  c.id === columnId ? { ...c, name: newName } : c,
+                ),
+                tasks: prev.tasks.map((t) =>
+                  t.columnId === columnId ? { ...t, columnName: newName } : t,
+                ),
+              }
+            : prev,
+        );
       } catch (error) {
         console.error('Failed to rename column:', error);
         alert('Failed to rename column.');
@@ -322,30 +348,22 @@ export default function BoardPage() {
     [project, board],
   );
 
-  const reorderColumn = useCallback(
-    async (): Promise<void> => {
-      if (!project) return;
-      if (project.userRole !== 'PROJECT_ADMIN') {
-        alert('Only ProjectAdmin can reorder columns.');
-        return;
-      }
-      alert('Column reorder via API is not yet supported.');
-    },
-    [project],
-  );
+  const reorderColumn = useCallback(async (): Promise<void> => {
+    if (!project) return;
+    if (project.userRole !== 'PROJECT_ADMIN') {
+      alert('Only ProjectAdmin can reorder columns.');
+      return;
+    }
+    alert('Column reorder via API is not yet supported.');
+  }, [project]);
 
   const updateColumnWip = useCallback(
-    async (columnId: string): Promise<void> => {
+    async (columnId: string, newWipLimit: number | null): Promise<void> => {
       if (!project || !board) return;
       if (project.userRole !== 'PROJECT_ADMIN') {
         alert('Only ProjectAdmin can edit WIP limits.');
         return;
       }
-
-      const limitInput = prompt('Enter new WIP limit (or leave blank to remove limit):');
-      // Treat cancel as abort. Empty string means remove limit.
-      if (limitInput === null) return; 
-      const newWipLimit = limitInput.trim() === '' ? null : parseInt(limitInput, 10);
 
       try {
         await apiClient(`/columns/${columnId}`, {
@@ -353,10 +371,16 @@ export default function BoardPage() {
           body: JSON.stringify({ wipLimit: newWipLimit }),
         });
 
-        setBoard((prev) => prev ? {
-            ...prev,
-            columns: prev.columns.map((c) => c.id === columnId ? { ...c, wipLimit: newWipLimit } : c)
-        } : prev);
+        setBoard((prev) =>
+          prev
+            ? {
+                ...prev,
+                columns: prev.columns.map((c) =>
+                  c.id === columnId ? { ...c, wipLimit: newWipLimit } : c,
+                ),
+              }
+            : prev,
+        );
       } catch (error) {
         console.error('Failed to update WIP limit:', error);
         alert('Failed to update WIP limit.');
@@ -378,13 +402,19 @@ export default function BoardPage() {
       try {
         await apiClient(`/columns/${columnId}`, { method: 'DELETE' });
 
-        setBoard((prev) => prev ? {
-            ...prev,
-            columns: prev.columns.filter((c) => c.id !== columnId)
-        } : prev);
+        setBoard((prev) =>
+          prev
+            ? {
+                ...prev,
+                columns: prev.columns.filter((c) => c.id !== columnId),
+              }
+            : prev,
+        );
       } catch (error) {
         console.error('Failed to delete column:', error);
-        alert('Cannot delete a column that contains tasks. Move or delete them first.');
+        alert(
+          'Cannot delete a column that contains tasks. Move or delete them first.',
+        );
       }
     },
     [project, board],

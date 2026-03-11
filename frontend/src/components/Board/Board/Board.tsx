@@ -483,11 +483,16 @@ const Board = ({
                     ...state.board,
                     tasks: state.board.tasks.map((task) =>
                       task.id === selectedTaskId
-                        ? { ...task, comments: task.comments?.filter((c) => c.id !== commentId) }
+                        ? {
+                            ...task,
+                            comments: task.comments?.filter(
+                              (c) => c.id !== commentId,
+                            ),
+                          }
                         : task,
-                    )
-                  }
-                }
+                    ),
+                  },
+                },
               });
             }
           }}
