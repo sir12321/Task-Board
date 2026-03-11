@@ -28,7 +28,7 @@ function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       setUser(data.user);
-      navigate('/board');
+      navigate('/dashboard');
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
