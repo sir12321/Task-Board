@@ -1,72 +1,140 @@
 .sidebar {
   width: 220px;
-  background: #525f77;
+  background: linear-gradient(180deg, #5c6883 0%, #515d78 100%);
   color: #e5e7eb;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 18px 14px 16px;
   transition: width 0.3s ease;
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .sidebar.collapsed {
-  width: 60px;
-  padding-left: 8px;
-  padding-right: 8px;
+  width: 72px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .logo {
-  margin-bottom: 30px;
-  font-size: 25px;
-  font-weight: bold;
+  margin: 2px 0 22px;
+  padding: 0 4px;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #f8fafc;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 10px 10px;
+  padding: 10px 12px;
   cursor: pointer;
-  opacity: 0.8;
-  gap: 10px;
-  width: 90%;
-  font-size: 18px;
+  opacity: 0.92;
+  gap: 12px;
+  width: 100%;
+  font-size: 17px;
+  border-radius: 10px;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.nav-link {
+  color: inherit;
+  text-decoration: none;
 }
 
 .nav-item:hover {
   opacity: 1;
-  background-color: #3f4257;
-  border-radius: 10px;
+  background-color: #414963;
+}
+
+.nav-item.active {
+  opacity: 1;
+  background-color: #414963;
+  box-shadow: inset 3px 0 0 #93c5fd;
+}
+
+.nav-icon {
+  width: 20px;
+  flex: 0 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #dbeafe;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(219, 234, 254, 0.45);
+  border-radius: 999px;
+  height: 20px;
 }
 
 .icon {
-  width: 24px;
-  text-align: center;
-  order: 2;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 1px solid rgba(252, 165, 165, 0.45);
+  color: #fecaca;
+}
+
+.label {
+  white-space: nowrap;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.notification-badge {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
   margin-left: auto;
-  margin-right: 4px;
+  box-shadow: 0 0 0 2px #414963;
+}
+
+.sidebar.collapsed .notification-badge {
+  margin-left: auto;
+}
+
+.collapse-btn {
+  align-self: flex-end;
+  background: rgba(15, 23, 42, 0.14);
+  border: none;
+  color: #f8fafc;
+  cursor: pointer;
+  font-size: 20px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.label {
-  white-space: nowrap;
-  order: 1;
-}
-.collapse-btn {
-  align-self: flex-end;
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-size: 24px;
-  margin-bottom: 20px;
-}
-
 .collapse-btn:hover {
-  padding-bottom: 6px;
-  color: #d1d5db;
-  background-color: #3f4257;
-  border-radius: 8px;
+  color: #dbeafe;
+  background-color: #414963;
 }
 
 .sidebar.collapsed .collapse-btn {
@@ -83,16 +151,19 @@
 
 .sidebar-footer {
   margin-top: auto;
-  padding-left: 0;
-  padding-right: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
-.sidebar.collapsed .icon {
-  align-items: center;
+.sidebar.collapsed .icon,
+.sidebar.collapsed .nav-icon {
+  margin: 0;
 }
 
 .sidebar-footer .nav-item {
   position: relative;
+  margin-top: 8px;
+  color: #fca5a5;
 }
 
 .sidebar:not(.collapsed) .sidebar-footer .nav-item.logout .icon {
@@ -114,13 +185,13 @@
 .user-info {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 
 .avatar {
   width: 40px;
   height: 40px;
-  background: #374151;
+  background: #31415c;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -140,16 +211,25 @@
 }
 
 .user-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .user-email {
-  font-size: 12px;
-  opacity: 0.7;
+  font-size: 11px;
+  color: #cdd5e1;
 }
 
 .logout {
-  margin-top: 8px;
+  margin-top: 10px;
+  color: #fca5a5;
+}
+
+.logout .label {
   color: #f87171;
+}
+
+.logout .icon {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.45);
 }

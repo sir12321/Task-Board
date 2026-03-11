@@ -5,7 +5,24 @@ import {
     generateRefreshToken,
     verifyRefreshToken,
 } from '../utils/jwt.util';
-import { User } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
+
+const authUserSelect = {
+    id: true,
+    email: true,
+    name: true,
+    avatarUrl: true,
+    globalRole: true,
+    notifications: {
+        orderBy: {
+            createdAt: 'desc',
+        },
+    },
+} satisfies Prisma.UserSelect;
+
+type AuthUserPayload = Prisma.UserGetPayload<{
+    select: typeof authUserSelect;
+}>;
 
 export interface RegisterInput {
     email: string;
@@ -71,7 +88,14 @@ export const loginUser = async (data: LoginInput): Promise<{ user: User; accessT
     return { user, accessToken, refreshToken };
 };
 
-export const refreshSession = async (token: string): Promise<{ accessToken: string; user: { id: string; email: string; name: string; avatarUrl: string | null; globalRole: string } }> => {
+export const getAuthUserById = async (userId: string): Promise<AuthUserPayload | null> => {
+    return prisma.user.findUnique({
+        where: { id: userId },
+        select: authUserSelect,
+    });
+};
+
+export const refreshSession = async (token: string): Promise<{ accessToken: string; user: AuthUserPayload }> => {
     const decoded = verifyRefreshToken(token) as { userId: string };
 
     const user = await prisma.user.findUnique({
@@ -84,16 +108,15 @@ export const refreshSession = async (token: string): Promise<{ accessToken: stri
 
     const payload = { userId: user.id, globalRole: user.globalRole };
     const newAccessToken = generateAccessToken(payload);
+    const authUser = await getAuthUserById(user.id);
+
+    if (!authUser) {
+        throw new Error('Invalid refresh token');
+    }
 
     return {
         accessToken: newAccessToken,
-        user: {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            avatarUrl: user.avatarUrl,
-            globalRole: user.globalRole,
-        },
+        user: authUser,
     };
 };
 

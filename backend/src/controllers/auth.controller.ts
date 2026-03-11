@@ -24,6 +24,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
             name: newUser.name,
             avatarUrl: newUser.avatarUrl,
             globalRole: newUser.globalRole,
+            notifications: [],
         };
 
         res.status(201).json({
@@ -43,13 +44,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) : P
     try {
         const { email, password } = req.body;
         const { user, accessToken, refreshToken } = await authService.loginUser({ email, password });
-        const safeUser = {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            avatarUrl: user.avatarUrl,
-            globalRole: user.globalRole,
-        };
+        const safeUser = await authService.getAuthUserById(user.id);
+        if (!safeUser) {
+            res.status(401).json({ error: 'Invalid email or password' });
+            return;
+        }
         res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
         res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
 

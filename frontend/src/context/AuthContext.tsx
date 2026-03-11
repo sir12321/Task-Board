@@ -1,18 +1,17 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import type { ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from 'react';
+import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { apiClient } from '../utils/api';
-
-interface AuthUser {
-  id: string;
-  email: string;
-  name: string;
-  avatarUrl: string | null;
-  globalRole: string;
-}
+import type { AuthUser } from '../types/Types';
 
 interface AuthContextType {
   user: AuthUser | null;
-  setUser: (user: AuthUser | null) => void;
+  setUser: Dispatch<SetStateAction<AuthUser | null>>;
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
 }
@@ -52,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchUser]);
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>Loading session...</div>; 
+    return <div style={{ padding: '20px' }}>Loading session...</div>;
   }
 
   return (

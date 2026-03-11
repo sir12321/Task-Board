@@ -72,6 +72,12 @@ export interface UserProfile {
   avatarUrl?: string | null;
 }
 
+export interface AuthUser extends UserProfile {
+  id: string;
+  globalRole: GlobalRole;
+  notifications: Notification[];
+}
+
 export interface User extends UserProfile {
   id: string;
   globalRole: GlobalRole;

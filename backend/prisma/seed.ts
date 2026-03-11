@@ -354,6 +354,51 @@ async function main(): Promise<void> {
         });
     }
 
+    const existingNotificationCount = await prisma.notification.count({
+        where: {
+            userId: {
+                in: [manya.id, john.id, alice.id],
+            },
+        },
+    });
+
+    if (existingNotificationCount === 0) {
+        await prisma.notification.createMany({
+            data: [
+                {
+                    userId: manya.id,
+                    content: 'John Doe commented on "Set up project".',
+                    isRead: false,
+                    createdAt: new Date('2026-03-09T10:35:00.000Z'),
+                },
+                {
+                    userId: manya.id,
+                    content: 'Task "Configure CI" is due in 2 days.',
+                    isRead: false,
+                    createdAt: new Date('2026-03-09T17:00:00.000Z'),
+                },
+                {
+                    userId: john.id,
+                    content: 'You have been assigned to "Set up project".',
+                    isRead: true,
+                    createdAt: new Date('2026-03-08T08:00:00.000Z'),
+                },
+                {
+                    userId: john.id,
+                    content: 'Status changed on your task: "Set up project".',
+                    isRead: false,
+                    createdAt: new Date('2026-03-10T12:20:00.000Z'),
+                },
+                {
+                    userId: alice.id,
+                    content: 'New comment on your task: "Write documentation".',
+                    isRead: false,
+                    createdAt: new Date('2026-03-10T14:30:00.000Z'),
+                },
+            ],
+        });
+    }
+
     console.log('\n════════════════════════════════════════════');
     console.log('📧 Login credentials (password: 111)');
     console.log('════════════════════════════════════════════');
