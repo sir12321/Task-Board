@@ -1,0 +1,113 @@
+.container {
+    padding: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.headerSection {
+    margin-bottom: 40px;
+}
+
+.title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #172b4d;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #5e6c84;
+    font-size: 16px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+}
+
+.projectCard {
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #dfe1e6;
+    padding: 24px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.projectCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.projectHeader {
+    font-size: 20px;
+    font-weight: 600;
+    color: #0052cc;
+    margin: 0;
+}
+
+.roleBadge {
+    background: #ebf2ff;
+    color: #0052cc;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.sectionLabel {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b778c;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.boardList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.boardButton {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background: #f4f5f7;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.boardButton:hover {
+  background: #ebecf0;
+  border-color: #0052cc;
+}
+
+.boardIcon {
+  margin-right: 10px;
+}
+
+.boardName {
+  font-size: 14px;
+  color: #172b4d;
+  font-weight: 500;
+}
+
+.emptyText, .emptyState {
+  color: #6b778c;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.loader {
+  padding: 100px;
+  text-align: center;
+  font-size: 18px;
+  color: #5e6c84;
+}
