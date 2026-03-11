@@ -68,9 +68,9 @@ nav {
   align-items: center;
   justify-content: center;
   color: #dbeafe;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  border: 1px solid rgba(219, 234, 254, 0.45);
+  border: 1px solid rgba(219, 234, 254, 0.5);
   border-radius: 999px;
   height: 20px;
 }
@@ -113,7 +113,38 @@ nav {
 }
 
 .sidebar.collapsed .notification-badge {
-  margin-left: auto;
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  margin-left: 0;
+  box-shadow: 0 0 0 2px #5c6883;
+}
+
+.sidebar.collapsed nav {
+  align-items: center;
+}
+
+.sidebar.collapsed nav .nav-item {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  justify-content: center;
+  position: relative;
+}
+
+.sidebar.collapsed nav .nav-item.active {
+  box-shadow: inset 0 0 0 2px #93c5fd;
+}
+
+.sidebar.collapsed nav .label {
+  display: none;
+}
+
+.sidebar.collapsed nav .nav-icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  font-size: 14px;
 }
 
 .collapse-btn {
@@ -175,10 +206,8 @@ nav {
 }
 
 .sidebar.collapsed .sidebar-footer .nav-item .icon {
-  position: absolute;
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%);
+  position: static;
+  transform: none;
   margin-left: 0;
 }
 
@@ -223,6 +252,18 @@ nav {
 .logout {
   margin-top: 10px;
   color: #fca5a5;
+}
+
+.sidebar.collapsed .logout {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  justify-content: center;
+  margin: 10px auto 0;
+}
+
+.sidebar.collapsed .sidebar-footer .nav-item.logout {
+  position: static;
 }
 
 .logout .label {

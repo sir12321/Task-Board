@@ -34,16 +34,20 @@ const Sidebar = ({ collapsed, toggle }: Props) => {
         <NavLink
           to="/notifications"
           className={({ isActive }) =>
-            `nav-item nav-link ${isActive ? 'active' : ''}`
+            `nav-item nav-link notifications-item ${isActive ? 'active' : ''}`
           }
         >
+          <span className="nav-icon">⦿</span>
           {!collapsed && <span className="label">Notifications</span>}
           {hasUnreadNotifications && (
-            <span className="notification-badge">{`${unreadNotificationCount}`}</span>
+            <span className="notification-badge">
+              {`${unreadNotificationCount}`}
+            </span>
           )}
         </NavLink>
 
-        <div className="nav-item">
+        <div className="nav-item settings-item">
+          <span className="nav-icon">⚙</span>
           {!collapsed && <span className="label">Settings</span>}
         </div>
       </nav>
