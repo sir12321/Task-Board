@@ -21,7 +21,6 @@ import styles from './Board.module.css';
 interface Props {
   board: BoardType;
   projectDetails: ProjectDetails;
-  // task CRUD handlers
   onDeleteTask?: (taskId: string) => Promise<void> | void;
   onCreateTask?: (payload: NewTaskInput) => Promise<void> | void;
   onUpdateTask?: (
@@ -29,7 +28,6 @@ interface Props {
     payload: NewTaskInput,
   ) => Promise<void> | void;
   onAddComment?: (taskId: string, content: string) => Promise<void> | void;
-  // column workflow handlers
   onAddColumn?: (columnName: string) => Promise<void> | void;
   onRenameColumn?: (columnId: string, newName: string) => Promise<void> | void;
   onReorderColumn?: (
@@ -57,16 +55,18 @@ const Board = ({
   onDeleteColumn,
 }: Props) => {
   const { user } = useAuth();
+  const StoryColumnId =
+    board.columns.find((c) => c.order === 0)?.id ?? 'col-story';
+  const StoryColumnName =
+    board.columns.find((c) => c.order === 0)?.name ?? 'Stories';
 
-  const StoryColumnId = board.columns.find((c) => c.order === 0)?.id ?? 'col-story';
-
-  // Normalization helper that ensures all story-type tasks are assigned to the
-  // reserved "Stories" column (col-story). This simplifies downstream logic by
-  // guaranteeing that story tasks won't appear elsewhere.
+  // Ensure story tasks always live in the Stories column.
   const normalizeBoard = (b: BoardType): BoardType => ({
-    ...b,
+    ...b, // makes a copy of object with tasks overwritten
     tasks: b.tasks.map((t) =>
-      t.type === 'STORY' ? { ...t, columnId: StoryColumnId } : t,
+      t.type === 'STORY'
+        ? { ...t, columnId: StoryColumnId, columnName: StoryColumnName }
+        : t,
     ),
   });
 
@@ -77,6 +77,35 @@ const Board = ({
     board: normalizeBoard(board),
     projectDetails,
   } as BoardState);
+  const [shortError, setshortError] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [createColumnId, setCreateColumnId] = useState<string | null>(null);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [workflowEditMode, setWorkflowEditMode] = useState(false);
+  const [renameColumnDialog, setRenameColumnDialog] = useState<{
+    columnId: string;
+    currentName: string;
+  } | null>(null);
+
+  // Some Boolean Helpers
+  const canManageTasks =
+    state.projectDetails.userRole === 'PROJECT_ADMIN' ||
+    state.projectDetails.userRole === 'PROJECT_MEMBER' ||
+    user?.globalRole === 'GLOBAL_ADMIN';
+  const canManageColumns =
+    state.projectDetails.userRole === 'PROJECT_ADMIN' ||
+    user?.globalRole === 'GLOBAL_ADMIN';
+  const assignableMembers = state.projectDetails.members.filter(
+    (member) =>
+      member.role === 'PROJECT_ADMIN' || member.role === 'PROJECT_MEMBER',
+  );
+
+  // Automatically clear shortError messages after a brief interval
+  useEffect(() => {
+    if (!shortError) return;
+    const id = setTimeout(() => setshortError(null), 3000);
+    return () => clearTimeout(id);
+  }, [shortError]);
 
   // If the `board` prop changes from the parent we need to update the reducer
   // state accordingly. This keeps the UI in sync with remote data loads.
@@ -84,50 +113,13 @@ const Board = ({
     dispatch({ type: 'SET_BOARD', payload: { board: normalizeBoard(board) } });
   }, [board]);
 
-  // Toast state for showing short-lived error messages
-  // UI state
-  const [toast, setToast] = useState<string | null>(null); // short-lived notifications
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null); // open details modal
-  const [createColumnId, setCreateColumnId] = useState<string | null>(null); // open create modal
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null); // open edit modal
-  const [workflowEditMode, setWorkflowEditMode] = useState(false); // toggle workflow editing
-
-  // Compute permissions derived from the user's role. Viewer-only users
-  // cannot modify anything while members and admins have incremental access.
-  const canManageTasks =
-    state.projectDetails.userRole === 'PROJECT_ADMIN' ||
-    state.projectDetails.userRole === 'PROJECT_MEMBER';
-  const canManageColumns = state.projectDetails.userRole === 'PROJECT_ADMIN';
-  // Only admins/members should be assigned tasks
-  const assignableMembers = state.projectDetails.members.filter(
-    (member) =>
-      member.role === 'PROJECT_ADMIN' || member.role === 'PROJECT_MEMBER',
-  );
-
-  // Automatically clear toast messages after a brief interval
-  useEffect(() => {
-    if (!toast) return;
-    const id = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(id);
-  }, [toast]);
-
-  // move validation logic lives in ./MoveTask.tsx now; import and use it
-
-  // state used only for the rename dialog
-  const [renameColumn, setRenameColumn] = useState<{
-    columnId: string;
-    currentName: string;
-  } | null>(null);
-
-  // perform a rename; same semantics that previously existed inline
   const handleRenameColumn = async (columnId: string, newName: string) => {
-    if (!canManageColumns) {
-      setToast('Only ProjectAdmin can rename columns');
-      return;
-    }
-
     if (onRenameColumn) {
-      await onRenameColumn(columnId, newName);
+      try {
+        await onRenameColumn(columnId, newName);
+      } catch (err) {
+        setshortError((err as Error)?.message ?? 'Failed to rename column');
+      }
       return;
     }
 
@@ -135,89 +127,69 @@ const Board = ({
   };
 
   const openRenameColumn = (columnId: string, currentName: string) => {
-    setRenameColumn({ columnId, currentName });
+    setRenameColumnDialog({ columnId, currentName });
   };
 
-  // Task drop logic has been moved to the MoveTask helper. The component
-  // simply forwards necessary state/dispatch to that function when a drop
-  // occurs (see `onDropTask` prop further below).
-
-  // Maintain a sorted copy of columns based on their order property. This
-  // is used throughout the rendering logic to ensure columns appear in the
-  // correct sequence, independent of the underlying array order.
   const sortedColumns = state.board.columns
     .slice()
     .sort((a, b) => a.order - b.order);
 
-  // Add a new column to the board. This function shows a prompt, checks
-  // permissions, and either calls a parent handler or updates the reducer
-  // directly. The async signature allows parent handlers to perform network
-  // requests before updating state.
   const handleAddColumn = async () => {
-    if (!canManageColumns) {
-      setToast('Only ProjectAdmin can create columns');
-      return;
-    }
-
     const columnName = window.prompt('Enter column name');
     if (columnName === null) {
       return;
     }
 
     if (onAddColumn) {
-      await onAddColumn(columnName);
+      try {
+        await onAddColumn(columnName);
+      } catch (err) {
+        setshortError((err as Error)?.message || 'Failed to add column');
+      }
       return;
     }
 
     dispatch({ type: 'ADD_COLUMN', payload: { name: columnName } });
   };
 
-  // Move a column left or right in the workflow. There are several guards:
-  // 1. Only admins can perform it.
-  // 2. The special 'Stories' column cannot be moved past first.
-  // 3. We don't allow swapping with the story column.
-  // After validation either call parent handler or update state directly.
   const handleMoveColumn = async (
     columnId: string,
     direction: 'left' | 'right',
   ) => {
-    if (!canManageColumns) {
-      setToast('Only ProjectAdmin can reorder columns');
-      return;
-    }
+    const column = sortedColumns.find((c) => c.id === columnId);
 
-    if (columnId === 'col-story') {
-      setToast('Stories column must stay first');
+    if (columnId === StoryColumnId) {
+      setshortError(
+        `${column?.name} column must stay first because it contains STORY tasks`,
+      );
       return;
     }
 
     const currentIndex = sortedColumns.findIndex(
       (column) => column.id === columnId,
     );
-    if (currentIndex === -1) {
-      return;
-    }
     const targetIndex =
       direction === 'left' ? currentIndex - 1 : currentIndex + 1;
-    if (targetIndex >= 0 && sortedColumns[targetIndex]?.id === 'col-story') {
-      setToast('Stories column must stay first');
+
+    if (targetIndex < 0 || targetIndex >= sortedColumns.length) {
       return;
     }
 
     if (onReorderColumn) {
-      await onReorderColumn(columnId, direction);
+      try {
+        await onReorderColumn(columnId, direction);
+      } catch (err) {
+        setshortError((err as Error)?.message ?? 'Failed to move column');
+      }
       return;
     }
 
     dispatch({ type: 'REORDER_COLUMN', payload: { columnId, direction } });
   };
 
-  // Prompt the user to update the WIP (work-in-progress) limit on a column.
-  // Performs input validation to ensure the limit is a positive integer or
-  // left empty. Delegates to parent or reducer accordingly.
   const handleEditWip = async (columnId: string, currentWip: number | null) => {
     if (!canManageColumns) {
-      setToast('Only ProjectAdmin can edit WIP limits');
+      setshortError('Only ProjectAdmin can edit WIP limits');
       return;
     }
 
@@ -234,7 +206,7 @@ const Board = ({
     if (trimmed !== '') {
       const parsed = Number(trimmed);
       if (!Number.isInteger(parsed) || parsed < 1) {
-        setToast('WIP must be an integer >= 1, or empty for no limit');
+        setshortError('WIP must be an integer >= 1, or empty for no limit');
         return;
       }
       nextWip = parsed;
@@ -255,7 +227,7 @@ const Board = ({
   // perform this action. The confirmation step avoids accidental data loss.
   const handleDeleteColumn = async (columnId: string) => {
     if (!canManageColumns) {
-      setToast('Only ProjectAdmin can delete columns');
+      setshortError('Only ProjectAdmin can delete columns');
       return;
     }
 
@@ -355,11 +327,11 @@ const Board = ({
                 isDraggable={state.projectDetails.userRole !== 'PROJECT_VIEWER'}
                 onDropTask={async (taskId, colId) => {
                   if (!canManageTasks) {
-                    setToast('You do not have permission to move tasks.');
+                    setshortError('You do not have permission to move tasks.');
                     return;
                   }
 
-                  if (!canMoveTask(state.board, taskId, colId, setToast)) {
+                  if (!canMoveTask(state.board, taskId, colId, setshortError)) {
                     return;
                   }
 
@@ -370,7 +342,7 @@ const Board = ({
 
                   const previousBoard = state.board;
 
-                  handleDropTask(state, dispatch, taskId, colId, setToast)
+                  handleDropTask(state, dispatch, taskId, colId, setshortError);
 
                   if (onUpdateTask) {
                     try {
@@ -385,15 +357,18 @@ const Board = ({
                         columnId: colId,
                       });
                     } catch {
-                      setToast('Move rejected by server. Reverting...');
-                      dispatch({ type: 'SET_BOARD', payload: { board: previousBoard } });
+                      setshortError('Move rejected by server. Reverting...');
+                      dispatch({
+                        type: 'SET_BOARD',
+                        payload: { board: previousBoard },
+                      });
                     }
                   }
                 }}
                 onTaskClick={(taskId) => setSelectedTaskId(taskId)}
                 onTaskEdit={(taskId) => {
                   if (!canManageTasks) {
-                    setToast('You do not have permission to edit tasks');
+                    setshortError('You do not have permission to edit tasks');
                     return;
                   }
                   setEditingTaskId(taskId);
@@ -401,7 +376,7 @@ const Board = ({
                 canManageTasks={canManageTasks}
                 onCreateTask={(columnId) => {
                   if (!canManageTasks) {
-                    setToast('You do not have permission to create tasks');
+                    setshortError('You do not have permission to create tasks');
                     return;
                   }
                   setCreateColumnId(columnId);
@@ -433,18 +408,20 @@ const Board = ({
         )}
       </div>
 
-      {/* Toast notification area at bottom-right */}
-      {toast && <div className={styles['toast-bottom-right']}>{toast}</div>}
+      {/* shortError notification area at bottom-right */}
+      {shortError && (
+        <div className={styles['shortError-bottom-right']}>{shortError}</div>
+      )}
 
       {/* column rename modal */}
-      {renameColumn && (
+      {canManageColumns && renameColumnDialog && (
         <HandleRenameColumn
-          columnId={renameColumn.columnId}
-          currentName={renameColumn.currentName}
+          columnId={renameColumnDialog.columnId}
+          currentName={renameColumnDialog.currentName}
           canManageColumns={canManageColumns && workflowEditMode}
           onSubmit={handleRenameColumn}
-          onCancel={() => setRenameColumn(null)}
-          setToast={setToast}
+          onCancel={() => setRenameColumnDialog(null)}
+          setshortError={setshortError}
         />
       )}
 
@@ -575,8 +552,8 @@ const Board = ({
               try {
                 await onDeleteTask(taskId);
               } catch {
-                // parent handler failed — surface a toast
-                setToast('Failed to delete task');
+                // parent handler failed — surface a shortError
+                setshortError('Failed to delete task');
               }
             } else {
               dispatch({ type: 'DELETE_TASK', payload: { taskId } });

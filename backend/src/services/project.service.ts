@@ -16,6 +16,7 @@ interface ProjectSummary {
     boards: { id: string; name: string }[];
 }
 
+// instead of searching, use hashmap for O(1) access
 export const getUserProjects = async (userId: string): Promise<ProjectSummary[]> => {
     const projects = await prisma.project.findMany({
         where: {
@@ -77,6 +78,7 @@ export const createProject = async (userId: string, data: { name: string; descri
         },
     });
 
+    
     return newProject;
 };
 

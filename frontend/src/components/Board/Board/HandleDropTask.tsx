@@ -2,7 +2,7 @@ import type { Board as BoardType } from '../../../types/Types';
 
 // Business logic for determining whether a task may move to a target column.
 // The function mirrors the rules previously inline in Board.tsx. It does not
-// modify state directly, but returns a boolean and uses the provided `setToast`
+// modify state directly, but returns a boolean and uses the provided `setshortError`
 // callback to communicate why a move was disallowed.
 import type { Dispatch } from 'react';
 import type { BoardState, BoardAction } from './BoardReducer';
@@ -11,7 +11,7 @@ export const canMoveTask = (
   board: BoardType,
   taskId: string,
   targetColumnId: string,
-  setToast: (message: string | null) => void,
+  setshortError: (message: string | null) => void,
 ): boolean => {
   const task = board.tasks.find((t) => t.id === taskId);
   if (!task) return false;
@@ -21,13 +21,15 @@ export const canMoveTask = (
 
   // Disallow non-story tasks from being moved into the dedicated story column
   if (targetColumn.id === 'col-story' && task.type !== 'STORY') {
-    setToast('Move forbidden: only stories can go into the Stories column');
+    setshortError(
+      'Move forbidden: only stories can go into the Stories column',
+    );
     return false;
   }
 
   // Prevent STORY tasks from being moved out of the story column
   if (task.type === 'STORY' && targetColumn.id !== 'col-story') {
-    setToast('Move forbidden: stories must remain in the Stories column');
+    setshortError('Move forbidden: stories must remain in the Stories column');
     return false;
   }
 
@@ -37,7 +39,7 @@ export const canMoveTask = (
   );
 
   if (targetColumn.wipLimit && tasksInColumn.length >= targetColumn.wipLimit) {
-    setToast('Move forbidden: WIP limit reached');
+    setshortError('Move forbidden: WIP limit reached');
     return false;
   }
 
@@ -47,7 +49,7 @@ export const canMoveTask = (
   if (sourceColumn) {
     const orderDiff = targetColumn.order - sourceColumn.order;
     if (orderDiff !== 1) {
-      setToast('Move forbidden: only adjacent forward moves are allowed');
+      setshortError('Move forbidden: only adjacent forward moves are allowed');
       return false;
     }
   }
@@ -65,9 +67,9 @@ export const handleDrop = (
   dispatch: Dispatch<BoardAction>,
   taskId: string,
   targetColumnId: string,
-  setToast: (message: string | null) => void,
+  setshortError: (message: string | null) => void,
 ) => {
-  if (!canMoveTask(state.board, taskId, targetColumnId, setToast)) return;
+  if (!canMoveTask(state.board, taskId, targetColumnId, setshortError)) return;
 
   dispatch({
     type: 'MOVE_TASK',

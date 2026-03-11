@@ -7,7 +7,7 @@ interface Props {
   canManageColumns: boolean;
   onSubmit: (columnId: string, newName: string) => Promise<void> | void;
   onCancel: () => void;
-  setToast: (msg: string | null) => void;
+  setshortError: (msg: string | null) => void;
 }
 
 /**
@@ -21,19 +21,19 @@ const RenameColumn = ({
   canManageColumns,
   onSubmit,
   onCancel,
-  setToast,
+  setshortError,
 }: Props) => {
   const [name, setName] = useState(currentName);
 
   const handleSave = async () => {
     if (!canManageColumns) {
-      setToast('Only ProjectAdmin can rename columns');
+      setshortError('Only ProjectAdmin can rename columns');
       return;
     }
 
     const trimmed = name.trim();
     if (trimmed === '') {
-      setToast('Column name cannot be empty');
+      setshortError('Column name cannot be empty');
       return;
     }
 
@@ -41,7 +41,7 @@ const RenameColumn = ({
       await onSubmit(columnId, trimmed);
       onCancel();
     } catch {
-      setToast('Failed to rename column');
+      setshortError('Failed to rename column');
     }
   };
 
