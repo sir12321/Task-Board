@@ -123,7 +123,7 @@ export const moveTask = async (id: string, cId: string, userId: string, globalRo
         throw new Error('Task not found');
     }
 
-    await verifyTaskPermissions(userId, cId, globalRole);
+    await verifyTaskPermissions(userId, task.boardId, globalRole);
 
     const targetCol = await prisma.column.findUnique({
         where: { id: cId },
