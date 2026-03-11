@@ -1,3 +1,9 @@
+.page {
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .boardHeader {
   display: flex;
   justify-content: space-between;
@@ -28,12 +34,22 @@
   background: #f2f6fa;
 }
 
+.boardViewport {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+}
+
 .board {
   display: flex;
   gap: 24px;
   align-items: flex-start;
   padding-bottom: 20px;
-  overflow-x: auto;
+  width: max-content;
+  min-width: 100%;
+  flex-wrap: nowrap;
+  min-height: 600px;
 }
 
 .addColumnButton {

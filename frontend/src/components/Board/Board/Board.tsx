@@ -217,7 +217,7 @@ const Board = ({
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className={styles.page}>
       <div className={styles.projectSection}>
         <div className={styles['project-name']}>
           {state.projectDetails.name}
@@ -243,143 +243,155 @@ const Board = ({
         </div>
       </div>
 
-      <div className={styles.board}>
-        {sortedColumns.map((column, index) =>
-          (() => {
-            // compute adjacency flags for move buttons
-            const leftNeighbor = index > 0 ? sortedColumns[index - 1] : null;
-            const rightNeighbor =
-              index < sortedColumns.length - 1
-                ? sortedColumns[index + 1]
-                : null;
-            const isStory = column.id === StoryColumnId;
-            const canMoveLeft =
-              !isStory && index > 0 && leftNeighbor?.id !== StoryColumnId;
-            const canMoveRight =
-              !isStory &&
-              index < sortedColumns.length - 1 &&
-              rightNeighbor?.id !== StoryColumnId;
-            return (
-              <Column
-                key={column.id}
-                userRole={state.projectDetails.userRole}
-                column={column}
-                // sort tasks within column by priority, due date, title
-                tasks={state.board.tasks
-                  .filter((t) => t.columnId === column.id)
-                  .sort((a: Task, b: Task) => {
-                    const priorityOrder: Record<string, number> = {
-                      CRITICAL: 4,
-                      HIGH: 3,
-                      MEDIUM: 2,
-                      LOW: 1,
-                    };
+      <div className={styles.boardViewport}>
+        <div className={styles.board}>
+          {sortedColumns.map((column, index) =>
+            (() => {
+              // compute adjacency flags for move buttons
+              const leftNeighbor = index > 0 ? sortedColumns[index - 1] : null;
+              const rightNeighbor =
+                index < sortedColumns.length - 1
+                  ? sortedColumns[index + 1]
+                  : null;
+              const isStory = column.id === StoryColumnId;
+              const canMoveLeft =
+                !isStory && index > 0 && leftNeighbor?.id !== StoryColumnId;
+              const canMoveRight =
+                !isStory &&
+                index < sortedColumns.length - 1 &&
+                rightNeighbor?.id !== StoryColumnId;
+              return (
+                <Column
+                  key={column.id}
+                  userRole={state.projectDetails.userRole}
+                  column={column}
+                  // sort tasks within column by priority, due date, title
+                  tasks={state.board.tasks
+                    .filter((t) => t.columnId === column.id)
+                    .sort((a: Task, b: Task) => {
+                      const priorityOrder: Record<string, number> = {
+                        CRITICAL: 4,
+                        HIGH: 3,
+                        MEDIUM: 2,
+                        LOW: 1,
+                      };
 
-                    const pa = priorityOrder[a.priority] ?? 0;
-                    const pb = priorityOrder[b.priority] ?? 0;
-                    if (pa !== pb) return pb - pa; // higher priority first
+                      const pa = priorityOrder[a.priority] ?? 0;
+                      const pb = priorityOrder[b.priority] ?? 0;
+                      if (pa !== pb) return pb - pa; // higher priority first
 
-                    const da = a.dueDate
-                      ? new Date(a.dueDate).getTime()
-                      : Infinity;
-                    const db = b.dueDate
-                      ? new Date(b.dueDate).getTime()
-                      : Infinity;
-                    if (da !== db) return da - db; // earlier due date first
+                      const da = a.dueDate
+                        ? new Date(a.dueDate).getTime()
+                        : Infinity;
+                      const db = b.dueDate
+                        ? new Date(b.dueDate).getTime()
+                        : Infinity;
+                      if (da !== db) return da - db; // earlier due date first
 
-                    return a.title.localeCompare(b.title);
-                  })}
-                isDraggable={state.projectDetails.userRole !== 'PROJECT_VIEWER'}
-                onDropTask={async (taskId, colId) => {
-                  if (
-                    !canMoveTask(
-                      state.board,
+                      return a.title.localeCompare(b.title);
+                    })}
+                  isDraggable={
+                    state.projectDetails.userRole !== 'PROJECT_VIEWER'
+                  }
+                  onDropTask={async (taskId, colId) => {
+                    if (
+                      !canMoveTask(
+                        state.board,
+                        taskId,
+                        colId,
+                        StoryColumnId,
+                        setShortError,
+                      )
+                    ) {
+                      return;
+                    }
+
+                    const task = state.board.tasks.find((t) => t.id === taskId);
+                    if (!task) {
+                      return;
+                    }
+
+                    const previousBoard = state.board;
+
+                    handleDropTask(
+                      state,
+                      dispatch,
                       taskId,
                       colId,
-                      StoryColumnId,
                       setShortError,
-                    )
-                  ) {
-                    return;
-                  }
+                    );
 
-                  const task = state.board.tasks.find((t) => t.id === taskId);
-                  if (!task) {
-                    return;
-                  }
-
-                  const previousBoard = state.board;
-
-                  handleDropTask(state, dispatch, taskId, colId, setShortError);
-
-                  if (onUpdateTask) {
-                    try {
-                      await onUpdateTask(taskId, {
-                        title: task.title,
-                        description: task.description,
-                        type: task.type,
-                        priority: task.priority,
-                        dueDate: task.dueDate,
-                        assigneeId: task.assigneeId,
-                        parentId: task.parentId,
-                        columnId: colId,
-                      });
-                    } catch {
-                      setShortError('Move rejected by server. Reverting...');
-                      dispatch({
-                        type: 'SET_BOARD',
-                        payload: { board: previousBoard },
-                      });
+                    if (onUpdateTask) {
+                      try {
+                        await onUpdateTask(taskId, {
+                          title: task.title,
+                          description: task.description,
+                          type: task.type,
+                          priority: task.priority,
+                          dueDate: task.dueDate,
+                          assigneeId: task.assigneeId,
+                          parentId: task.parentId,
+                          columnId: colId,
+                        });
+                      } catch {
+                        setShortError('Move rejected by server. Reverting...');
+                        dispatch({
+                          type: 'SET_BOARD',
+                          payload: { board: previousBoard },
+                        });
+                      }
                     }
+                  }}
+                  onTaskClick={(taskId) => setSelectedTaskId(taskId)}
+                  onTaskEdit={(taskId) => {
+                    setEditingTaskId(taskId);
+                  }}
+                  canManageTasks={canManageTasks}
+                  onCreateTask={(columnId) => {
+                    setCreateColumnId(columnId);
+                  }}
+                  canManageColumns={canManageColumns && workflowEditMode}
+                  onRenameColumn={(columnId) =>
+                    openRenameColumn(columnId, column.name)
                   }
-                }}
-                onTaskClick={(taskId) => setSelectedTaskId(taskId)}
-                onTaskEdit={(taskId) => {
-                  setEditingTaskId(taskId);
-                }}
-                canManageTasks={canManageTasks}
-                onCreateTask={(columnId) => {
-                  setCreateColumnId(columnId);
-                }}
-                canManageColumns={canManageColumns && workflowEditMode}
-                onRenameColumn={(columnId) =>
-                  openRenameColumn(columnId, column.name)
-                }
-                canMoveLeft={canMoveLeft}
-                canMoveRight={canMoveRight}
-                onMoveLeft={(columnId) => handleMoveColumn(columnId, 'left')}
-                onMoveRight={(columnId) => handleMoveColumn(columnId, 'right')}
-                onEditWip={(columnId) => {
-                  const taskCount = state.board.tasks.filter(
-                    (t) => t.columnId === columnId,
-                  ).length;
-                  setWipDialog({
-                    columnId,
-                    currentWip: column.wipLimit,
-                    columnTaskCount: taskCount,
-                  });
-                }}
-                onDeleteColumn={(columnId) => {
-                  const col = sortedColumns.find((c) => c.id === columnId);
-                  if (col)
-                    setDeleteColumnDialog({
+                  canMoveLeft={canMoveLeft}
+                  canMoveRight={canMoveRight}
+                  onMoveLeft={(columnId) => handleMoveColumn(columnId, 'left')}
+                  onMoveRight={(columnId) =>
+                    handleMoveColumn(columnId, 'right')
+                  }
+                  onEditWip={(columnId) => {
+                    const taskCount = state.board.tasks.filter(
+                      (t) => t.columnId === columnId,
+                    ).length;
+                    setWipDialog({
                       columnId,
-                      columnName: col.name,
+                      currentWip: column.wipLimit,
+                      columnTaskCount: taskCount,
                     });
-                }}
-              />
-            );
-          })(),
-        )}
-        {canManageColumns && workflowEditMode && (
-          <button
-            type="button"
-            className={styles.addColumnButton}
-            onClick={() => setAddColumnOpen(true)}
-          >
-            + Add Column
-          </button>
-        )}
+                  }}
+                  onDeleteColumn={(columnId) => {
+                    const col = sortedColumns.find((c) => c.id === columnId);
+                    if (col)
+                      setDeleteColumnDialog({
+                        columnId,
+                        columnName: col.name,
+                      });
+                  }}
+                />
+              );
+            })(),
+          )}
+          {canManageColumns && workflowEditMode && (
+            <button
+              type="button"
+              className={styles.addColumnButton}
+              onClick={() => setAddColumnOpen(true)}
+            >
+              + Add Column
+            </button>
+          )}
+        </div>
       </div>
 
       {/* shortError notification area at bottom-right */}
