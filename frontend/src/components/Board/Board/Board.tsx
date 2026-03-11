@@ -9,8 +9,12 @@ import type {
 import { BoardReducer } from './BoardReducer';
 import type { BoardState } from './BoardReducer';
 import Column from '../Column/Column';
+import normalizeBoard from './normalizeBoard';
 import { handleDrop as handleDropTask, canMoveTask } from './HandleDropTask';
 import HandleRenameColumn from './RenameColumn';
+import EditWIPColumn from './EditWIPColumn';
+import AddColumn from './AddColumn';
+import DeleteColumn from './DeleteColumn';
 import TaskDetailsModal from '../Task/TaskDetailsModal/TaskDetailsModal';
 import TaskCreateEditModal from '../Task/TaskCreate/TaskCreateEdit';
 import styles from './Board.module.css';
@@ -60,24 +64,14 @@ const Board = ({
   const StoryColumnName =
     board.columns.find((c) => c.order === 0)?.name ?? 'Stories';
 
-  // Ensure story tasks always live in the Stories column.
-  const normalizeBoard = (b: BoardType): BoardType => ({
-    ...b, // makes a copy of object with tasks overwritten
-    tasks: b.tasks.map((t) =>
-      t.type === 'STORY'
-        ? { ...t, columnId: StoryColumnId, columnName: StoryColumnName }
-        : t,
-    ),
-  });
-
   // Reducer state manages the board and project details locally. This enables
   // complex state transitions (task moves, column edits) while still allowing a
   // parent component to override via props handlers.
   const [state, dispatch] = useReducer(BoardReducer, {
-    board: normalizeBoard(board),
+    board: normalizeBoard({ board, StoryColumnId, StoryColumnName }),
     projectDetails,
   } as BoardState);
-  const [shortError, setshortError] = useState<string | null>(null);
+  const [shortError, setShortError] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [createColumnId, setCreateColumnId] = useState<string | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -85,6 +79,16 @@ const Board = ({
   const [renameColumnDialog, setRenameColumnDialog] = useState<{
     columnId: string;
     currentName: string;
+  } | null>(null);
+  const [wipDialog, setWipDialog] = useState<{
+    columnId: string;
+    currentWip: number | null;
+    columnTaskCount: number;
+  } | null>(null);
+  const [addColumnOpen, setAddColumnOpen] = useState(false);
+  const [deleteColumnDialog, setDeleteColumnDialog] = useState<{
+    columnId: string;
+    columnName: string;
   } | null>(null);
 
   // Some Boolean Helpers
@@ -103,14 +107,19 @@ const Board = ({
   // Automatically clear shortError messages after a brief interval
   useEffect(() => {
     if (!shortError) return;
-    const id = setTimeout(() => setshortError(null), 3000);
+    const id = setTimeout(() => setShortError(null), 3000);
     return () => clearTimeout(id);
   }, [shortError]);
 
   // If the `board` prop changes from the parent we need to update the reducer
   // state accordingly. This keeps the UI in sync with remote data loads.
   useEffect(() => {
-    dispatch({ type: 'SET_BOARD', payload: { board: normalizeBoard(board) } });
+    dispatch({
+      type: 'SET_BOARD',
+      payload: {
+        board: normalizeBoard({ board, StoryColumnId, StoryColumnName }),
+      },
+    });
   }, [board]);
 
   const handleRenameColumn = async (columnId: string, newName: string) => {
@@ -118,12 +127,24 @@ const Board = ({
       try {
         await onRenameColumn(columnId, newName);
       } catch (err) {
-        setshortError((err as Error)?.message ?? 'Failed to rename column');
+        setShortError((err as Error)?.message ?? 'Failed to rename column');
       }
       return;
     }
 
     dispatch({ type: 'RENAME_COLUMN', payload: { columnId, name: newName } });
+  };
+
+  const handleSubmitWip = async (columnId: string, wipLimit: number | null) => {
+    if (onUpdateColumnWip) {
+      try {
+        await onUpdateColumnWip(columnId, wipLimit);
+      } catch (err) {
+        setShortError((err as Error)?.message ?? 'Failed to update WIP limit');
+      }
+      return;
+    }
+    dispatch({ type: 'UPDATE_COLUMN_WIP', payload: { columnId, wipLimit } });
   };
 
   const openRenameColumn = (columnId: string, currentName: string) => {
@@ -134,21 +155,15 @@ const Board = ({
     .slice()
     .sort((a, b) => a.order - b.order);
 
-  const handleAddColumn = async () => {
-    const columnName = window.prompt('Enter column name');
-    if (columnName === null) {
-      return;
-    }
-
+  const handleSubmitAddColumn = async (columnName: string) => {
     if (onAddColumn) {
       try {
         await onAddColumn(columnName);
       } catch (err) {
-        setshortError((err as Error)?.message || 'Failed to add column');
+        setShortError((err as Error)?.message || 'Failed to add column');
       }
       return;
     }
-
     dispatch({ type: 'ADD_COLUMN', payload: { name: columnName } });
   };
 
@@ -159,7 +174,7 @@ const Board = ({
     const column = sortedColumns.find((c) => c.id === columnId);
 
     if (columnId === StoryColumnId) {
-      setshortError(
+      setShortError(
         `${column?.name} column must stay first because it contains STORY tasks`,
       );
       return;
@@ -179,7 +194,7 @@ const Board = ({
       try {
         await onReorderColumn(columnId, direction);
       } catch (err) {
-        setshortError((err as Error)?.message ?? 'Failed to move column');
+        setShortError((err as Error)?.message ?? 'Failed to move column');
       }
       return;
     }
@@ -187,71 +202,20 @@ const Board = ({
     dispatch({ type: 'REORDER_COLUMN', payload: { columnId, direction } });
   };
 
-  const handleEditWip = async (columnId: string, currentWip: number | null) => {
-    if (!canManageColumns) {
-      setshortError('Only ProjectAdmin can edit WIP limits');
-      return;
-    }
-
-    const input = window.prompt(
-      'Set WIP limit (empty means no limit)',
-      currentWip === null ? '' : String(currentWip),
-    );
-    if (input === null) {
-      return;
-    }
-
-    const trimmed = input.trim();
-    let nextWip: number | null = null;
-    if (trimmed !== '') {
-      const parsed = Number(trimmed);
-      if (!Number.isInteger(parsed) || parsed < 1) {
-        setshortError('WIP must be an integer >= 1, or empty for no limit');
-        return;
-      }
-      nextWip = parsed;
-    }
-
-    if (onUpdateColumnWip) {
-      await onUpdateColumnWip(columnId, nextWip);
-      return;
-    }
-
-    dispatch({
-      type: 'UPDATE_COLUMN_WIP',
-      payload: { columnId, wipLimit: nextWip },
-    });
-  };
-
-  // Delete a column after confirming with the user. Only admins may
-  // perform this action. The confirmation step avoids accidental data loss.
-  const handleDeleteColumn = async (columnId: string) => {
-    if (!canManageColumns) {
-      setshortError('Only ProjectAdmin can delete columns');
-      return;
-    }
-
-    const column = sortedColumns.find((c) => c.id === columnId);
-    if (!column) {
-      return;
-    }
-
-    const confirmed = window.confirm(`Delete column "${column.name}"?`);
-    if (!confirmed) {
-      return;
-    }
-
+  const handleSubmitDeleteColumn = async (columnId: string) => {
     if (onDeleteColumn) {
-      await onDeleteColumn(columnId);
+      try {
+        await onDeleteColumn(columnId);
+      } catch (err) {
+        setShortError((err as Error)?.message ?? 'Failed to delete column');
+      }
       return;
     }
-
     dispatch({ type: 'DELETE_COLUMN', payload: { columnId } });
   };
 
   return (
     <div style={{ padding: '20px' }}>
-      {/* Project header section showing name/description and workflow toggle */}
       <div className={styles.projectSection}>
         <div className={styles['project-name']}>
           {state.projectDetails.name}
@@ -277,7 +241,6 @@ const Board = ({
         </div>
       </div>
 
-      {/* Columns and tasks area */}
       <div className={styles.board}>
         {sortedColumns.map((column, index) =>
           (() => {
@@ -287,13 +250,13 @@ const Board = ({
               index < sortedColumns.length - 1
                 ? sortedColumns[index + 1]
                 : null;
-            const isStory = column.id === 'col-story';
+            const isStory = column.id === StoryColumnId;
             const canMoveLeft =
-              !isStory && index > 0 && leftNeighbor?.id !== 'col-story';
+              !isStory && index > 0 && leftNeighbor?.id !== StoryColumnId;
             const canMoveRight =
               !isStory &&
               index < sortedColumns.length - 1 &&
-              rightNeighbor?.id !== 'col-story';
+              rightNeighbor?.id !== StoryColumnId;
             return (
               <Column
                 key={column.id}
@@ -326,12 +289,15 @@ const Board = ({
                   })}
                 isDraggable={state.projectDetails.userRole !== 'PROJECT_VIEWER'}
                 onDropTask={async (taskId, colId) => {
-                  if (!canManageTasks) {
-                    setshortError('You do not have permission to move tasks.');
-                    return;
-                  }
-
-                  if (!canMoveTask(state.board, taskId, colId, setshortError)) {
+                  if (
+                    !canMoveTask(
+                      state.board,
+                      taskId,
+                      colId,
+                      StoryColumnId,
+                      setShortError,
+                    )
+                  ) {
                     return;
                   }
 
@@ -342,7 +308,7 @@ const Board = ({
 
                   const previousBoard = state.board;
 
-                  handleDropTask(state, dispatch, taskId, colId, setshortError);
+                  handleDropTask(state, dispatch, taskId, colId, setShortError);
 
                   if (onUpdateTask) {
                     try {
@@ -357,7 +323,7 @@ const Board = ({
                         columnId: colId,
                       });
                     } catch {
-                      setshortError('Move rejected by server. Reverting...');
+                      setShortError('Move rejected by server. Reverting...');
                       dispatch({
                         type: 'SET_BOARD',
                         payload: { board: previousBoard },
@@ -367,18 +333,10 @@ const Board = ({
                 }}
                 onTaskClick={(taskId) => setSelectedTaskId(taskId)}
                 onTaskEdit={(taskId) => {
-                  if (!canManageTasks) {
-                    setshortError('You do not have permission to edit tasks');
-                    return;
-                  }
                   setEditingTaskId(taskId);
                 }}
                 canManageTasks={canManageTasks}
                 onCreateTask={(columnId) => {
-                  if (!canManageTasks) {
-                    setshortError('You do not have permission to create tasks');
-                    return;
-                  }
                   setCreateColumnId(columnId);
                 }}
                 canManageColumns={canManageColumns && workflowEditMode}
@@ -389,10 +347,24 @@ const Board = ({
                 canMoveRight={canMoveRight}
                 onMoveLeft={(columnId) => handleMoveColumn(columnId, 'left')}
                 onMoveRight={(columnId) => handleMoveColumn(columnId, 'right')}
-                onEditWip={(columnId) =>
-                  handleEditWip(columnId, column.wipLimit)
-                }
-                onDeleteColumn={(columnId) => handleDeleteColumn(columnId)}
+                onEditWip={(columnId) => {
+                  const taskCount = state.board.tasks.filter(
+                    (t) => t.columnId === columnId,
+                  ).length;
+                  setWipDialog({
+                    columnId,
+                    currentWip: column.wipLimit,
+                    columnTaskCount: taskCount,
+                  });
+                }}
+                onDeleteColumn={(columnId) => {
+                  const col = sortedColumns.find((c) => c.id === columnId);
+                  if (col)
+                    setDeleteColumnDialog({
+                      columnId,
+                      columnName: col.name,
+                    });
+                }}
               />
             );
           })(),
@@ -401,7 +373,7 @@ const Board = ({
           <button
             type="button"
             className={styles.addColumnButton}
-            onClick={handleAddColumn}
+            onClick={() => setAddColumnOpen(true)}
           >
             + Add Column
           </button>
@@ -413,6 +385,38 @@ const Board = ({
         <div className={styles['shortError-bottom-right']}>{shortError}</div>
       )}
 
+      {/* Add column modal */}
+      {addColumnOpen && (
+        <AddColumn
+          onSubmit={handleSubmitAddColumn}
+          onCancel={() => setAddColumnOpen(false)}
+          setShortError={setShortError}
+        />
+      )}
+
+      {/* Delete column confirmation modal */}
+      {deleteColumnDialog && (
+        <DeleteColumn
+          columnId={deleteColumnDialog.columnId}
+          columnName={deleteColumnDialog.columnName}
+          onSubmit={handleSubmitDeleteColumn}
+          onCancel={() => setDeleteColumnDialog(null)}
+          setShortError={setShortError}
+        />
+      )}
+
+      {/* WIP limit modal */}
+      {wipDialog && (
+        <EditWIPColumn
+          columnId={wipDialog.columnId}
+          currentWip={wipDialog.currentWip}
+          columnTaskCount={wipDialog.columnTaskCount}
+          onSubmit={handleSubmitWip}
+          onCancel={() => setWipDialog(null)}
+          setShortError={setShortError}
+        />
+      )}
+
       {/* column rename modal */}
       {canManageColumns && renameColumnDialog && (
         <HandleRenameColumn
@@ -421,7 +425,7 @@ const Board = ({
           canManageColumns={canManageColumns && workflowEditMode}
           onSubmit={handleRenameColumn}
           onCancel={() => setRenameColumnDialog(null)}
-          setshortError={setshortError}
+          setShortError={setShortError}
         />
       )}
 
@@ -553,7 +557,7 @@ const Board = ({
                 await onDeleteTask(taskId);
               } catch {
                 // parent handler failed — surface a shortError
-                setshortError('Failed to delete task');
+                setShortError('Failed to delete task');
               }
             } else {
               dispatch({ type: 'DELETE_TASK', payload: { taskId } });

@@ -81,6 +81,7 @@ export const BoardReducer = (
   state: BoardState,
   action: BoardAction
 ): BoardState => {
+  const storyColumnId = state.board.columns[0]?.id ?? 'col-story';
   switch (action.type) {
     case "MOVE_TASK": {
       const { taskId, targetColumnId } = action.payload;
@@ -109,11 +110,11 @@ export const BoardReducer = (
           return state;
         }
 
-        if (column.id === 'col-story' && task.type !== 'STORY') {
+        if (column.id === storyColumnId && task.type !== 'STORY') {
           return state;
         }
 
-        if (task.type === 'STORY' && column.id !== 'col-story') {
+        if (task.type === 'STORY' && column.id !== storyColumnId) {
           return state;
         }
       }
@@ -269,7 +270,7 @@ export const BoardReducer = (
         return state;
       }
 
-      if (action.payload.columnId === 'col-story') {
+      if (action.payload.columnId === storyColumnId) {
         return state;
       }
 
@@ -286,7 +287,7 @@ export const BoardReducer = (
       if (targetIndex < 0 || targetIndex >= ordered.length) {
         return state;
       }
-      if (ordered[targetIndex]?.id === 'col-story') {
+      if (ordered[targetIndex]?.id === storyColumnId) {
         return state;
       }
 
@@ -328,9 +329,10 @@ export const BoardReducer = (
       if (state.projectDetails.userRole !== 'PROJECT_ADMIN') {
         return state;
       }
-
+      const todoColumnId = state.board.columns[1]?.id;
+      const doneColumnId = state.board.columns[state.board.columns.length - 1]?.id;
       const { columnId } = action.payload;
-      if (['col-story', 'col-backlog', 'col-done'].includes(columnId)) {
+      if ([storyColumnId, todoColumnId, doneColumnId].includes(columnId)) {
         return state;
       }
 

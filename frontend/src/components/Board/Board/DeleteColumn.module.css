@@ -1,4 +1,4 @@
-/* Styles for the EditColumn modal dialog */
+/* Styles for the DeleteColumn confirmation modal */
 
 .overlay {
   position: fixed;
@@ -22,15 +22,17 @@
   flex-direction: column;
   gap: 8px;
   min-width: 280px;
+  max-width: 360px;
 }
 
 .heading {
   margin: 0;
 }
 
-.textInput {
-  padding: 6px 8px;
+.message {
+  margin: 4px 0;
   font-size: 14px;
+  line-height: 1.4;
 }
 
 .buttonRow {
@@ -42,4 +44,15 @@
 .button {
   padding: 6px 10px;
   cursor: pointer;
+}
+
+.danger {
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+}
+
+.danger:hover {
+  background: #b71c1c;
 }

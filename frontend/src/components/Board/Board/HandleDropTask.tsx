@@ -1,9 +1,4 @@
 import type { Board as BoardType } from '../../../types/Types';
-
-// Business logic for determining whether a task may move to a target column.
-// The function mirrors the rules previously inline in Board.tsx. It does not
-// modify state directly, but returns a boolean and uses the provided `setshortError`
-// callback to communicate why a move was disallowed.
 import type { Dispatch } from 'react';
 import type { BoardState, BoardAction } from './BoardReducer';
 
@@ -11,6 +6,7 @@ export const canMoveTask = (
   board: BoardType,
   taskId: string,
   targetColumnId: string,
+  storyColumnId: string,
   setshortError: (message: string | null) => void,
 ): boolean => {
   const task = board.tasks.find((t) => t.id === taskId);
@@ -20,7 +16,7 @@ export const canMoveTask = (
   if (!targetColumn) return false;
 
   // Disallow non-story tasks from being moved into the dedicated story column
-  if (targetColumn.id === 'col-story' && task.type !== 'STORY') {
+  if (targetColumn.id === storyColumnId && task.type !== 'STORY') {
     setshortError(
       'Move forbidden: only stories can go into the Stories column',
     );
@@ -28,7 +24,7 @@ export const canMoveTask = (
   }
 
   // Prevent STORY tasks from being moved out of the story column
-  if (task.type === 'STORY' && targetColumn.id !== 'col-story') {
+  if (task.type === 'STORY' && targetColumn.id !== storyColumnId) {
     setshortError('Move forbidden: stories must remain in the Stories column');
     return false;
   }
@@ -69,7 +65,16 @@ export const handleDrop = (
   targetColumnId: string,
   setshortError: (message: string | null) => void,
 ) => {
-  if (!canMoveTask(state.board, taskId, targetColumnId, setshortError)) return;
+  if (
+    !canMoveTask(
+      state.board,
+      taskId,
+      targetColumnId,
+      state.board.columns[0]?.id,
+      setshortError,
+    )
+  )
+    return;
 
   dispatch({
     type: 'MOVE_TASK',
