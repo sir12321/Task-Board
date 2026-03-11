@@ -9,6 +9,6 @@ router.use(authenticateToken);
 router.use('/:projectId/members', memberRoutes);
 router.get('/', getProjects);
 router.post('/', createNewProject);
-router.patch('/:id/archive', archiveProjectHandler);
+router.patch('/:id', archiveProjectHandler);
 
 export default router;

@@ -56,3 +56,12 @@ export const getBoards = async (boardId: string): Promise<BoardResponse | null> 
         }),
     };
 };
+
+export const createBoard = async (projectId: string, name: string): Promise<Board> => {
+    return await p.board.create({
+        data: {
+            name,
+            projectId,
+        },
+    });
+}

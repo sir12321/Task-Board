@@ -58,7 +58,10 @@ const DashboardPage = () => {
 
     const handleCreateProject = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!newProjectName.trim()) return;
+        if (!newProjectName.trim()) {
+            alert("Project name cannot be empty.");
+            return;
+        }
 
         try {
             const created = await apiClient("/projects", {
@@ -68,7 +71,15 @@ const DashboardPage = () => {
                     description: newProjectDescription,
                 }),
             });
-            setProjects((prev) => [...prev, created]);
+
+            const safelyCreated = {
+                ...created,
+                userRole: created.userRole || "PROJECT_ADMIN",
+                boards: created.boards || [],
+                members: created.members || [],
+                isArchived: false,
+            };
+            setProjects((prev) => [...prev, safelyCreated]);
             setIsModalOpen(false);
             setNewProjectName("");
             setNewProjectDescription("");   
@@ -82,7 +93,7 @@ const DashboardPage = () => {
         if (!newBoardName.trim()) return;
 
         try {
-            const created = await apiClient(`/projects/${projectId}/boards`, {
+            const created = await apiClient(`/boards`, {
                 method: "POST",
                 body: JSON.stringify({ 
                     name: newBoardName,

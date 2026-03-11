@@ -20,7 +20,6 @@ interface ProjectSummary {
 export const getUserProjects = async (userId: string): Promise<ProjectSummary[]> => {
     const projects = await prisma.project.findMany({
         where: {
-            isArchived: false,
             members: {
                 some: { userId },
             },
@@ -47,6 +46,7 @@ export const getUserProjects = async (userId: string): Promise<ProjectSummary[]>
             name: project.name,
             description: project.description,
             userRole: currentUserMember?.role || 'PROJECT_VIEWER',
+            isArchived: project.isArchived,
             members: project.members.map((m) => ({
                 id: m.user.id,
                 name: m.user.name,
@@ -82,7 +82,12 @@ export const createProject = async (userId: string, data: { name: string; descri
     return newProject;
 };
 
-export const archiveProject = async (userId: string, projectId: string, globalRole: string): Promise<Project> => {
+export const archiveProject = async (
+    userId: string, 
+    projectId: string, 
+    globalRole: string, 
+    isArchived: boolean
+): Promise<Project> => {
     if (globalRole !== 'GLOBAL_ADMIN') {
         const member = await prisma.projectMember.findUnique({
             where: { userId_projectId: { userId, projectId } },
@@ -96,6 +101,6 @@ export const archiveProject = async (userId: string, projectId: string, globalRo
 
     return prisma.project.update({
         where: { id: projectId },
-        data: { isArchived: true },
+        data: { isArchived },
     });
 };
