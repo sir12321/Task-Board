@@ -57,6 +57,7 @@ const TaskDetailsModal = ({
   // responsive even when a parent-provided `onAddComment` is async.
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const commentDeleteWindowMs = 2 * 24 * 60 * 60 * 1000;
 
   const handleAddComment = async () => {
     const content = newComment.trim();
@@ -110,6 +111,12 @@ const TaskDetailsModal = ({
                 {task.comments && task.comments.length > 0 ? (
                   task.comments.map((c) => {
                     const isMine = c.authorId === currentUserId;
+                    const createdAtMs = new Date(c.createdAt).getTime();
+                    const isWithinDeleteWindow =
+                      Number.isFinite(createdAtMs) &&
+                      Date.now() - createdAtMs <= commentDeleteWindowMs;
+                    const canDelete =
+                      Boolean(onDeleteComment) && isMine && isWithinDeleteWindow;
                     return (
                       <div
                         className={`${styles.comment} ${
@@ -126,7 +133,7 @@ const TaskDetailsModal = ({
                             <span className={styles.commentTime}>
                               {new Date(c.createdAt).toLocaleString()}
                             </span>
-                            {(isMine || userRole === 'PROJECT_ADMIN') && onDeleteComment && (
+                            {canDelete && (
                               <button
                                 type = "button"
                                 onClick={() => {

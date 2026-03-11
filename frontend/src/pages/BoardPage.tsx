@@ -263,7 +263,33 @@ export default function BoardPage() {
 
   const deleteComment = useCallback(
     async (commentId: string): Promise<void> => {
-      if (!project || !board) return;
+      if (!board || !user) return;
+      const commentDeleteWindowMs = 2 * 24 * 60 * 60 * 1000;
+
+      const commentToDelete = board.tasks
+        .flatMap((task) => task.comments ?? [])
+        .find((comment) => comment.id === commentId);
+
+      if (!commentToDelete) {
+        alert('Comment not found.');
+        return;
+      }
+
+      if (commentToDelete.authorId !== user.id) {
+        alert("You can only delete your own comments.");
+        return;
+      }
+
+      const createdAtMs = new Date(commentToDelete.createdAt).getTime();
+      const isWithinDeleteWindow =
+        Number.isFinite(createdAtMs) &&
+        Date.now() - createdAtMs <= commentDeleteWindowMs;
+
+      if (!isWithinDeleteWindow) {
+        alert('You can only delete a comment within 2 days of posting it.');
+        return;
+      }
+
       try {
         await apiClient(`/comments/${commentId}`, { method: 'DELETE' });
         setBoard((prev) => {
@@ -281,7 +307,7 @@ export default function BoardPage() {
         alert('Failed to delete comment.');
       }
     },
-    [board, project],
+    [board, user],
   );
 
   const addColumn = useCallback(

@@ -9,16 +9,15 @@
 
 .modal {
   background: white;
-  width: 1200px;
-  max-width: 96%;
-  height: 90vh;
-  max-height: 90vh;
+  width: 820px;
+  max-width: 88%;
+  height: 54vh;
+  max-height: 54vh;
   overflow: hidden;
   padding: 20px;
   border-radius: 10px;
   position: relative;
   box-shadow: 0 20px 40px rgba(16, 24, 40, 0.2);
-  /* improve legibility */
   font-size: 15px;
   display: flex;
   flex-direction: column;
@@ -244,7 +243,6 @@
   color: #666;
   font-size: 14px;
 }
-
 
 .detailRow {
   display: flex;
