@@ -104,6 +104,8 @@ export const BoardReducer = (
         (c) => c.id === task.columnId
       );
 
+      const storyColumnId = state.board.columns.find((c) => c.order === 0)?.id || 'col-story';
+
       if (sourceColumn && column) {
         const orderDiff = column.order - sourceColumn.order;
         if (orderDiff !== 1) {

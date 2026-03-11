@@ -18,6 +18,7 @@ interface Properties {
   currentUserId?: string | null;
   onClose: () => void;
   onAddComment?: (content: string) => Promise<void> | void;
+  onDeleteComment?: (commentId: string) => Promise<void> | void;
 }
 
 /**
@@ -33,6 +34,7 @@ const TaskDetailsModal = ({
   onClose,
 
   onAddComment,
+  onDeleteComment,
 }: Properties) => {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'In progress';
@@ -124,6 +126,19 @@ const TaskDetailsModal = ({
                             <span className={styles.commentTime}>
                               {new Date(c.createdAt).toLocaleString()}
                             </span>
+                            {(isMine || userRole === 'PROJECT_ADMIN') && onDeleteComment && (
+                              <button
+                                type = "button"
+                                onClick={() => {
+                                  if (window.confirm('Are you sure you want to delete this comment?')) {
+                                    onDeleteComment(c.id);
+                                  }
+                                }}
+                                style={{ marginLeft: '12px', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+                              >
+                                Delete
+                              </button>
+                            )}
                           </div>
                           <div className={styles.commentText}>{c.content}</div>
                         </div>

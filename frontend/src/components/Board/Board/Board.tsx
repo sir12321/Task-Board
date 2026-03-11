@@ -32,6 +32,7 @@ interface Props {
     payload: NewTaskInput,
   ) => Promise<void> | void;
   onAddComment?: (taskId: string, content: string) => Promise<void> | void;
+  onDeleteComment?: (taskId: string, commentId: string) => Promise<void> | void;
   onAddColumn?: (columnName: string) => Promise<void> | void;
   onRenameColumn?: (columnId: string, newName: string) => Promise<void> | void;
   onReorderColumn?: (
@@ -52,6 +53,7 @@ const Board = ({
   onCreateTask,
   onUpdateTask,
   onAddComment,
+  onDeleteComment,
   onAddColumn,
   onRenameColumn,
   onReorderColumn,
@@ -470,6 +472,24 @@ const Board = ({
                 },
               },
             });
+          }}
+          onDeleteComment={async (commentId: string) => {
+            if (onDeleteComment) {
+              await onDeleteComment(selectedTaskId, commentId);
+              dispatch({
+                type: 'SET_BOARD',
+                payload: {
+                  board: {
+                    ...state.board,
+                    tasks: state.board.tasks.map((task) =>
+                      task.id === selectedTaskId
+                        ? { ...task, comments: task.comments?.filter((c) => c.id !== commentId) }
+                        : task,
+                    )
+                  }
+                }
+              });
+            }
           }}
         />
       )}
