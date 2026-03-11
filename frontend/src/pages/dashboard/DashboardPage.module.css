@@ -8,6 +8,12 @@
     margin-bottom: 40px;
 }
 
+.titleRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .title {
     font-size: 32px;
     font-weight: 700;
@@ -26,6 +32,21 @@
     gap: 24px;
 }
 
+.createButton {
+    background-color: #0052cc;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.createButton:hover {
+    background-color: #003d99;
+}
+
 .projectCard {
     background-color: white;
     border-radius: 8px;
@@ -42,6 +63,13 @@
 }
 
 .projectHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.projectTitle {
     font-size: 20px;
     font-weight: 600;
     color: #0052cc;
@@ -67,47 +95,205 @@
 }
 
 .boardList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .boardButton {
-  display: flex;
-  align-items: center;
-  padding: 10px 12px;
-  background: #f4f5f7;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f4f5f7;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
 }
 
 .boardButton:hover {
-  background: #ebecf0;
-  border-color: #0052cc;
+    background: #ebecf0;
+    border-color: #0052cc;
 }
 
 .boardIcon {
-  margin-right: 10px;
+    margin-right: 10px;
 }
 
 .boardName {
-  font-size: 14px;
-  color: #172b4d;
-  font-weight: 500;
+    font-size: 14px;
+    color: #172b4d;
+    font-weight: 500;
 }
 
 .emptyText, .emptyState {
-  color: #6b778c;
-  font-size: 14px;
-  font-style: italic;
+    color: #6b778c;
+    font-size: 14px;
+    font-style: italic;
 }
 
-.loader {
-  padding: 100px;
-  text-align: center;
-  font-size: 18px;
-  color: #5e6c84;
+.loading {
+    padding: 100px;
+    text-align: center;
+    font-size: 18px;
+    color: #5e6c84;
+}
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(9, 30, 66, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: white;
+    padding: 32px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 20px 66px -20px rgba(0,0,0,0.3);
+}
+
+.formField {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.formField label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #5e6c84;
+    margin-bottom: 4px;
+}
+
+.formField input, .formField textarea {
+    padding: 10px;
+    border: 2px solid #dfe1e6;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.modalActions {
+    margin-top: 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.submitBtn {
+    background: #0052cc;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.addBoardTrigger {
+    background: transparent;
+    border: 1px dashed #dfe1e6;
+    color: #6b778c;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+    margin-top: 4px;
+}
+
+.addBoardTrigger:hover {
+    background: #f4f5f7;
+    color: #172b4d;
+    border-color: #0052cc;
+}
+
+.inlineForm {
+    background: #f4f5f7;
+    padding: 8px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.inlineInput {
+    padding: 6px 8px;
+    border: 2px solid #0052cc;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.inlineActions {
+    display: flex;
+    gap: 8px;
+}
+
+.addBtn {
+    background: #0052cc;
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.cancelBtn {
+    background: transparent;
+    border: none;
+    color: #6b778c;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.tabContainer {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+    border-bottom: 2px solid #dfe1e6;
+}
+
+.tab {
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #5e6c84;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+
+.activeTab {
+    color: #0052cc;
+    border-bottom-color: #0052cc;
+}
+
+.projectActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.archiveBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.archiveBtn:hover {
+    background: #ebecf0;
 }

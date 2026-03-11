@@ -23,12 +23,10 @@ export interface Task {
   type: TaskType;
   priority: TaskPriority;
   dueDate: string | null;
-
   createdAt: string;
   updatedAt: string;
   resolvedAt?: string | null;
   closedAt?: string | null;
-
   columnId: string;
   columnName: string;
   status: string;
@@ -38,7 +36,6 @@ export interface Task {
   assigneeName?: string | null;
   parentId?: string | null;
   parentName?: string | null;
-
   comments?: Comment[];
 }
 
@@ -108,11 +105,12 @@ export interface ProjectDetails extends Project {
     id: string;
     name: string;
   }[];
+  isArchived?: boolean;
 }
 
 export interface ProjectMemberSummary {
   id: string;
   name: string;
-  email: string; // what if multiple users have same email, must be handled
+  email: string;
   role: ProjectRole;
 }
