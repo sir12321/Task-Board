@@ -96,18 +96,6 @@ const DashboardPage = () => {
         <div className={styles.headerSection}>
           <div className={styles.titleRow}>
             <h1 className={styles.title}>Dashboard</h1>
-            <button
-              className={styles.createButton}
-              onClick={() =>
-                navigate(
-                  user?.globalRole === 'GLOBAL_ADMIN'
-                    ? '/create-project'
-                    : '/assign-users',
-                )
-              }
-            >
-              {user?.globalRole === 'GLOBAL_ADMIN' ? '+ New Project' : 'Assign Users'}
-            </button>
           </div>
 
           <div className={styles.tabContainer}>
