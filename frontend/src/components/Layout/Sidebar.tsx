@@ -32,6 +32,16 @@ const Sidebar = ({ collapsed, toggle }: Props) => {
 
       <nav>
         <NavLink
+          to="/dashboard"
+          className={({ isActive }) =>
+            `nav-item nav-link dashboard-item ${isActive ? 'active' : ''}`
+          }
+        >
+          <span className="nav-icon">⌂</span>
+          {!collapsed && <span className="label">Dashboard</span>}
+        </NavLink>
+
+        <NavLink
           to="/notifications"
           className={({ isActive }) =>
             `nav-item nav-link notifications-item ${isActive ? 'active' : ''}`
@@ -46,10 +56,39 @@ const Sidebar = ({ collapsed, toggle }: Props) => {
           )}
         </NavLink>
 
-        <div className="nav-item settings-item">
+        {user.globalRole === 'GLOBAL_ADMIN' && (
+          <NavLink
+            to="/create-project"
+            className={({ isActive }) =>
+              `nav-item nav-link projectCreate-item ${isActive ? 'active' : ''}`
+            }
+          >
+            <span className="nav-icon">+</span>
+            {!collapsed && <span className="label">Create Project</span>}
+          </NavLink>
+        )}
+
+        {user.globalRole !== 'GLOBAL_ADMIN' && (
+          <NavLink
+            to="/assign-users"
+            className={({ isActive }) =>
+              `nav-item nav-link projectCreate-item ${isActive ? 'active' : ''}`
+            }
+          >
+            <span className="nav-icon">⇄</span>
+            {!collapsed && <span className="label">Assign Users</span>}
+          </NavLink>
+        )}
+
+        <NavLink
+          to="/project-settings"
+          className={({ isActive }) =>
+            `nav-item nav-link settings-item ${isActive ? 'active' : ''}`
+          }
+        >
           <span className="nav-icon">⚙</span>
-          {!collapsed && <span className="label">Settings</span>}
-        </div>
+          {!collapsed && <span className="label">Project Settings</span>}
+        </NavLink>
       </nav>
 
       <div className="sidebar-footer">

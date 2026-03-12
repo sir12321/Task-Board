@@ -1,0 +1,352 @@
+.pageContainer {
+  padding: 36px 40px 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.pageHeading h1 {
+  margin: 0 0 8px;
+  font-size: 32px;
+  color: #172b4d;
+}
+
+.contentColumn {
+  display: block;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #dfe1e6;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 12px 28px -24px rgba(9, 30, 66, 0.45);
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.membersList + .panelHeader {
+  margin-top: 2px;
+  margin-bottom: 8px;
+}
+
+.panelHeader h2,
+.panelHeader h3 {
+  margin: 0 0 6px;
+  color: #172b4d;
+}
+
+.panelHeader p {
+  margin: 0;
+  color: #6b778c;
+  line-height: 1.45;
+}
+
+.projectForm {
+  display: grid;
+  gap: 16px;
+}
+
+.spanFull {
+  grid-column: 1 / -1;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formField label {
+  color: #5e6c84;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.formField input,
+.formField textarea,
+.memberRoleField select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #c7d1db;
+  border-radius: 8px;
+  padding: 11px 12px;
+  font: inherit;
+  color: #172b4d;
+  background: #fff;
+}
+
+.memberRoleField select {
+  cursor: pointer;
+}
+
+.formField textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.formField input:focus,
+.formField textarea:focus,
+.memberRoleField select:focus,
+.availableUserActions select:focus {
+  outline: 2px solid rgba(0, 82, 204, 0.18);
+  border-color: #0052cc;
+}
+
+.supportText {
+  margin: 0;
+  color: #6b778c;
+  font-size: 13px;
+}
+
+.contentSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin: 24px 0 14px;
+}
+
+.contentSectionHeader h3 {
+  margin: 0 0 4px;
+  color: #172b4d;
+  font-size: 20px;
+}
+
+.contentSectionHeader p {
+  margin: 0;
+  color: #6b778c;
+  line-height: 1.45;
+}
+
+.userSearchBar {
+  margin: 4px 0 16px;
+  max-width: 420px;
+}
+
+.userSearchBar input {
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.availableUsersList,
+.membersList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.availableUsersList {
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.membersList {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.availableUserCard,
+.memberCard {
+  border: 1px solid #d6deea;
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #fbfcfe 0%, #f5f8fc 100%);
+  box-shadow: 0 10px 24px -22px rgba(9, 30, 66, 0.55);
+}
+
+.availableUserCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.availableUserActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.roleSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.roleSelector label {
+  color: #6b778c;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.roleSelector select {
+  min-width: 120px;
+}
+
+.userIdentity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.userAvatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #dce7fb 0%, #c8d7f3 100%);
+  color: #1d4ed8;
+  font-weight: 800;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 38px;
+}
+
+.userText {
+  min-width: 0;
+}
+
+.availableUserActions select {
+  min-width: 120px;
+  box-sizing: border-box;
+  border: 1px solid #c7d1db;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  background: #fff;
+  color: #172b4d;
+  cursor: pointer;
+}
+
+.userName {
+  font-weight: 700;
+  color: #172b4d;
+  font-size: 16px;
+}
+
+.userEmail {
+  color: #6b778c;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.secondaryActionButton,
+.primaryActionButton,
+.ghostActionButton {
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.primaryActionButton {
+  border: none;
+  background: #0052cc;
+  color: #fff;
+}
+
+.primaryActionButton:hover {
+  background: #003d99;
+}
+
+.secondaryActionButton {
+  border: 1px solid #bfd4ff;
+  background: #ebf2ff;
+  color: #0052cc;
+}
+
+.secondaryActionButton:hover {
+  background: #d9e8ff;
+}
+
+.ghostActionButton {
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #344054;
+}
+
+.ghostActionButton:hover {
+  background: #f8fafc;
+}
+
+.feedbackMessage {
+  margin-top: 16px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #eff8ff;
+  color: #175cd3;
+  border: 1px solid #b2ddff;
+}
+
+.memberCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 170px auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.memberRoleField {
+  min-width: 0;
+}
+
+.emptyMessage {
+  border: 1px dashed #c7d1db;
+  border-radius: 10px;
+  padding: 20px;
+  color: #6b778c;
+  background: #f8fafc;
+}
+
+@media (max-width: 980px) {
+  .pageHeader {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .pageContainer {
+    padding: 24px 18px 36px;
+  }
+
+  .userSearchBar {
+    max-width: 100%;
+  }
+
+  .availableUserCard,
+  .availableUserActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .availableUserCard {
+    grid-template-columns: 1fr;
+  }
+
+  .memberCard {
+    grid-template-columns: 1fr;
+  }
+}

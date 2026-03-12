@@ -4,6 +4,10 @@ import RegisterPage from './pages/auth/RegisterPage';
 import BoardPage from './pages/BoardPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
+import AssignUsersPage from './pages/project-management/AssignUsersPage';
+import CreateProjectPage from './pages/project-management/CreateProjectPage';
+import EditProjectSettingsPage from './pages/project-management/EditProjectSettingsPage';
+import ProjectManagementPage from './pages/project-management/ProjectManagementPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -39,6 +43,38 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <NotificationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/project-management"
+        element={
+          <ProtectedRoute>
+            <ProjectManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/create-project"
+        element={
+          <ProtectedRoute>
+            <CreateProjectPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/assign-users"
+        element={
+          <ProtectedRoute>
+            <AssignUsersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/project-settings"
+        element={
+          <ProtectedRoute>
+            <EditProjectSettingsPage />
           </ProtectedRoute>
         }
       />
