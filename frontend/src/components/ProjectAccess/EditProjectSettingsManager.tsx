@@ -1,20 +1,52 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { ProjectRole } from '../../types/Types';
+import type {
+  AuthUser,
+  DirectoryUser,
+  ProjectDetails,
+  ProjectRole,
+} from '../../types/Types';
 import styles from './EditProjectSettingsManager.module.css';
-import { useManagedProjects } from './useManagedProjects';
-import { PROJECT_ROLE_OPTIONS } from './projectAccess';
-import { INITIAL_DIRECTORY } from './ProjectAccessMock';
+import { getInitials } from '../../utils/getInitials';
 
-const getInitials = (name: string): string =>
-  name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+const PROJECT_ROLE_OPTIONS: Array<{
+  value: ProjectRole;
+  label: string;
+}> = [
+  { value: 'PROJECT_ADMIN', label: 'Admin' },
+  { value: 'PROJECT_MEMBER', label: 'User' },
+  { value: 'PROJECT_VIEWER', label: 'Viewer' },
+];
 
-const EditProjectSettingsManager = () => {
-  const { user, adminProjects, setManagedProjects } = useManagedProjects();
+interface Props {
+  user: AuthUser;
+  adminProjects: ProjectDetails[];
+  directoryUsers: DirectoryUser[];
+  onSaveProjectSettings: (input: {
+    projectId: string;
+    name: string;
+    description: string;
+    isArchived: boolean;
+  }) => Promise<void>;
+  onAddProjectMember: (input: {
+    projectId: string;
+    memberEmail: string;
+    role: ProjectRole;
+  }) => Promise<void>;
+  onUpdateProjectMemberRole: (input: {
+    projectId: string;
+    memberId: string;
+    role: ProjectRole;
+  }) => Promise<void>;
+}
+
+const EditProjectSettingsManager = ({
+  user,
+  adminProjects,
+  directoryUsers,
+  onSaveProjectSettings,
+  onAddProjectMember,
+  onUpdateProjectMemberRole,
+}: Props) => {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [projectQuery, setProjectQuery] = useState('');
   const [userQuery, setUserQuery] = useState('');
@@ -26,6 +58,7 @@ const EditProjectSettingsManager = () => {
   const [draftDescription, setDraftDescription] = useState('');
   const [draftArchived, setDraftArchived] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredProjects = useMemo(() => {
     const query = projectQuery.trim().toLowerCase();
@@ -68,7 +101,7 @@ const EditProjectSettingsManager = () => {
       selectedProject.members.map((member) => member.email),
     );
 
-    return INITIAL_DIRECTORY.filter((person) => {
+    return directoryUsers.filter((person) => {
       if (person.globalRole === 'GLOBAL_ADMIN') {
         return false;
       }
@@ -86,7 +119,7 @@ const EditProjectSettingsManager = () => {
         person.email.toLowerCase().includes(query)
       );
     });
-  }, [selectedProject, userQuery]);
+  }, [directoryUsers, selectedProject, userQuery]);
 
   const filteredMembers = useMemo(() => {
     if (!selectedProject) {
@@ -118,10 +151,6 @@ const EditProjectSettingsManager = () => {
     setDraftArchived(Boolean(selectedProject.isArchived));
   }, [selectedProject]);
 
-  if (!user) {
-    return null;
-  }
-
   const handleReset = (): void => {
     if (!selectedProject) {
       return;
@@ -133,7 +162,7 @@ const EditProjectSettingsManager = () => {
     setStatusMessage('');
   };
 
-  const handleSave = (): void => {
+  const handleSave = async (): Promise<void> => {
     if (!selectedProject) {
       return;
     }
@@ -143,20 +172,22 @@ const EditProjectSettingsManager = () => {
       return;
     }
 
-    setManagedProjects((prev) =>
-      prev.map((project) =>
-        project.id === selectedProject.id
-          ? {
-              ...project,
-              name: draftName.trim(),
-              description: draftDescription.trim() || null,
-              isArchived: draftArchived,
-            }
-          : project,
-      ),
-    );
-
-    setStatusMessage(`Saved settings for "${draftName.trim()}".`);
+    try {
+      setIsSubmitting(true);
+      await onSaveProjectSettings({
+        projectId: selectedProject.id,
+        name: draftName,
+        description: draftDescription,
+        isArchived: draftArchived,
+      });
+      setStatusMessage(`Saved settings for "${draftName.trim()}".`);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to save settings.';
+      setStatusMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const updateDirectoryRole = (email: string, nextRole: ProjectRole): void => {
@@ -166,49 +197,42 @@ const EditProjectSettingsManager = () => {
     }));
   };
 
-  const handleAddUser = (userId: string): void => {
+  const handleAddUser = async (userId: string): Promise<void> => {
     if (!selectedProject) {
       return;
     }
 
-    const directoryUser = INITIAL_DIRECTORY.find(
-      (person) => person.id === userId,
-    );
+    const directoryUser = directoryUsers.find((person) => person.id === userId);
     if (!directoryUser) {
       return;
     }
 
     const role = directoryRoles[directoryUser.email] ?? 'PROJECT_MEMBER';
 
-    setManagedProjects((prev) =>
-      prev.map((project) =>
-        project.id === selectedProject.id
-          ? {
-              ...project,
-              members: [
-                ...project.members,
-                {
-                  id: directoryUser.id,
-                  name: directoryUser.name,
-                  email: directoryUser.email,
-                  role,
-                },
-              ],
-            }
-          : project,
-      ),
-    );
-
-    setStatusMessage(
-      `Added ${directoryUser.name} to "${selectedProject.name}".`,
-    );
-    setUserQuery('');
+    try {
+      setIsSubmitting(true);
+      await onAddProjectMember({
+        projectId: selectedProject.id,
+        memberEmail: directoryUser.email,
+        role,
+      });
+      setStatusMessage(
+        `Added ${directoryUser.name} to "${selectedProject.name}".`,
+      );
+      setUserQuery('');
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to add member.';
+      setStatusMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleUpdateMemberRole = (
+  const handleUpdateMemberRole = async (
     memberId: string,
     nextRole: ProjectRole,
-  ): void => {
+  ): Promise<void> => {
     if (!selectedProject) {
       return;
     }
@@ -222,24 +246,23 @@ const EditProjectSettingsManager = () => {
       return;
     }
 
-    setManagedProjects((prev) =>
-      prev.map((project) =>
-        project.id === selectedProject.id
-          ? {
-              ...project,
-              members: project.members.map((member) =>
-                member.email === 'admin@taskboard.com'
-                  ? member
-                  : (nextMembers.find(
-                      (nextMember) => nextMember.id === member.id,
-                    ) ?? member),
-              ),
-            }
-          : project,
-      ),
-    );
-
-    setStatusMessage(`Updated member roles in "${selectedProject.name}".`);
+    try {
+      setIsSubmitting(true);
+      await onUpdateProjectMemberRole({
+        projectId: selectedProject.id,
+        memberId,
+        role: nextRole,
+      });
+      setStatusMessage(`Updated member roles in "${selectedProject.name}".`);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Failed to update member role.';
+      setStatusMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -406,6 +429,7 @@ const EditProjectSettingsManager = () => {
                             value={
                               directoryRoles[person.email] ?? 'PROJECT_MEMBER'
                             }
+                            disabled={isSubmitting}
                             onChange={(event) =>
                               updateDirectoryRole(
                                 person.email,
@@ -423,6 +447,7 @@ const EditProjectSettingsManager = () => {
                         <button
                           type="button"
                           className={styles.primaryActionButton}
+                          disabled={isSubmitting}
                           onClick={() => handleAddUser(person.id)}
                         >
                           Add
@@ -472,6 +497,7 @@ const EditProjectSettingsManager = () => {
                       <div className={styles.memberRoleSelectWrap}>
                         <select
                           value={member.role}
+                          disabled={isSubmitting}
                           onChange={(event) =>
                             handleUpdateMemberRole(
                               member.id,
@@ -501,6 +527,7 @@ const EditProjectSettingsManager = () => {
                 <button
                   type="button"
                   className={styles.ghostActionButton}
+                  disabled={isSubmitting}
                   onClick={handleReset}
                 >
                   Reset
@@ -508,9 +535,10 @@ const EditProjectSettingsManager = () => {
                 <button
                   type="button"
                   className={styles.primaryActionButton}
+                  disabled={isSubmitting}
                   onClick={handleSave}
                 >
-                  Save settings
+                  {isSubmitting ? 'Saving...' : 'Save settings'}
                 </button>
               </div>
             </div>

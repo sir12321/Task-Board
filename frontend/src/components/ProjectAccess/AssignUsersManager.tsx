@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { AuthUser, ProjectDetails, ProjectRole } from '../../types/Types';
-import { PROJECT_ROLE_OPTIONS } from './projectAccess';
 import styles from './AssignUsersManager.module.css';
+
+const PROJECT_ROLE_OPTIONS: Array<{
+  value: ProjectRole;
+  label: string;
+}> = [
+  { value: 'PROJECT_ADMIN', label: 'Admin' },
+  { value: 'PROJECT_MEMBER', label: 'User' },
+  { value: 'PROJECT_VIEWER', label: 'Viewer' },
+];
 
 const roleLabel = (role: ProjectRole): string => role.replace('PROJECT_', '');
 

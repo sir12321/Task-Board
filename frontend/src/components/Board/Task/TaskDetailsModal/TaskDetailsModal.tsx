@@ -4,6 +4,7 @@ import type {
   ProjectRole as ProjectRole,
 } from '../../../../types/Types';
 import styles from './TaskDetailsModal.module.css';
+import { getInitials } from '../../../../utils/getInitials';
 
 /**
  * Props for the TaskDetailsModal component.
@@ -125,7 +126,7 @@ const TaskDetailsModal = ({
                         key={c.id}
                       >
                         <div className={styles.commentAvatar}>
-                          {c.authorName.slice(0, 2).toUpperCase()}
+                          {getInitials(c.authorName)}
                         </div>
                         <div className={styles.commentBody}>
                           <div className={styles.commentMeta}>
@@ -194,7 +195,7 @@ const TaskDetailsModal = ({
                       title={`Assignee: ${assigneeName}`}
                     >
                       <div className={styles.avatarSmall}>
-                        {assigneeName.slice(0, 2).toUpperCase()}
+                        {getInitials(assigneeName)}
                       </div>
                       <div className={styles.assigneeName}>{assigneeName}</div>
                     </div>
@@ -213,7 +214,7 @@ const TaskDetailsModal = ({
                       title={`Reporter: ${reporterName}`}
                     >
                       <div className={styles.avatarSmall}>
-                        {reporterName.slice(0, 2).toUpperCase()}
+                        {getInitials(reporterName)}
                       </div>
                       <div className={styles.assigneeName}>{reporterName}</div>
                     </div>

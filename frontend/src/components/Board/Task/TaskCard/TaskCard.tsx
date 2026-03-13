@@ -3,6 +3,7 @@ import type {
   ProjectRole as ProjectRole,
 } from '../../../../types/Types';
 import styles from './TaskCard.module.css';
+import { getInitials } from '../../../../utils/getInitials';
 
 interface Properties {
   task: Task;
@@ -30,8 +31,6 @@ const TaskCard = ({
       timeZone: 'UTC',
     });
   };
-
-  const avatarInitials = (id: string) => id.slice(0, 2).toUpperCase();
 
   const assignee = task.assigneeName || null;
 
@@ -83,7 +82,7 @@ const TaskCard = ({
       {assignee && (
         <div className={styles.assignees}>
           <div className={styles.assignee} title={`Assignee: ${assignee}`}>
-            {avatarInitials(assignee)}
+            {getInitials(assignee)}
           </div>
         </div>
       )}

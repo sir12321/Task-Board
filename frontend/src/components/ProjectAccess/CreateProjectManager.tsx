@@ -1,18 +1,24 @@
 import { useMemo, useState } from 'react';
 import type {
+  AuthUser,
+  DirectoryUser,
   ProjectMemberSummary,
   ProjectRole,
-  ManagedProject,
 } from '../../types/Types';
 import styles from './CreateProjectManager.module.css';
-import { PROJECT_ROLE_OPTIONS } from './projectAccess';
-import { INITIAL_DIRECTORY } from './ProjectAccessMock';
-import { useManagedProjects } from './useManagedProjects';
+import { getInitials } from '../../utils/getInitials';
+
+const PROJECT_ROLE_OPTIONS: Array<{
+  value: ProjectRole;
+  label: string;
+}> = [
+  { value: 'PROJECT_ADMIN', label: 'Admin' },
+  { value: 'PROJECT_MEMBER', label: 'User' },
+  { value: 'PROJECT_VIEWER', label: 'Viewer' },
+];
 
 const createInitialSelection = (
-  currentUser: NonNullable<
-    ReturnType<typeof useManagedProjects>['currentDirectoryUser']
-  >,
+  currentUser: DirectoryUser,
 ): ProjectMemberSummary[] => [
   {
     ...currentUser,
@@ -20,29 +26,35 @@ const createInitialSelection = (
   },
 ];
 
-const getInitials = (name: string): string =>
-  name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+interface Props {
+  user: AuthUser;
+  currentDirectoryUser: DirectoryUser;
+  directoryUsers: DirectoryUser[];
+  onCreateProject: (input: {
+    name: string;
+    description: string;
+    members: ProjectMemberSummary[];
+    creatorEmail: string;
+  }) => Promise<void>;
+}
 
-const CreateProjectManager = () => {
-  const { user, setManagedProjects, currentDirectoryUser } =
-    useManagedProjects();
+const CreateProjectManager = ({
+  user,
+  currentDirectoryUser,
+  directoryUsers,
+  onCreateProject,
+}: Props) => {
   const [projectTitle, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [directoryQuery, setDirectoryQuery] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [directoryRoles, setDirectoryRoles] = useState<
     Record<string, ProjectRole>
   >({});
   const [selectedMembers, setSelectedMembers] = useState<
     ProjectMemberSummary[]
-  >(() =>
-    currentDirectoryUser ? createInitialSelection(currentDirectoryUser) : [],
-  );
+  >(() => createInitialSelection(currentDirectoryUser));
 
   const visibleDirectory = useMemo(() => {
     const query = directoryQuery.trim().toLowerCase();
@@ -50,7 +62,7 @@ const CreateProjectManager = () => {
       selectedMembers.map((member) => member.email),
     );
 
-    return INITIAL_DIRECTORY.filter((person) => {
+    return directoryUsers.filter((person) => {
       if (person.globalRole === 'GLOBAL_ADMIN') {
         return false;
       }
@@ -68,9 +80,9 @@ const CreateProjectManager = () => {
         person.email.toLowerCase().includes(query)
       );
     });
-  }, [directoryQuery, selectedMembers]);
+  }, [directoryQuery, directoryUsers, selectedMembers]);
 
-  if (!user || !currentDirectoryUser || user.globalRole !== 'GLOBAL_ADMIN') {
+  if (user.globalRole !== 'GLOBAL_ADMIN') {
     return null;
   }
 
@@ -111,7 +123,7 @@ const CreateProjectManager = () => {
     setStatusMessage('');
   };
 
-  const handleCreateProject = (): void => {
+  const handleCreateProject = async (): Promise<void> => {
     if (!projectTitle.trim()) {
       setStatusMessage(
         'Project name is required before you can save the draft.',
@@ -119,20 +131,25 @@ const CreateProjectManager = () => {
       return;
     }
 
-    const createdProject: ManagedProject = {
-      id: `project-${Date.now()}`,
-      name: projectTitle.trim(),
-      description: projectDescription.trim() || null,
-      boards: [],
-      isArchived: false,
-      members: selectedMembers,
-    };
+    try {
+      setIsCreatingProject(true);
+      setStatusMessage('');
 
-    setManagedProjects((prev) => [createdProject, ...prev]);
-    resetDraft();
-    setStatusMessage(
-      `Created "${createdProject.name}" in frontend demo state.`,
-    );
+      await onCreateProject({
+        name: projectTitle,
+        description: projectDescription,
+        members: selectedMembers,
+        creatorEmail: currentDirectoryUser.email,
+      });
+      resetDraft();
+      setStatusMessage(`Created "${projectTitle.trim()}".`);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to create project';
+      setStatusMessage(message);
+    } finally {
+      setIsCreatingProject(false);
+    }
   };
 
   return (
@@ -295,8 +312,9 @@ const CreateProjectManager = () => {
               type="button"
               className={styles.primaryActionButton}
               onClick={handleCreateProject}
+              disabled={isCreatingProject}
             >
-              Create project
+              {isCreatingProject ? 'Creating...' : 'Create project'}
             </button>
           </div>
 

@@ -1,6 +1,7 @@
 import './Sidebar.css';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { getInitials } from '../../utils/getInitials';
 
 interface Props {
   collapsed: boolean;
@@ -97,7 +98,7 @@ const Sidebar = ({ collapsed, toggle }: Props) => {
             {user.avatarUrl ? (
               <img src={user.avatarUrl} alt="avatar" />
             ) : (
-              user.name.slice(0, 2).toUpperCase()
+              getInitials(user.name)
             )}
           </div>
 
