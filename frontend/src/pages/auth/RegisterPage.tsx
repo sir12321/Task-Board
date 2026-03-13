@@ -36,7 +36,14 @@ function RegisterPage() {
       navigate('/login');
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        if (
+          err.message.toLowerCase().includes('already exists') ||
+          err.message.toLowerCase().includes('already in use')
+        ) {
+          setError('This email address already exists.');
+        } else {
+          setError(err.message);
+        }
       } else {
         setError('An unexpected error occurred during registration.');
       }

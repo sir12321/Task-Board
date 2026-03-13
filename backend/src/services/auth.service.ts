@@ -41,7 +41,7 @@ export const registerUser = async (data: RegisterInput): Promise<User> => {
     });
 
     if (existingUser) {
-        throw new Error('Email already in use');
+        throw new Error('This email address already exists.');
     }
 
     const hashedPassword = await hashPassword(data.password);
