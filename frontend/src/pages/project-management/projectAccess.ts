@@ -1,80 +1,42 @@
 import type {
   AuthUser,
-  ProjectDetails,
   ProjectRole,
   DirectoryUser,
   ManagedProject,
   ProjectMemberSummary,
 } from '../../types/Types';
 import { apiClient } from '../../utils/api';
-// to be replaced in future to backend API call
-import { INITIAL_DIRECTORY, seedProjects } from './ProjectAccessMock';
-
-const STORAGE_KEY = 'taskboard-managed-projects';
-
-export const loadManagedProjects = (): ManagedProject[] => {
-  if (typeof window === 'undefined') {
-    return seedProjects;
-  }
-
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seedProjects));
-    return seedProjects;
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as ManagedProject[];
-    return parsed.length > 0 ? parsed : seedProjects;
-  } catch {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seedProjects));
-    return seedProjects;
-  }
-};
-
-export const saveManagedProjects = (projects: ManagedProject[]): void => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
-};
 
 export const getDirectoryUser = (user: AuthUser): DirectoryUser => ({
-  id: `auth-${user.id}`,
+  id: user.id,
   name: user.name,
   email: user.email,
   globalRole: user.globalRole,
 });
 
-export const getProjectDirectoryUsers = (): DirectoryUser[] =>
-  INITIAL_DIRECTORY;
+interface ApiDirectoryUser {
+  id: string;
+  name: string;
+  email: string;
+  globalRole: 'GLOBAL_ADMIN' | 'USER';
+}
 
-export const getGlobalAdminEmails = (): Set<string> =>
+export const getProjectDirectoryUsers = async (): Promise<DirectoryUser[]> => {
+  const users = (await apiClient('/users')) as ApiDirectoryUser[];
+  return users.map((user) => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    globalRole: user.globalRole,
+  }));
+};
+
+export const getGlobalAdminEmails = (directoryUsers: DirectoryUser[]): Set<string> =>
   new Set(
-    getProjectDirectoryUsers()
+    directoryUsers
       .filter((directoryUser) => directoryUser.globalRole === 'GLOBAL_ADMIN')
       .map((directoryUser) => directoryUser.email),
   );
-
-// to be replaced in future to backend API call to fetch project details for a user
-export const buildProjectDetailsForUser = (
-  project: ManagedProject,
-  user: AuthUser,
-): ProjectDetails | null => {
-  const members = project.members.find((member) => member.email === user.email);
-
-  if (!members && user.globalRole !== 'GLOBAL_ADMIN') {
-    return null;
-  }
-
-  return {
-    ...project,
-    members: project.members.filter(
-      (member) => member.email !== 'admin@taskboard.com',
-    ),
-    userRole: members?.role ?? 'PROJECT_ADMIN',
-  };
-};
 
 interface ApiProjectSummary {
   id: string;
@@ -204,7 +166,11 @@ export const saveManagedProjectSettings = async ({
 
   await apiClient(`/projects/${project.id}`, {
     method: 'PATCH',
-    body: JSON.stringify({ isArchived }),
+    body: JSON.stringify({
+      isArchived,
+      name: trimmedName,
+      description: description.trim() || null,
+    }),
   });
 
   return {

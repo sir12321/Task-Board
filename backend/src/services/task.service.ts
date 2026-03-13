@@ -158,10 +158,6 @@ export const moveTask = async (id: string, cId: string, userId: string, globalRo
         },
     });
 
-    if (updatedTask.assigneeId && updatedTask.assigneeId !== userId) {
-        await createNotification(updatedTask.assigneeId, `Status changed on your task: ${updatedTask.title}`);
-    }
-
     return updatedTask;
 };
 

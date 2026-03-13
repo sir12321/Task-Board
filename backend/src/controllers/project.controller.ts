@@ -50,7 +50,7 @@ export const archiveProjectHandler = async (req: AuthRequest, res: Response): Pr
         const userId = req.user?.id;
         const globalRole = req.user?.globalRole;
         const projectId = req.params.id;
-        const { isArchived } = req.body;
+        const { isArchived, name, description } = req.body;
 
         if (!userId || !globalRole) {
             res.status(401).json({ error: 'Unauthorized' });
@@ -62,8 +62,12 @@ export const archiveProjectHandler = async (req: AuthRequest, res: Response): Pr
             return;
         }
 
-        const project = await archiveProject(userId, projectId as string, globalRole, isArchived);
-        res.status(200).json({ message: 'Project archived successfully', project });
+        const project = await archiveProject(userId, projectId as string, globalRole, {
+            isArchived,
+            name,
+            description,
+        });
+        res.status(200).json({ message: 'Project updated successfully', project });
     } catch (error: unknown) {
         if (error instanceof Error && error.message.includes('Forbidden')) {
             res.status(403).json({ error: error.message });

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { ProjectDetails } from '../../types/Types';
 import { apiClient } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 import './ProjectBoardSelector.css';
 
 const buildBoardPath = (projectId: string, boardId: string) =>
@@ -9,6 +10,7 @@ const buildBoardPath = (projectId: string, boardId: string) =>
 
 const ProjectBoardSelector = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { projectId, boardId } = useParams();
   const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState<ProjectDetails[]>([]);
@@ -19,9 +21,10 @@ const ProjectBoardSelector = () => {
   const fetchProjects = useCallback(async () => {
     try {
       const data: ProjectDetails[] = await apiClient('/projects');
-      setProjects(data);
-      if (!expandedProjectId && data.length > 0) {
-        setExpandedProjectId(data[0].id);
+      const activeProjects = data.filter((p) => !p.isArchived);
+      setProjects(activeProjects);
+      if (!expandedProjectId && activeProjects.length > 0) {
+        setExpandedProjectId(activeProjects[0].id);
       }
     } catch {
       // silently fail — user may not have projects
@@ -35,31 +38,69 @@ const ProjectBoardSelector = () => {
   const selected = useMemo(() => {
     if (projects.length === 0) return null;
 
-    const project = projectId
+    const routeProject = projectId
       ? projects.find((p) => p.id === projectId)
-      : projects[0];
-    if (!project) return null;
+      : undefined;
+    const project = routeProject ?? projects[0];
 
     const board = boardId
       ? project.boards.find((b) => b.id === boardId)
       : project.boards[0];
-    if (!board) return null;
 
-    return { project, board };
+    return { project, board: board ?? null };
   }, [projectId, boardId, projects]);
 
   useEffect(() => {
-    if (selected) {
+    if (selected && !expandedProjectId) {
       setExpandedProjectId(selected.project.id);
     }
-  }, [selected]);
+  }, [selected, expandedProjectId]);
 
   const handleSelectBoard = (projectKey: string, boardKey: string): void => {
     setOpen(false);
     navigate(buildBoardPath(projectKey, boardKey));
   };
 
+  const handleCreateProject = (): void => {
+    setOpen(false);
+    navigate('/create-project');
+  };
+
+  const handleCreateBoard = async (projectId: string): Promise<void> => {
+    const boardName = prompt('Enter board name:');
+    if (!boardName) return;
+
+    try {
+      const newBoard = await apiClient('/boards', {
+        method: 'POST',
+        body: JSON.stringify({
+          projectId,
+          name: boardName,
+        }),
+      });
+
+      await fetchProjects();
+      
+      handleSelectBoard(projectId, newBoard.id);
+    } catch (error) {
+      console.error('Failed to create board:', error);
+      alert('Failed to create board');
+    }
+  };
+
   if (!selected) {
+    if (projects.length === 0) {
+      return (
+        <div className="project-board-selector">
+          <div className="pbs-toggle pbs-placeholder">
+            <div className="pbs-label">
+              <div className="pbs-project">No Projects</div>
+              <div className="pbs-board">Create one to get started</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return null;
   }
 
@@ -73,7 +114,7 @@ const ProjectBoardSelector = () => {
       >
         <div className="pbs-label">
           <div className="pbs-project">{selected.project.name}</div>
-          <div className="pbs-board">{selected.board.name}</div>
+            <div className="pbs-board">{selected.board?.name ?? 'Select a board'}</div>
         </div>
         <div className="pbs-caret">▾</div>
       </button>
@@ -101,7 +142,7 @@ const ProjectBoardSelector = () => {
                     key={b.id}
                     type="button"
                     className={`pbs-board-item ${
-                      b.id === selected.board.id &&
+                      b.id === selected.board?.id &&
                       project.id === selected.project.id
                         ? 'selected'
                         : ''
@@ -111,9 +152,28 @@ const ProjectBoardSelector = () => {
                     {b.name}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  className="pbs-create-board-btn"
+                  onClick={() => handleCreateBoard(project.id)}
+                  title="Create new board"
+                >
+                  + New Board
+                </button>
               </div>
             </div>
           ))}
+
+          {user?.globalRole === 'GLOBAL_ADMIN' && (
+            <button
+              type="button"
+              className="pbs-create-project-btn"
+              onClick={handleCreateProject}
+              title="Create new project"
+            >
+              + New Project
+            </button>
+          )}
         </div>
       )}
     </div>

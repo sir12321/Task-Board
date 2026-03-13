@@ -33,7 +33,10 @@ export const deleteComment = async (commentId: string, userId: string, globalRol
     throw new Error('Comment not found');
   }
 
-  if (comment.authorId !== userId && globalRole !== 'GLOBAL_ADMIN') {
+  const isAuthor = comment.authorId === userId;
+  const isGlobalAdmin = globalRole === 'GLOBAL_ADMIN';
+
+  if (!isAuthor && !isGlobalAdmin) {
     throw new Error('Unauthorized to delete this comment');
   }
 
@@ -50,7 +53,10 @@ export const editComment = async (commentId: string, userId: string, content: st
     throw new Error('Comment not found');
   }
   
-  if (comment.authorId !== userId && globalRole !== 'GLOBAL_ADMIN') {
+  const isAuthor = comment.authorId === userId;
+  const isGlobalAdmin = globalRole === 'GLOBAL_ADMIN';
+
+  if (!isAuthor && !isGlobalAdmin) {
     throw new Error('Unauthorized to edit this comment');
   }
 

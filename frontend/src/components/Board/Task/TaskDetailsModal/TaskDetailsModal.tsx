@@ -17,6 +17,7 @@ interface Properties {
   userRole: ProjectRole;
   task: Task;
   currentUserId?: string | null;
+  currentUserGlobalRole?: string;
   onClose: () => void;
   onAddComment?: (content: string) => Promise<void> | void;
   onDeleteComment?: (commentId: string) => Promise<void> | void;
@@ -32,6 +33,7 @@ const TaskDetailsModal = ({
   userRole,
   task,
   currentUserId,
+  currentUserGlobalRole,
   onClose,
 
   onAddComment,
@@ -112,12 +114,13 @@ const TaskDetailsModal = ({
                 {task.comments && task.comments.length > 0 ? (
                   task.comments.map((c) => {
                     const isMine = c.authorId === currentUserId;
+                    const isGlobalAdmin = currentUserGlobalRole === 'GLOBAL_ADMIN';
                     const createdAtMs = new Date(c.createdAt).getTime();
                     const isWithinDeleteWindow =
                       Number.isFinite(createdAtMs) &&
                       Date.now() - createdAtMs <= commentDeleteWindowMs;
                     const canDelete =
-                      Boolean(onDeleteComment) && isMine && isWithinDeleteWindow;
+                      Boolean(onDeleteComment) && (isGlobalAdmin || (isMine && isWithinDeleteWindow));
                     return (
                       <div
                         className={`${styles.comment} ${
@@ -139,7 +142,7 @@ const TaskDetailsModal = ({
                                 type = "button"
                                 onClick={() => {
                                   if (window.confirm('Are you sure you want to delete this comment?')) {
-                                    onDeleteComment(c.id);
+                                    onDeleteComment?.(c.id);
                                   }
                                 }}
                                 style={{ marginLeft: '12px', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}

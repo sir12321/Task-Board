@@ -51,7 +51,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchUser]);
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>Loading session...</div>;
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'grid',
+          placeItems: 'center',
+          background: '#f1f3f4',
+          color: '#334155',
+          fontWeight: 600,
+          letterSpacing: '0.2px',
+        }}
+      >
+        <div
+          style={{
+            padding: '10px 14px',
+            border: '1px solid rgba(15, 23, 42, 0.08)',
+            borderRadius: '8px',
+            background: '#ffffff',
+            boxShadow: '0 4px 12px rgba(2, 6, 23, 0.06)',
+          }}
+        >
+          Restoring your session...
+        </div>
+      </div>
+    );
   }
 
   return (

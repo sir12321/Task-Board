@@ -8,11 +8,24 @@ import taskRoutes from './routes/task.routes';
 import commentRoutes from './routes/comment.routes';
 import notificationRoutes from './routes/notification.routes';
 import columnRoutes from './routes/column.routes';
+import userRoutes from './routes/user.routes';
 
 const app: Express = express();
 
+const allowedOrigins = (process.env.FRONTEND_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 
@@ -26,6 +39,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/columns', columnRoutes);
+app.use('/api/users', userRoutes);
 
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });

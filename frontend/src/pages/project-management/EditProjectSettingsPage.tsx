@@ -3,14 +3,13 @@ import Layout from '../../components/Layout/Layout';
 import EditProjectSettingsManager from '../../components/ProjectAccess/EditProjectSettings/EditProjectSettingsManager';
 import { getGlobalAdminEmails, getProjectDirectoryUsers } from './projectAccess';
 import { useAuth } from '../../context/AuthContext';
-import type { ProjectDetails, ProjectRole } from '../../types/Types';
+import type { DirectoryUser, ProjectDetails, ProjectRole } from '../../types/Types';
 import { apiClient } from '../../utils/api';
 
 const removeGlobalAdminsFromProjects = (
   projects: ProjectDetails[],
+  globalAdminEmails: Set<string>,
 ): ProjectDetails[] => {
-  const globalAdminEmails = getGlobalAdminEmails();
-
   return projects.map((project) => ({
     ...project,
     members: project.members.filter(
@@ -22,14 +21,23 @@ const removeGlobalAdminsFromProjects = (
 const EditProjectSettingsPage = () => {
   const { user } = useAuth();
   const [adminProjects, setAdminProjects] = useState<ProjectDetails[]>([]);
+  const [directoryUsers, setDirectoryUsers] = useState<DirectoryUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingError, setLoadingError] = useState('');
 
   const loadProjects = useCallback(async (): Promise<void> => {
-    const projects: ProjectDetails[] = await apiClient('/projects');
+    const [projects, users] = await Promise.all([
+      apiClient('/projects') as Promise<ProjectDetails[]>,
+      getProjectDirectoryUsers(),
+    ]);
+
+    const globalAdminEmails = getGlobalAdminEmails(users);
+    setDirectoryUsers(users);
+
     setAdminProjects(
       removeGlobalAdminsFromProjects(
         projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+        globalAdminEmails,
       ),
     );
   }, []);
@@ -46,11 +54,19 @@ const EditProjectSettingsPage = () => {
       try {
         setLoading(true);
         setLoadingError('');
-        const projects: ProjectDetails[] = await apiClient('/projects');
+        const [projects, users] = await Promise.all([
+          apiClient('/projects') as Promise<ProjectDetails[]>,
+          getProjectDirectoryUsers(),
+        ]);
+
+        const globalAdminEmails = getGlobalAdminEmails(users);
+
         if (!cancelled) {
+          setDirectoryUsers(users);
           setAdminProjects(
             removeGlobalAdminsFromProjects(
               projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+              globalAdminEmails,
             ),
           );
         }
@@ -87,7 +103,11 @@ const EditProjectSettingsPage = () => {
     }) => {
       await apiClient(`/projects/${projectId}`, {
         method: 'PATCH',
-        body: JSON.stringify({ isArchived }),
+        body: JSON.stringify({
+          isArchived,
+          name: name.trim(),
+          description: description.trim() || null,
+        }),
       });
 
       setAdminProjects((prev) =>
@@ -172,7 +192,7 @@ const EditProjectSettingsPage = () => {
       <EditProjectSettingsManager
         user={user}
         adminProjects={adminProjects}
-        directoryUsers={getProjectDirectoryUsers()}
+        directoryUsers={directoryUsers}
         onSaveProjectSettings={handleSaveProjectSettings}
         onAddProjectMember={handleAddProjectMember}
         onUpdateProjectMemberRole={handleUpdateProjectMemberRole}

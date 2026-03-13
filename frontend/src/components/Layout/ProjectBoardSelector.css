@@ -135,3 +135,40 @@
 .pbs-create-board:hover {
   background: #cbcfd5;
 }
+
+.pbs-create-board-btn {
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px solid #d0d7e0;
+  width: 100%;
+  text-align: left;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 6px;
+}
+
+.pbs-create-board-btn:hover {
+  background: #eef2f7;
+  color: #334155;
+}
+
+.pbs-create-project-btn {
+  margin-top: 10px;
+  padding: 7px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  width: 100%;
+  text-align: left;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pbs-create-project-btn:hover {
+  background: #e2e8f0;
+}

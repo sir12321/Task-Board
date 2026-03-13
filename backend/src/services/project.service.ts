@@ -60,6 +60,14 @@ export const getUserProjects = async (userId: string): Promise<ProjectSummary[]>
 };
 
 export const createProject = async (userId: string, data: { name: string; description?: string }): Promise<Project> => {
+    const DEFAULT_COLUMNS = [
+        { name: 'Stories', order: 0, wipLimit: null },
+        { name: 'To Do', order: 1, wipLimit: null },
+        { name: 'In Progress', order: 2, wipLimit: 3 },
+        { name: 'Review', order: 3, wipLimit: 3 },
+        { name: 'Done', order: 4, wipLimit: null },
+    ];
+
     const newProject = await prisma.project.create({
         data: {
             name: data.name,
@@ -73,6 +81,9 @@ export const createProject = async (userId: string, data: { name: string; descri
             boards: {
                 create: {
                     name: 'Main Board',
+                    columns: {
+                        create: DEFAULT_COLUMNS,
+                    },
                 },
             },
         },
@@ -86,7 +97,11 @@ export const archiveProject = async (
     userId: string, 
     projectId: string, 
     globalRole: string, 
-    isArchived: boolean
+    updates: {
+        isArchived?: boolean;
+        name?: string;
+        description?: string | null;
+    }
 ): Promise<Project> => {
     if (globalRole !== 'GLOBAL_ADMIN') {
         const member = await prisma.projectMember.findUnique({
@@ -99,8 +114,26 @@ export const archiveProject = async (
         }
     }
 
+    const data: { isArchived?: boolean; name?: string; description?: string | null } = {};
+
+    if (typeof updates.isArchived === 'boolean') {
+        data.isArchived = updates.isArchived;
+    }
+
+    if (typeof updates.name === 'string') {
+        const trimmedName = updates.name.trim();
+        if (!trimmedName) {
+            throw new Error('Project name is required');
+        }
+        data.name = trimmedName;
+    }
+
+    if (updates.description !== undefined) {
+        data.description = updates.description === null ? null : updates.description;
+    }
+
     return prisma.project.update({
         where: { id: projectId },
-        data: { isArchived },
+        data,
     });
 };

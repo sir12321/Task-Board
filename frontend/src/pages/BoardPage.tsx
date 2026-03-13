@@ -150,8 +150,8 @@ export default function BoardPage() {
       try {
         const existingTask = board.tasks.find((t) => t.id === taskId);
         if (existingTask && existingTask.columnId !== payload.columnId) {
-          await apiClient(`/tasks/${taskId}/move`, {
-            method: 'PUT',
+          await apiClient(`/tasks/${taskId}/status`, {
+            method: 'PATCH',
             body: JSON.stringify({ targetColumnId: payload.columnId }),
           });
         }
@@ -275,19 +275,24 @@ export default function BoardPage() {
         return;
       }
 
-      if (commentToDelete.authorId !== user.id) {
+      const isAuthor = commentToDelete.authorId === user.id;
+      const isGlobalAdmin = user.globalRole === 'GLOBAL_ADMIN';
+
+      if (!isGlobalAdmin && !isAuthor) {
         alert("You can only delete your own comments.");
         return;
       }
 
-      const createdAtMs = new Date(commentToDelete.createdAt).getTime();
-      const isWithinDeleteWindow =
-        Number.isFinite(createdAtMs) &&
-        Date.now() - createdAtMs <= commentDeleteWindowMs;
+      if (!isGlobalAdmin) {
+        const createdAtMs = new Date(commentToDelete.createdAt).getTime();
+        const isWithinDeleteWindow =
+          Number.isFinite(createdAtMs) &&
+          Date.now() - createdAtMs <= commentDeleteWindowMs;
 
-      if (!isWithinDeleteWindow) {
-        alert('You can only delete a comment within 2 days of posting it.');
-        return;
+        if (!isWithinDeleteWindow) {
+          alert('You can only delete a comment within 2 days of posting it.');
+          return;
+        }
       }
 
       try {
@@ -446,10 +451,10 @@ export default function BoardPage() {
     [project, board],
   );
 
-  if (loading) {
+  if (loading && !board) {
     return (
       <Layout>
-        <div style={{ padding: '20px' }}>Loading...</div>
+        <div style={{ padding: '20px' }}>Loading board...</div>
       </Layout>
     );
   }
@@ -464,21 +469,39 @@ export default function BoardPage() {
 
   return (
     <Layout>
-      <BoardView
-        key={`${project.id}:${board.id}`}
-        board={board}
-        projectDetails={project}
-        onDeleteTask={deleteTask}
-        onCreateTask={createTask}
-        onUpdateTask={updateTask}
-        onAddComment={addComment}
-        onDeleteComment={deleteComment}
-        onAddColumn={addColumn}
-        onRenameColumn={renameColumn}
-        onReorderColumn={reorderColumn}
-        onUpdateColumnWip={updateColumnWip}
-        onDeleteColumn={deleteColumn}
-      />
+      <div
+        style={{
+          opacity: loading ? 0.75 : 1,
+          transition: 'opacity 180ms ease',
+        }}
+      >
+        {loading && board && (
+          <div
+            style={{
+              padding: '8px 20px 0',
+              fontSize: '12px',
+              color: '#64748b',
+            }}
+          >
+            Updating board...
+          </div>
+        )}
+        <BoardView
+          key={`${project.id}:${board.id}`}
+          board={board}
+          projectDetails={project}
+          onDeleteTask={deleteTask}
+          onCreateTask={createTask}
+          onUpdateTask={updateTask}
+          onAddComment={addComment}
+          onDeleteComment={deleteComment}
+          onAddColumn={addColumn}
+          onRenameColumn={renameColumn}
+          onReorderColumn={reorderColumn}
+          onUpdateColumnWip={updateColumnWip}
+          onDeleteColumn={deleteColumn}
+        />
+      </div>
     </Layout>
   );
 }

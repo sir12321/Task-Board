@@ -48,7 +48,7 @@ export const createComment = async (req: AuthRequest, res: Response) : Promise<v
 
 export const removeComment = async (req: AuthRequest, res: Response) : Promise<void> => {
     try {
-        const commentId = req.params.id;
+        const commentId = req.params.commentId || req.params.id;
         const userId = req.user?.id;
         const globalRole = req.user?.globalRole;
 
@@ -75,7 +75,7 @@ export const removeComment = async (req: AuthRequest, res: Response) : Promise<v
 
 export const updateComment = async (req: AuthRequest, res: Response) : Promise<void> => {
     try {
-        const commentId = req.params.id;
+        const commentId = req.params.commentId || req.params.id;
         const userId = req.user?.id;
         const globalRole = req.user?.globalRole;
         const { content } = req.body;

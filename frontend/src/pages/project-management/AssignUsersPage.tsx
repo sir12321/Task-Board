@@ -3,15 +3,15 @@ import { Navigate } from 'react-router-dom';
 import Layout from '../../components/Layout/Layout';
 import AssignUsersManager from '../../components/ProjectAccess/AssignUsersRole/AssignUsersManager';
 import { getGlobalAdminEmails } from './projectAccess';
+import { getProjectDirectoryUsers } from './projectAccess';
 import { useAuth } from '../../context/AuthContext';
 import type { ProjectDetails, ProjectRole } from '../../types/Types';
 import { apiClient } from '../../utils/api';
 
 const removeGlobalAdminsFromProjects = (
   projects: ProjectDetails[],
+  globalAdminEmails: Set<string>,
 ): ProjectDetails[] => {
-  const globalAdminEmails = getGlobalAdminEmails();
-
   return projects.map((project) => ({
     ...project,
     members: project.members.filter(
@@ -27,10 +27,17 @@ const AssignUsersPage = () => {
   const [loadingError, setLoadingError] = useState('');
 
   const loadProjects = useCallback(async (): Promise<void> => {
-    const projects: ProjectDetails[] = await apiClient('/projects');
+    const [projects, directoryUsers] = await Promise.all([
+      apiClient('/projects') as Promise<ProjectDetails[]>,
+      getProjectDirectoryUsers(),
+    ]);
+
+    const globalAdminEmails = getGlobalAdminEmails(directoryUsers);
+
     setAdminProjects(
       removeGlobalAdminsFromProjects(
         projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+        globalAdminEmails,
       ),
     );
   }, []);
@@ -47,11 +54,18 @@ const AssignUsersPage = () => {
       try {
         setLoading(true);
         setLoadingError('');
-        const projects: ProjectDetails[] = await apiClient('/projects');
+        const [projects, directoryUsers] = await Promise.all([
+          apiClient('/projects') as Promise<ProjectDetails[]>,
+          getProjectDirectoryUsers(),
+        ]);
+
+        const globalAdminEmails = getGlobalAdminEmails(directoryUsers);
+
         if (!cancelled) {
           setAdminProjects(
             removeGlobalAdminsFromProjects(
               projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+              globalAdminEmails,
             ),
           );
         }

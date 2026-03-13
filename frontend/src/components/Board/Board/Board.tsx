@@ -32,7 +32,7 @@ interface Props {
     payload: NewTaskInput,
   ) => Promise<void> | void;
   onAddComment?: (taskId: string, content: string) => Promise<void> | void;
-  onDeleteComment?: (taskId: string, commentId: string) => Promise<void> | void;
+  onDeleteComment?: (commentId: string) => Promise<void> | void;
   onAddColumn?: (columnName: string) => Promise<void> | void;
   onRenameColumn?: (columnId: string, newName: string) => Promise<void> | void;
   onReorderColumn?: (
@@ -445,6 +445,7 @@ const Board = ({
           task={state.board.tasks.find((t) => t.id === selectedTaskId)!}
           userRole={state.projectDetails.userRole}
           currentUserId={user?.id}
+          currentUserGlobalRole={user?.globalRole}
           onClose={() => setSelectedTaskId(null)}
           onAddComment={async (content: string) => {
             if (onAddComment) {
@@ -483,26 +484,28 @@ const Board = ({
           }}
           onDeleteComment={async (commentId: string) => {
             if (onDeleteComment) {
-              await onDeleteComment(selectedTaskId, commentId);
-              dispatch({
-                type: 'SET_BOARD',
-                payload: {
-                  board: {
-                    ...state.board,
-                    tasks: state.board.tasks.map((task) =>
-                      task.id === selectedTaskId
-                        ? {
-                            ...task,
-                            comments: task.comments?.filter(
-                              (c) => c.id !== commentId,
-                            ),
-                          }
-                        : task,
-                    ),
-                  },
-                },
-              });
+              await onDeleteComment(commentId);
+              return;
             }
+
+            dispatch({
+              type: 'SET_BOARD',
+              payload: {
+                board: {
+                  ...state.board,
+                  tasks: state.board.tasks.map((task) =>
+                    task.id === selectedTaskId
+                      ? {
+                          ...task,
+                          comments: task.comments?.filter(
+                            (c) => c.id !== commentId,
+                          ),
+                        }
+                      : task,
+                  ),
+                },
+              },
+            });
           }}
         />
       )}

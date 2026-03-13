@@ -1,6 +1,11 @@
-const BASE_URL = '/api';
+const configuredBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
+const BASE_URL = configuredBaseUrl
+    ? configuredBaseUrl.replace(/\/$/, '')
+    : '/api';
 
 export const apiClient = async (endpoint: string, options: RequestInit = {}) => {
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
     const defaultOptions: RequestInit = {
         credentials: 'include', // Include cookies for authentication
         headers: {
@@ -12,7 +17,7 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
         },
     };
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const response = await fetch(`${BASE_URL}${normalizedEndpoint}`, {
         ...defaultOptions,
         ...options,
     });
@@ -22,5 +27,14 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
         throw new Error(errorData.error || errorData.message || 'API request failed');
     }
 
-    return response.json();
+    if (response.status === 204) {
+        return null;
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+        return response.json();
+    }
+
+    return response.text();
 };
