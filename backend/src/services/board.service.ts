@@ -77,4 +77,32 @@ export const createBoard = async (projectId: string, name: string): Promise<Boar
     });
 
     return board;
-}
+};
+
+export const verifyCreationPermission = async (
+    userId: string,
+    projectId: string,
+    globalRole?: string,
+): Promise<void> => {
+    if (globalRole === 'GLOBAL_ADMIN') {
+        return;
+    }
+
+    const member = await p.projectMember.findUnique({
+        where: {
+            userId_projectId: {
+                userId,
+                projectId,
+            },
+        },
+        select: { role: true },
+    });
+
+    if (!member) {
+        throw new Error('Forbidden: You are not a member of this project');
+    }
+
+    if (member.role !== 'PROJECT_ADMIN') {
+        throw new Error('Forbidden: Only project admins can create boards');
+    }
+};

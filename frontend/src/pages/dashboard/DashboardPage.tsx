@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
 import Layout from '../../components/Layout/Layout';
 import type { ProjectDetails } from '../../types/Types';
+import { useAuth } from '../../context/AuthContext';
 import styles from './DashboardPage.module.css';
 
 const DashboardPage = () => {
   const [projects, setProjects] = useState<ProjectDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [addingBoardTo, setAddingBoardTo] = useState<string | null>(null);
   const [newBoardName, setNewBoardName] = useState('');
@@ -80,6 +82,13 @@ const DashboardPage = () => {
     navigate(`/projects/${projectId}/boards/${boardId}`);
   };
 
+  const canCreateBoard = (project: ProjectDetails) => {
+    return (
+      user?.globalRole === 'GLOBAL_ADMIN' ||
+      project.userRole === 'PROJECT_ADMIN'
+    );
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -142,7 +151,7 @@ const DashboardPage = () => {
                       <span className={styles.boardName}>{board.name}</span>
                     </button>
                   ))}
-                  {addingBoardTo === project.id ? (
+                  {canCreateBoard(project) && addingBoardTo === project.id ? (
                     <div className={styles.inlineForm}>
                       <input
                         autoFocus
@@ -169,14 +178,14 @@ const DashboardPage = () => {
                         </button>
                       </div>
                     </div>
-                  ) : (
+                  ) : canCreateBoard(project) ? (
                     <button
                       onClick={() => setAddingBoardTo(project.id)}
                       className={styles.addBoardTrigger}
                     >
                       + Add Board
                     </button>
-                  )}
+                  ) : null}
                   {project.boards.length === 0 && !addingBoardTo && (
                     <p className={styles.emptyText}>
                       No boards in this project.

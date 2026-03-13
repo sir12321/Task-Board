@@ -107,7 +107,16 @@ export const makeTask = async (data: {
     });
 
     if (data.assigneeId) {
-        await createNotification(data.assigneeId, `You have been assigned to task: ${data.title}`);
+        const reporter = await prisma.user.findUnique({
+            where: { id: data.reporterId },
+            select: { name: true },
+        });
+        const reporterName = reporter?.name ?? 'Unknown Reporter';
+
+        await createNotification(
+            data.assigneeId,
+            `You have been assigned to task "${data.title}" by ${reporterName}`,
+        );
     }
 
     return task;
@@ -229,7 +238,7 @@ export const updateTask = async (
 ): Promise<Task> => {
     const task = await prisma.task.findUnique({
         where: { id },
-        select: { boardId: true, assigneeId: true, type: true },
+        select: { boardId: true, assigneeId: true, type: true, reporterId: true },
     });
 
     if (!task) {

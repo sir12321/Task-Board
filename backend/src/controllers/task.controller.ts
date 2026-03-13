@@ -2,12 +2,13 @@ import { Response } from "express";
 import { makeTask, moveTask, removeTask } from "../services/task.service";
 import { AuthRequest } from "./auth.controller";
 import { createNotification } from '../services/notification.service';
+import prisma from '../utils/prisma';
 
 const notifyStatusChange = async (task: {
     title: string;
     assigneeId: string | null;
     reporterId: string;
-}, actorUserId?: string): Promise<void> => {
+}, fromStatus: string, toStatus: string, actorUserId?: string): Promise<void> => {
     const recipientIds = new Set<string>();
     if (task.assigneeId) {
         recipientIds.add(task.assigneeId);
@@ -26,7 +27,10 @@ const notifyStatusChange = async (task: {
 
     await Promise.all(
         Array.from(recipientIds).map((userId) =>
-            createNotification(userId, `Status changed on task: ${task.title}`),
+            createNotification(
+                userId,
+                `Status changed on task "${task.title}": ${fromStatus} -> ${toStatus}`,
+            ),
         ),
     );
 };
@@ -92,16 +96,74 @@ export const updateTaskStatus = async (req: AuthRequest, res: Response): Promise
         }
 
         if (close === true) {
+            const beforeTask = await prisma.task.findUnique({
+                where: { id },
+                select: {
+                    title: true,
+                    assigneeId: true,
+                    reporterId: true,
+                    column: { select: { name: true } },
+                },
+            });
+
+            if (!beforeTask) {
+                res.status(404).json({ error: 'Task not found' });
+                return;
+            }
+
             const { closeTask } = await import('../services/task.service');
             const task = await closeTask(id, userId, globalRole);
-            await notifyStatusChange(task, userId);
+            await notifyStatusChange(
+                {
+                    title: beforeTask.title,
+                    assigneeId: beforeTask.assigneeId,
+                    reporterId: beforeTask.reporterId,
+                },
+                beforeTask.column.name,
+                'Closed',
+                userId,
+            );
             res.status(200).json(task);
             return;
         }
 
         if (targetColumnId && typeof targetColumnId === 'string') {
+            const beforeTask = await prisma.task.findUnique({
+                where: { id },
+                select: {
+                    title: true,
+                    assigneeId: true,
+                    reporterId: true,
+                    column: { select: { name: true } },
+                },
+            });
+
+            if (!beforeTask) {
+                res.status(404).json({ error: 'Task not found' });
+                return;
+            }
+
+            const toColumn = await prisma.column.findUnique({
+                where: { id: targetColumnId },
+                select: { name: true },
+            });
+
+            if (!toColumn) {
+                res.status(404).json({ error: 'Target column not found' });
+                return;
+            }
+
             const task = await moveTask(id, targetColumnId, userId, globalRole);
-            await notifyStatusChange(task, userId);
+            await notifyStatusChange(
+                {
+                    title: beforeTask.title,
+                    assigneeId: beforeTask.assigneeId,
+                    reporterId: beforeTask.reporterId,
+                },
+                beforeTask.column.name,
+                toColumn.name,
+                userId,
+            );
             res.status(200).json(task);
             return;
         }

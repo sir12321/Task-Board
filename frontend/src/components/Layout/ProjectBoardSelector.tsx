@@ -88,6 +88,13 @@ const ProjectBoardSelector = () => {
     }
   };
 
+  const canCreateBoard = (project: ProjectDetails): boolean => {
+    return (
+      user?.globalRole === 'GLOBAL_ADMIN' ||
+      project.userRole === 'PROJECT_ADMIN'
+    );
+  };
+
   if (!selected) {
     if (projects.length === 0) {
       return (
@@ -152,14 +159,16 @@ const ProjectBoardSelector = () => {
                     {b.name}
                   </button>
                 ))}
-                <button
-                  type="button"
-                  className="pbs-create-board-btn"
-                  onClick={() => handleCreateBoard(project.id)}
-                  title="Create new board"
-                >
-                  + New Board
-                </button>
+                {canCreateBoard(project) && (
+                  <button
+                    type="button"
+                    className="pbs-create-board-btn"
+                    onClick={() => handleCreateBoard(project.id)}
+                    title="Create new board"
+                  >
+                    + New Board
+                  </button>
+                )}
               </div>
             </div>
           ))}

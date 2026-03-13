@@ -14,10 +14,12 @@ export const makeComment = async (data: {
       taskId: data.taskId
     }
   });
-
-  const task = await prisma.task.findUnique({ where: { id: data.taskId }, select: { assigneeId: true, title: true } });
+  const task = await prisma.task.findUnique({
+    where: { id: data.taskId },
+    select: { assigneeId: true, title: true },
+  });
   if (task?.assigneeId && task.assigneeId !== data.authorId) {
-    await createNotification(task.assigneeId, `New comment on your task: ${task.title}`);
+    await createNotification(task.assigneeId, `New comment on your task "${task.title}": ${data.content}`);
   }
 
   return comment;
