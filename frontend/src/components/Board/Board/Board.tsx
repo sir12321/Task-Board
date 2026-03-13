@@ -225,21 +225,17 @@ const Board = ({
         <div className={styles['project-description']}>
           {state.projectDetails.description}
         </div>
-        <div className={styles.abc}>
-          <div className={styles.boardHeader}>
-            <h2>{state.board.name}</h2>
-            {canManageColumns && (
-              <button
-                type="button"
-                className={styles.workflowModeButton}
-                onClick={() => setWorkflowEditMode((prev) => !prev)}
-              >
-                {workflowEditMode ? 'Done Editing Workflow' : 'Edit Workflow'}
-              </button>
-            )}
-          </div>
-
-          <div className={styles.boardWorkspace}></div>
+        <div className={styles.boardHeader}>
+          <h2>{state.board.name}</h2>
+          {canManageColumns && (
+            <button
+              type="button"
+              className={styles.workflowModeButton}
+              onClick={() => setWorkflowEditMode((prev) => !prev)}
+            >
+              {workflowEditMode ? 'Done Editing Workflow' : 'Edit Workflow'}
+            </button>
+          )}
         </div>
       </div>
 

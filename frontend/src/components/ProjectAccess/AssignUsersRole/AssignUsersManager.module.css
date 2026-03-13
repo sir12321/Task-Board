@@ -4,17 +4,6 @@
   margin: 0 auto;
 }
 
-.pageHeader h1 {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-  margin-bottom: 28px;
-  margin: 0 0 8px;
-  font-size: 32px;
-  color: #172b4d;
-}
-
 .contentColumn {
   display: block;
 }
@@ -144,12 +133,6 @@
   background: #eff8ff;
   color: #175cd3;
   border: 1px solid #b2ddff;
-}
-
-@media (max-width: 980px) {
-  .pageHeader {
-    flex-direction: column;
-  }
 }
 
 @media (max-width: 640px) {

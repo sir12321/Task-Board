@@ -10,16 +10,6 @@
   align-items: center;
 }
 
-.boardWorkspace {
-  margin-top: 0;
-}
-
-.workflowToolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-}
-
 .workflowModeButton {
   border: 1px solid rgba(15, 23, 42, 0.2);
   background: #f8fafc;
@@ -68,7 +58,7 @@
 }
 
 /* Bottom-right toast for brief error messages */
-.toast-bottom-right {
+.shortError-bottom-right {
   position: fixed;
   right: 20px;
   bottom: 20px;
@@ -80,15 +70,6 @@
   z-index: 1200;
   font-size: 14px;
   max-width: 320px;
-}
-
-.abc {
-  display: flex;
-  flex-direction: column;
-}
-
-.project-section {
-  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
 }
 
 .project-name {

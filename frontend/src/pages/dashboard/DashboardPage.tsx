@@ -3,14 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
 import Layout from '../../components/Layout/Layout';
 import type { ProjectDetails } from '../../types/Types';
-import { useAuth } from '../../context/AuthContext';
 import styles from './DashboardPage.module.css';
 
 const DashboardPage = () => {
   const [projects, setProjects] = useState<ProjectDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const [addingBoardTo, setAddingBoardTo] = useState<string | null>(null);
   const [newBoardName, setNewBoardName] = useState('');
@@ -127,11 +125,8 @@ const DashboardPage = () => {
                     }
                     title={project.isArchived ? 'Unarchive' : 'Archive'}
                   >
-                    {project.isArchived ? '📁' : '📥'}
+                    {project.isArchived ? 'Restore' : 'Archive'}
                   </button>
-                  <span className={styles.roleBadge}>
-                    {project.userRole.replace('PROJECT_', '')}
-                  </span>
                 </div>
               </div>
 
