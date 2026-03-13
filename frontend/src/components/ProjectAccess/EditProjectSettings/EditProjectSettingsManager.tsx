@@ -376,6 +376,8 @@ const EditProjectSettingsManager = ({
               </div>
 
               <div className={styles.memberManagementSection}>
+                {user.globalRole === 'GLOBAL_ADMIN' && (
+                  <>
                 <div className={styles.contentSectionHeader}>
                   <div>
                     <h3>Manage users</h3>
@@ -448,6 +450,8 @@ const EditProjectSettingsManager = ({
                     No additional users match the current search.
                   </div>
                 )}
+                  </>
+                )}
 
                 <div className={styles.contentSectionHeader}>
                   <div>
@@ -480,24 +484,31 @@ const EditProjectSettingsManager = ({
                           <div className={styles.userEmail}>{member.email}</div>
                         </div>
                       </div>
-                      <div className={styles.memberRoleSelectWrap}>
-                        <select
-                          value={member.role}
-                          disabled={isSubmitting}
-                          onChange={(event) =>
-                            handleUpdateMemberRole(
-                              member.id,
-                              event.target.value as ProjectRole,
-                            )
-                          }
-                        >
-                          {PROJECT_ROLE_OPTIONS.map((role) => (
-                            <option key={role.value} value={role.value}>
-                              {role.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      {user.globalRole === 'GLOBAL_ADMIN' && (
+                        <div className={styles.memberRoleSelectWrap}>
+                          <select
+                            value={member.role}
+                            disabled={isSubmitting}
+                            onChange={(event) =>
+                              handleUpdateMemberRole(
+                                member.id,
+                                event.target.value as ProjectRole,
+                              )
+                            }
+                          >
+                            {PROJECT_ROLE_OPTIONS.map((role) => (
+                              <option key={role.value} value={role.value}>
+                                {role.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      {user.globalRole !== 'GLOBAL_ADMIN' && (
+                        <div className={styles.memberRoleSelectWrap}>
+                          <span>{member.role.replace('PROJECT_', '')}</span>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
