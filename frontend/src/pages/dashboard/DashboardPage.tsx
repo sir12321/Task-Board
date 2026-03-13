@@ -89,6 +89,13 @@ const DashboardPage = () => {
     );
   };
 
+  const canArchiveProject = (project: ProjectDetails) => {
+    return (
+      user?.globalRole === 'GLOBAL_ADMIN' ||
+      project.userRole === 'PROJECT_ADMIN'
+    );
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -127,15 +134,17 @@ const DashboardPage = () => {
               <div className={styles.projectHeader}>
                 <h2 className={styles.projectTitle}>{project.name}</h2>
                 <div className={styles.projectActions}>
-                  <button
-                    className={styles.archiveBtn}
-                    onClick={() =>
-                      handleToggleArchive(project.id, !!project.isArchived)
-                    }
-                    title={project.isArchived ? 'Unarchive' : 'Archive'}
-                  >
-                    {project.isArchived ? 'Restore' : 'Archive'}
-                  </button>
+                  {canArchiveProject(project) && (
+                    <button
+                      className={styles.archiveBtn}
+                      onClick={() =>
+                        handleToggleArchive(project.id, !!project.isArchived)
+                      }
+                      title={project.isArchived ? 'Unarchive' : 'Archive'}
+                    >
+                      {project.isArchived ? 'Restore' : 'Archive'}
+                    </button>
+                  )}
                 </div>
               </div>
 

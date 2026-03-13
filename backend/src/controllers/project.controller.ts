@@ -5,13 +5,14 @@ import { AuthRequest } from './auth.controller';
 export const getProjects = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user?.id;
+        const globalRole = req.user?.globalRole;
 
         if (!userId) {
             res.status(401).json({ error: 'Unauthorized' });
             return;
         }
 
-        const projects = await getUserProjects(userId);
+        const projects = await getUserProjects(userId, globalRole);
         res.status(200).json(projects);
     } catch {
         res.status(500).json({ error: 'Failed to fetch projects' });

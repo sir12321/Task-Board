@@ -17,13 +17,15 @@ interface ProjectSummary {
 }
 
 // instead of searching, use hashmap for O(1) access
-export const getUserProjects = async (userId: string): Promise<ProjectSummary[]> => {
+export const getUserProjects = async (userId: string, globalRole?: string): Promise<ProjectSummary[]> => {
     const projects = await prisma.project.findMany({
-        where: {
-            members: {
-                some: { userId },
+        where: globalRole === 'GLOBAL_ADMIN'
+            ? undefined
+            : {
+                members: {
+                    some: { userId },
+                },
             },
-        },
         include: {
             members: {
                 include: {

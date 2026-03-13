@@ -34,13 +34,18 @@ const EditProjectSettingsPage = () => {
     const globalAdminEmails = getGlobalAdminEmails(users);
     setDirectoryUsers(users);
 
+    const manageableProjects =
+      user?.globalRole === 'GLOBAL_ADMIN'
+        ? projects
+        : projects.filter((project) => project.userRole === 'PROJECT_ADMIN');
+
     setAdminProjects(
       removeGlobalAdminsFromProjects(
-        projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+        manageableProjects,
         globalAdminEmails,
       ),
     );
-  }, []);
+  }, [user?.globalRole]);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,12 +65,16 @@ const EditProjectSettingsPage = () => {
         ]);
 
         const globalAdminEmails = getGlobalAdminEmails(users);
+        const manageableProjects =
+          user.globalRole === 'GLOBAL_ADMIN'
+            ? projects
+            : projects.filter((project) => project.userRole === 'PROJECT_ADMIN');
 
         if (!cancelled) {
           setDirectoryUsers(users);
           setAdminProjects(
             removeGlobalAdminsFromProjects(
-              projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+              manageableProjects,
               globalAdminEmails,
             ),
           );
