@@ -5,8 +5,8 @@ import {
   getDirectoryUser,
   loadManagedProjects,
   saveManagedProjects,
-  type ManagedProject,
-} from './projectAccessMock';
+} from './projectAccess';
+import type { ManagedProject } from '../../types/Types';
 
 export const useManagedProjects = () => {
   const { user } = useAuth();
@@ -32,7 +32,8 @@ export const useManagedProjects = () => {
   }, [managedProjects, user]);
 
   const adminProjects = useMemo(
-    () => userProjects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+    () =>
+      userProjects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
     [userProjects],
   );
 

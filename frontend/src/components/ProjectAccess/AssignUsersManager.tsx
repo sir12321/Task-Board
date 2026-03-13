@@ -1,16 +1,28 @@
 import { useEffect, useState } from 'react';
-import type { ProjectRole } from '../../types/Types';
+import type { AuthUser, ProjectDetails, ProjectRole } from '../../types/Types';
+import { PROJECT_ROLE_OPTIONS } from './projectAccess';
 import styles from './AssignUsersManager.module.css';
-import { PROJECT_ROLE_OPTIONS } from './projectAccessMock';
-import { useManagedProjects } from './useManagedProjects';
 
-const roleLabel = (role: ProjectRole): string =>
-  role.replace('PROJECT_', '').replace('MEMBER', 'USER');
+const roleLabel = (role: ProjectRole): string => role.replace('PROJECT_', '');
 
-const AssignUsersManager = () => {
-  const { user, adminProjects, setManagedProjects } = useManagedProjects();
+interface Props {
+  user: AuthUser;
+  adminProjects: ProjectDetails[];
+  onUpdateAssignedRole: (
+    projectId: string,
+    memberId: string,
+    newRole: ProjectRole,
+  ) => Promise<void>;
+}
+
+const AssignUsersManager = ({
+  user,
+  adminProjects,
+  onUpdateAssignedRole,
+}: Props) => {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (!selectedProjectId && adminProjects.length > 0) {
@@ -26,47 +38,35 @@ const AssignUsersManager = () => {
     }
   }, [adminProjects, selectedProjectId]);
 
-  if (!user) {
-    return null;
-  }
-
-  const selectedAdminProject =
+  const selectedProject =
     adminProjects.find((project) => project.id === selectedProjectId) ?? null;
 
-  const updateAssignedRole = (
+  const updateAssignedRole = async (
     memberId: string,
-    nextRole: ProjectRole,
-  ): void => {
-    if (!selectedAdminProject) {
+    newRole: ProjectRole,
+  ): Promise<void> => {
+    if (!selectedProject) {
       return;
     }
 
-    const nextMembers = selectedAdminProject.members.map((member) =>
-      member.id === memberId ? { ...member, role: nextRole } : member,
+    const editedMembers = selectedProject.members.map((member) =>
+      member.id === memberId ? { ...member, role: newRole } : member,
     );
 
-    if (!nextMembers.some((member) => member.role === 'PROJECT_ADMIN')) {
+    if (!editedMembers.some((member) => member.role === 'PROJECT_ADMIN')) {
       setStatusMessage('Each project must keep at least one admin.');
       return;
     }
 
-    setManagedProjects((prev) =>
-      prev.map((project) =>
-        project.id === selectedAdminProject.id
-          ? {
-              ...project,
-              members: project.members.map((member) =>
-                member.email === 'admin@taskboard.com'
-                  ? member
-                  : (nextMembers.find(
-                      (nextMember) => nextMember.id === member.id,
-                    ) ?? member),
-              ),
-            }
-          : project,
-      ),
-    );
-    setStatusMessage(`Updated access roles in "${selectedAdminProject.name}".`);
+    setIsUpdating(true);
+    try {
+      await onUpdateAssignedRole(selectedProject.id, memberId, newRole);
+      setStatusMessage(`Updated access roles in "${selectedProject.name}".`);
+    } catch (error) {
+      setStatusMessage((error as Error).message || 'Failed to update role.');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -80,14 +80,7 @@ const AssignUsersManager = () => {
       <div className={styles.contentColumn}>
         <section className={styles.panel}>
           <div className={styles.panelHeader}>
-            <div>
-              <h2>Assign Users</h2>
-              <p>
-                {user.globalRole === 'GLOBAL_ADMIN'
-                  ? 'Manage member roles for all locally managed projects.'
-                  : 'Manage member roles only in projects where you are a project admin.'}
-              </p>
-            </div>
+            <h2>Assign Users</h2>
           </div>
 
           {adminProjects.length === 0 ? (
@@ -120,9 +113,9 @@ const AssignUsersManager = () => {
                 </div>
               </div>
 
-              {selectedAdminProject && (
+              {selectedProject && (
                 <div className={styles.membersList}>
-                  {selectedAdminProject.members.map((member) => (
+                  {selectedProject.members.map((member) => (
                     <div key={member.id} className={styles.memberCard}>
                       <div>
                         <div className={styles.userName}>{member.name}</div>
@@ -131,6 +124,7 @@ const AssignUsersManager = () => {
                       <div className={styles.memberRoleField}>
                         <select
                           value={member.role}
+                          disabled={isUpdating}
                           onChange={(event) =>
                             updateAssignedRole(
                               member.id,

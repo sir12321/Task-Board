@@ -14,6 +14,7 @@ const Layout = ({ children }: Props) => {
   const location = useLocation();
   const showProjectBoardSelector =
     location.pathname === '/dashboard' ||
+    location.pathname === '/assign-users' ||
     Boolean(
       matchPath('/projects/:projectId/boards/:boardId', location.pathname),
     );

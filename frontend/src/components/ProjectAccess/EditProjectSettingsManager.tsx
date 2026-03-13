@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ProjectRole } from '../../types/Types';
 import styles from './EditProjectSettingsManager.module.css';
 import { useManagedProjects } from './useManagedProjects';
-import { INITIAL_DIRECTORY, PROJECT_ROLE_OPTIONS } from './projectAccessMock';
+import { PROJECT_ROLE_OPTIONS } from './projectAccess';
+import { INITIAL_DIRECTORY } from './ProjectAccessMock';
 
 const getInitials = (name: string): string =>
   name
@@ -392,9 +393,7 @@ const EditProjectSettingsManager = () => {
                         </div>
                         <div>
                           <div className={styles.userName}>{person.name}</div>
-                          <div className={styles.userEmail}>
-                            {person.email}
-                          </div>
+                          <div className={styles.userEmail}>{person.email}</div>
                         </div>
                       </div>
                       <div className={styles.availableUserActions}>
@@ -467,9 +466,7 @@ const EditProjectSettingsManager = () => {
                         </div>
                         <div>
                           <div className={styles.userName}>{member.name}</div>
-                          <div className={styles.userEmail}>
-                            {member.email}
-                          </div>
+                          <div className={styles.userEmail}>{member.email}</div>
                         </div>
                       </div>
                       <div className={styles.memberRoleSelectWrap}>

@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import type { ProjectMemberSummary, ProjectRole } from '../../types/Types';
+import type {
+  ProjectMemberSummary,
+  ProjectRole,
+  ManagedProject,
+} from '../../types/Types';
 import styles from './CreateProjectManager.module.css';
-import {
-  INITIAL_DIRECTORY,
-  PROJECT_ROLE_OPTIONS,
-  type ManagedProject,
-} from './projectAccessMock';
+import { PROJECT_ROLE_OPTIONS } from './projectAccess';
+import { INITIAL_DIRECTORY } from './ProjectAccessMock';
 import { useManagedProjects } from './useManagedProjects';
 
 const createInitialSelection = (
