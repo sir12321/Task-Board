@@ -4,18 +4,10 @@ import type {
   DirectoryUser,
   ProjectDetails,
   ProjectRole,
-} from '../../types/Types';
+} from '../../../types/Types';
 import styles from './EditProjectSettingsManager.module.css';
-import { getInitials } from '../../utils/getInitials';
-
-const PROJECT_ROLE_OPTIONS: Array<{
-  value: ProjectRole;
-  label: string;
-}> = [
-  { value: 'PROJECT_ADMIN', label: 'Admin' },
-  { value: 'PROJECT_MEMBER', label: 'User' },
-  { value: 'PROJECT_VIEWER', label: 'Viewer' },
-];
+import { getInitials } from '../../../utils/getInitials';
+import { PROJECT_ROLE_OPTIONS } from '../../../utils/getUtils';
 
 interface Props {
   user: AuthUser;
@@ -267,12 +259,6 @@ const EditProjectSettingsManager = ({
 
   return (
     <div className={styles.pageContainer}>
-      <div className={styles.pageHeader}>
-        <div className={styles.pageHeading}>
-          <h1>Edit Project Settings</h1>
-        </div>
-      </div>
-
       <div className={styles.settingsLayout}>
         <section className={styles.panel}>
           <div className={styles.panelHeader}>

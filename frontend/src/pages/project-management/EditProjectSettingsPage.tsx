@@ -1,10 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import Layout from '../../components/Layout/Layout';
-import EditProjectSettingsManager from '../../components/ProjectAccess/EditProjectSettingsManager';
-import { getProjectDirectoryUsers } from './projectAccess';
+import EditProjectSettingsManager from '../../components/ProjectAccess/EditProjectSettings/EditProjectSettingsManager';
+import { getGlobalAdminEmails, getProjectDirectoryUsers } from './projectAccess';
 import { useAuth } from '../../context/AuthContext';
 import type { ProjectDetails, ProjectRole } from '../../types/Types';
 import { apiClient } from '../../utils/api';
+
+const removeGlobalAdminsFromProjects = (
+  projects: ProjectDetails[],
+): ProjectDetails[] => {
+  const globalAdminEmails = getGlobalAdminEmails();
+
+  return projects.map((project) => ({
+    ...project,
+    members: project.members.filter(
+      (member) => !globalAdminEmails.has(member.email),
+    ),
+  }));
+};
 
 const EditProjectSettingsPage = () => {
   const { user } = useAuth();
@@ -15,7 +28,9 @@ const EditProjectSettingsPage = () => {
   const loadProjects = useCallback(async (): Promise<void> => {
     const projects: ProjectDetails[] = await apiClient('/projects');
     setAdminProjects(
-      projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+      removeGlobalAdminsFromProjects(
+        projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+      ),
     );
   }, []);
 
@@ -34,7 +49,9 @@ const EditProjectSettingsPage = () => {
         const projects: ProjectDetails[] = await apiClient('/projects');
         if (!cancelled) {
           setAdminProjects(
-            projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+            removeGlobalAdminsFromProjects(
+              projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+            ),
           );
         }
       } catch (error) {

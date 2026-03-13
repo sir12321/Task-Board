@@ -49,6 +49,13 @@ export const getDirectoryUser = (user: AuthUser): DirectoryUser => ({
 export const getProjectDirectoryUsers = (): DirectoryUser[] =>
   INITIAL_DIRECTORY;
 
+export const getGlobalAdminEmails = (): Set<string> =>
+  new Set(
+    getProjectDirectoryUsers()
+      .filter((directoryUser) => directoryUser.globalRole === 'GLOBAL_ADMIN')
+      .map((directoryUser) => directoryUser.email),
+  );
+
 // to be replaced in future to backend API call to fetch project details for a user
 export const buildProjectDetailsForUser = (
   project: ManagedProject,

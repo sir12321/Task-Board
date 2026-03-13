@@ -4,15 +4,12 @@
   margin: 0 auto;
 }
 
-.pageHeader {
+.pageHeader h1 {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 24px;
   margin-bottom: 28px;
-}
-
-.pageHeading h1 {
   margin: 0 0 8px;
   font-size: 32px;
   color: #172b4d;
@@ -140,7 +137,7 @@
   background: #f8fafc;
 }
 
-.feedbackMessage {
+.Message {
   margin-top: 16px;
   border-radius: 10px;
   padding: 12px 14px;

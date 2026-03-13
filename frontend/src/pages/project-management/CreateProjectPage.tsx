@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import Layout from '../../components/Layout/Layout';
-import CreateProjectManager from '../../components/ProjectAccess/CreateProjectManager';
+import CreateProjectManager from '../../components/ProjectAccess/CreateProject /CreateProjectManager';
 import {
   createManagedProject,
   getDirectoryUser,

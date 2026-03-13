@@ -4,18 +4,10 @@ import type {
   DirectoryUser,
   ProjectMemberSummary,
   ProjectRole,
-} from '../../types/Types';
+} from '../../../types/Types';
 import styles from './CreateProjectManager.module.css';
-import { getInitials } from '../../utils/getInitials';
-
-const PROJECT_ROLE_OPTIONS: Array<{
-  value: ProjectRole;
-  label: string;
-}> = [
-  { value: 'PROJECT_ADMIN', label: 'Admin' },
-  { value: 'PROJECT_MEMBER', label: 'User' },
-  { value: 'PROJECT_VIEWER', label: 'Viewer' },
-];
+import { getInitials } from '../../../utils/getInitials';
+import { PROJECT_ROLE_OPTIONS } from '../../../utils/getUtils';
 
 const createInitialSelection = (
   currentUser: DirectoryUser,
@@ -154,12 +146,6 @@ const CreateProjectManager = ({
 
   return (
     <div className={styles.pageContainer}>
-      <div className={styles.pageHeader}>
-        <div className={styles.pageHeading}>
-          <h1>Create Project</h1>
-        </div>
-      </div>
-
       <div className={styles.contentColumn}>
         <section className={styles.panel}>
           <div className={styles.panelHeader}>

@@ -1,15 +1,11 @@
 import { useEffect, useState } from 'react';
-import type { AuthUser, ProjectDetails, ProjectRole } from '../../types/Types';
+import type {
+  AuthUser,
+  ProjectDetails,
+  ProjectRole,
+} from '../../../types/Types';
+import { PROJECT_ROLE_OPTIONS } from '../../../utils/getUtils';
 import styles from './AssignUsersManager.module.css';
-
-const PROJECT_ROLE_OPTIONS: Array<{
-  value: ProjectRole;
-  label: string;
-}> = [
-  { value: 'PROJECT_ADMIN', label: 'Admin' },
-  { value: 'PROJECT_MEMBER', label: 'User' },
-  { value: 'PROJECT_VIEWER', label: 'Viewer' },
-];
 
 const roleLabel = (role: ProjectRole): string => role.replace('PROJECT_', '');
 
@@ -29,7 +25,7 @@ const AssignUsersManager = ({
   onUpdateAssignedRole,
 }: Props) => {
   const [selectedProjectId, setSelectedProjectId] = useState('');
-  const [statusMessage, setStatusMessage] = useState('');
+  const [statusMsg, setstatusMsg] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
@@ -48,6 +44,7 @@ const AssignUsersManager = ({
 
   const selectedProject =
     adminProjects.find((project) => project.id === selectedProjectId) ?? null;
+  const visibleMembers = selectedProject ? selectedProject.members : [];
 
   const updateAssignedRole = async (
     memberId: string,
@@ -57,21 +54,21 @@ const AssignUsersManager = ({
       return;
     }
 
-    const editedMembers = selectedProject.members.map((member) =>
+    const editedMembers = visibleMembers.map((member) =>
       member.id === memberId ? { ...member, role: newRole } : member,
     );
 
     if (!editedMembers.some((member) => member.role === 'PROJECT_ADMIN')) {
-      setStatusMessage('Each project must keep at least one admin.');
+      setstatusMsg('Each project must keep at least one admin.');
       return;
     }
 
     setIsUpdating(true);
     try {
       await onUpdateAssignedRole(selectedProject.id, memberId, newRole);
-      setStatusMessage(`Updated access roles in "${selectedProject.name}".`);
+      setstatusMsg(`Updated access roles in "${selectedProject.name}".`);
     } catch (error) {
-      setStatusMessage((error as Error).message || 'Failed to update role.');
+      setstatusMsg((error as Error).message || 'Failed to update role.');
     } finally {
       setIsUpdating(false);
     }
@@ -79,16 +76,10 @@ const AssignUsersManager = ({
 
   return (
     <div className={styles.pageContainer}>
-      <div className={styles.pageHeader}>
-        <div className={styles.pageHeading}>
-          <h1>Assign Users</h1>
-        </div>
-      </div>
-
       <div className={styles.contentColumn}>
         <section className={styles.panel}>
           <div className={styles.panelHeader}>
-            <h2>Assign Users</h2>
+            <h2>Assign User Roles</h2>
           </div>
 
           {adminProjects.length === 0 ? (
@@ -123,7 +114,7 @@ const AssignUsersManager = ({
 
               {selectedProject && (
                 <div className={styles.membersList}>
-                  {selectedProject.members.map((member) => (
+                  {visibleMembers.map((member) => (
                     <div key={member.id} className={styles.memberCard}>
                       <div>
                         <div className={styles.userName}>{member.name}</div>
@@ -157,9 +148,7 @@ const AssignUsersManager = ({
             </>
           )}
 
-          {statusMessage && (
-            <div className={styles.feedbackMessage}>{statusMessage}</div>
-          )}
+          {statusMsg && <div className={styles.Message}>{statusMsg}</div>}
         </section>
       </div>
     </div>

@@ -1,10 +1,24 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import Layout from '../../components/Layout/Layout';
-import AssignUsersManager from '../../components/ProjectAccess/AssignUsersManager';
+import AssignUsersManager from '../../components/ProjectAccess/AssignUsersRole/AssignUsersManager';
+import { getGlobalAdminEmails } from './projectAccess';
 import { useAuth } from '../../context/AuthContext';
 import type { ProjectDetails, ProjectRole } from '../../types/Types';
 import { apiClient } from '../../utils/api';
+
+const removeGlobalAdminsFromProjects = (
+  projects: ProjectDetails[],
+): ProjectDetails[] => {
+  const globalAdminEmails = getGlobalAdminEmails();
+
+  return projects.map((project) => ({
+    ...project,
+    members: project.members.filter(
+      (member) => !globalAdminEmails.has(member.email),
+    ),
+  }));
+};
 
 const AssignUsersPage = () => {
   const { user } = useAuth();
@@ -15,7 +29,9 @@ const AssignUsersPage = () => {
   const loadProjects = useCallback(async (): Promise<void> => {
     const projects: ProjectDetails[] = await apiClient('/projects');
     setAdminProjects(
-      projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+      removeGlobalAdminsFromProjects(
+        projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+      ),
     );
   }, []);
 
@@ -34,7 +50,9 @@ const AssignUsersPage = () => {
         const projects: ProjectDetails[] = await apiClient('/projects');
         if (!cancelled) {
           setAdminProjects(
-            projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+            removeGlobalAdminsFromProjects(
+              projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+            ),
           );
         }
       } catch (error) {
