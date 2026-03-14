@@ -123,6 +123,19 @@ const CreateProjectManager = ({
       return;
     }
 
+    if (
+      !selectedMembers.find(
+        (member) =>
+          member.email !== currentDirectoryUser.email &&
+          member.role === 'PROJECT_ADMIN',
+      )
+    ) {
+      setStatusMessage(
+        'At least one project member must be assigned the PROJECT_ADMIN role.',
+      );
+      return;
+    }
+
     try {
       setIsCreatingProject(true);
       setStatusMessage('');
