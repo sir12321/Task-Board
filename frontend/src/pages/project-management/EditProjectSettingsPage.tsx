@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import Layout from '../../components/Layout/Layout';
 import EditProjectSettingsManager from '../../components/ProjectAccess/EditProjectSettings/EditProjectSettingsManager';
-import { getGlobalAdminEmails, getProjectDirectoryUsers } from './projectAccess';
+import {
+  getGlobalAdminEmails,
+  getProjectDirectoryUsers,
+} from './projectAccess';
 import { useAuth } from '../../context/AuthContext';
-import type { DirectoryUser, ProjectDetails, ProjectRole } from '../../types/Types';
+import type {
+  DirectoryUser,
+  ProjectDetails,
+  ProjectRole,
+} from '../../types/Types';
 import { apiClient } from '../../utils/api';
 
 const removeGlobalAdminsFromProjects = (
@@ -40,10 +47,7 @@ const EditProjectSettingsPage = () => {
         : projects.filter((project) => project.userRole === 'PROJECT_ADMIN');
 
     setAdminProjects(
-      removeGlobalAdminsFromProjects(
-        manageableProjects,
-        globalAdminEmails,
-      ),
+      removeGlobalAdminsFromProjects(manageableProjects, globalAdminEmails),
     );
   }, [user?.globalRole]);
 
@@ -68,7 +72,9 @@ const EditProjectSettingsPage = () => {
         const manageableProjects =
           user.globalRole === 'GLOBAL_ADMIN'
             ? projects
-            : projects.filter((project) => project.userRole === 'PROJECT_ADMIN');
+            : projects.filter(
+                (project) => project.userRole === 'PROJECT_ADMIN',
+              );
 
         if (!cancelled) {
           setDirectoryUsers(users);
@@ -157,6 +163,22 @@ const EditProjectSettingsPage = () => {
     [loadProjects],
   );
 
+  const handleDeleteProject = useCallback(
+    async ({ projectId }: { projectId: string }) => {
+      await apiClient(`/projects/${projectId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          isArchived: true,
+        }),
+      });
+
+      setAdminProjects((prev) =>
+        prev.filter((project) => project.id !== projectId),
+      );
+    },
+    [],
+  );
+
   const handleUpdateProjectMemberRole = useCallback(
     async ({
       projectId,
@@ -203,6 +225,7 @@ const EditProjectSettingsPage = () => {
         adminProjects={adminProjects}
         directoryUsers={directoryUsers}
         onSaveProjectSettings={handleSaveProjectSettings}
+        onDeleteProject={handleDeleteProject}
         onAddProjectMember={handleAddProjectMember}
         onUpdateProjectMemberRole={handleUpdateProjectMemberRole}
       />

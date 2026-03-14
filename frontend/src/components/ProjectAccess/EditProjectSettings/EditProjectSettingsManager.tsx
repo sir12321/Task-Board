@@ -19,6 +19,7 @@ interface Props {
     description: string;
     isArchived: boolean;
   }) => Promise<void>;
+  onDeleteProject: (input: { projectId: string }) => Promise<void>;
   onAddProjectMember: (input: {
     projectId: string;
     memberEmail: string;
@@ -36,6 +37,7 @@ const EditProjectSettingsManager = ({
   adminProjects,
   directoryUsers,
   onSaveProjectSettings,
+  onDeleteProject,
   onAddProjectMember,
   onUpdateProjectMemberRole,
 }: Props) => {
@@ -176,6 +178,44 @@ const EditProjectSettingsManager = ({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to save settings.';
+      setStatusMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const canDeleteSelectedProject =
+    Boolean(selectedProject) &&
+    user.globalRole === 'GLOBAL_ADMIN' &&
+    selectedProject?.userRole === 'PROJECT_ADMIN';
+
+  const handleDeleteProject = async (): Promise<void> => {
+    if (!selectedProject) {
+      return;
+    }
+
+    if (!canDeleteSelectedProject) {
+      setStatusMessage(
+        'Only users with GLOBAL_ADMIN and PROJECT_ADMIN access can delete this project.',
+      );
+      return;
+    }
+
+    const shouldDelete = window.confirm(
+      `Delete project "${selectedProject.name}"? This action cannot be undone.`,
+    );
+    if (!shouldDelete) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await onDeleteProject({ projectId: selectedProject.id });
+      setStatusMessage(`Deleted "${selectedProject.name}".`);
+      setSelectedProjectId('');
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to delete project.';
       setStatusMessage(message);
     } finally {
       setIsSubmitting(false);
@@ -378,78 +418,86 @@ const EditProjectSettingsManager = ({
               <div className={styles.memberManagementSection}>
                 {user.globalRole === 'GLOBAL_ADMIN' && (
                   <>
-                <div className={styles.contentSectionHeader}>
-                  <div>
-                    <h3>Manage users</h3>
-                  </div>
-                </div>
-
-                <div
-                  className={`${styles.searchInputGroup} ${styles.compactSearchInputGroup}`}
-                >
-                  <label htmlFor="project-user-search">Search users</label>
-                  <input
-                    id="project-user-search"
-                    value={userQuery}
-                    onChange={(event) => setUserQuery(event.target.value)}
-                  />
-                </div>
-
-                <div className={styles.availableUsersList}>
-                  {availableUsers.map((person) => (
-                    <div key={person.id} className={styles.availableUserCard}>
-                      <div className={styles.userIdentity}>
-                        <div className={styles.userAvatar}>
-                          {getInitials(person.name)}
-                        </div>
-                        <div>
-                          <div className={styles.userName}>{person.name}</div>
-                          <div className={styles.userEmail}>{person.email}</div>
-                        </div>
-                      </div>
-                      <div className={styles.availableUserActions}>
-                        <div className={styles.roleSelector}>
-                          <label htmlFor={`settings-role-${person.id}`}>
-                            Role
-                          </label>
-                          <select
-                            id={`settings-role-${person.id}`}
-                            value={
-                              directoryRoles[person.email] ?? 'PROJECT_MEMBER'
-                            }
-                            disabled={isSubmitting}
-                            onChange={(event) =>
-                              updateDirectoryRole(
-                                person.email,
-                                event.target.value as ProjectRole,
-                              )
-                            }
-                          >
-                            {PROJECT_ROLE_OPTIONS.map((role) => (
-                              <option key={role.value} value={role.value}>
-                                {role.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <button
-                          type="button"
-                          className={styles.primaryActionButton}
-                          disabled={isSubmitting}
-                          onClick={() => handleAddUser(person.id)}
-                        >
-                          Add
-                        </button>
+                    <div className={styles.contentSectionHeader}>
+                      <div>
+                        <h3>Manage users</h3>
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                {availableUsers.length === 0 && (
-                  <div className={styles.emptyMessage}>
-                    No additional users match the current search.
-                  </div>
-                )}
+                    <div
+                      className={`${styles.searchInputGroup} ${styles.compactSearchInputGroup}`}
+                    >
+                      <label htmlFor="project-user-search">Search users</label>
+                      <input
+                        id="project-user-search"
+                        value={userQuery}
+                        onChange={(event) => setUserQuery(event.target.value)}
+                      />
+                    </div>
+
+                    <div className={styles.availableUsersList}>
+                      {availableUsers.map((person) => (
+                        <div
+                          key={person.id}
+                          className={styles.availableUserCard}
+                        >
+                          <div className={styles.userIdentity}>
+                            <div className={styles.userAvatar}>
+                              {getInitials(person.name)}
+                            </div>
+                            <div>
+                              <div className={styles.userName}>
+                                {person.name}
+                              </div>
+                              <div className={styles.userEmail}>
+                                {person.email}
+                              </div>
+                            </div>
+                          </div>
+                          <div className={styles.availableUserActions}>
+                            <div className={styles.roleSelector}>
+                              <label htmlFor={`settings-role-${person.id}`}>
+                                Role
+                              </label>
+                              <select
+                                id={`settings-role-${person.id}`}
+                                value={
+                                  directoryRoles[person.email] ??
+                                  'PROJECT_MEMBER'
+                                }
+                                disabled={isSubmitting}
+                                onChange={(event) =>
+                                  updateDirectoryRole(
+                                    person.email,
+                                    event.target.value as ProjectRole,
+                                  )
+                                }
+                              >
+                                {PROJECT_ROLE_OPTIONS.map((role) => (
+                                  <option key={role.value} value={role.value}>
+                                    {role.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <button
+                              type="button"
+                              className={styles.primaryActionButton}
+                              disabled={isSubmitting}
+                              onClick={() => handleAddUser(person.id)}
+                            >
+                              Add
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {availableUsers.length === 0 && (
+                      <div className={styles.emptyMessage}>
+                        No additional users match the current search.
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -521,6 +569,16 @@ const EditProjectSettingsManager = ({
               </div>
 
               <div className={styles.formActions}>
+                {canDeleteSelectedProject && (
+                  <button
+                    type="button"
+                    className={styles.deleteActionButton}
+                    disabled={isSubmitting || !canDeleteSelectedProject}
+                    onClick={handleDeleteProject}
+                  >
+                    Delete project
+                  </button>
+                )}
                 <button
                   type="button"
                   className={styles.ghostActionButton}

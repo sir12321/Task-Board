@@ -104,7 +104,9 @@
   border-radius: 10px;
   padding: 14px;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 .projectCardButton:hover,
@@ -379,7 +381,30 @@
   font-weight: 600;
   font: inherit;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.deleteActionButton {
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 600;
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid #fda29b;
+  background: #fef3f2;
+  color: #b42318;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.deleteActionButton:hover {
+  background: #fee4e2;
+  border-color: #f97066;
 }
 
 .primaryActionButton {
@@ -400,6 +425,13 @@
 
 .ghostActionButton:hover {
   background: #f8fafc;
+}
+
+.deleteActionButton:disabled,
+.primaryActionButton:disabled,
+.ghostActionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .emptyMessage,
