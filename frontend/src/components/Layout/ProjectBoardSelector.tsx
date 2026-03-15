@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { ProjectDetails } from '../../types/Types';
 import { apiClient } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
-import './ProjectBoardSelector.css';
+import styles from './ProjectBoardSelector.module.css';
 
 const buildBoardPath = (projectId: string, boardId: string) =>
   `/projects/${projectId}/boards/${boardId}`;
@@ -80,7 +80,7 @@ const ProjectBoardSelector = () => {
       });
 
       await fetchProjects();
-      
+
       handleSelectBoard(projectId, newBoard.id);
     } catch (error) {
       console.error('Failed to create board:', error);
@@ -98,11 +98,11 @@ const ProjectBoardSelector = () => {
   if (!selected) {
     if (projects.length === 0) {
       return (
-        <div className="project-board-selector">
-          <div className="pbs-toggle pbs-placeholder">
-            <div className="pbs-label">
-              <div className="pbs-project">No Projects</div>
-              <div className="pbs-board">Create one to get started</div>
+        <div className={styles.projectBoardSelector}>
+          <div className={`${styles.pbsToggle} ${styles.pbsPlaceholder}`}>
+            <div className={styles.pbsLabel}>
+              <div className={styles.pbsProject}>No Projects</div>
+              <div className={styles.pbsBoard}>Create one to get started</div>
             </div>
           </div>
         </div>
@@ -112,27 +112,29 @@ const ProjectBoardSelector = () => {
   }
 
   return (
-    <div className="project-board-selector">
+    <div className={styles.projectBoardSelector}>
       <button
         type="button"
-        className="pbs-toggle"
+        className={styles.pbsToggle}
         onClick={() => setOpen((s) => !s)}
         aria-expanded={open}
       >
-        <div className="pbs-label">
-          <div className="pbs-project">{selected.project.name}</div>
-            <div className="pbs-board">{selected.board?.name ?? 'Select a board'}</div>
+        <div className={styles.pbsLabel}>
+          <div className={styles.pbsProject}>{selected.project.name}</div>
+          <div className={styles.pbsBoard}>
+            {selected.board?.name ?? 'Select a board'}
+          </div>
         </div>
-        <div className="pbs-caret">▾</div>
+        <div className={styles.pbsCaret}>▾</div>
       </button>
 
       {open && (
-        <div className="pbs-menu">
+        <div className={styles.pbsMenu}>
           {projects.map((project) => (
-            <div key={project.id} className="pbs-project-block">
+            <div key={project.id} className={styles.pbsProjectBlock}>
               <div
-                className={`pbs-project-name ${
-                  project.id === selected.project.id ? 'selected' : ''
+                className={`${styles.pbsProjectName} ${
+                  project.id === selected.project.id ? styles.selected : ''
                 }`}
                 onClick={() => setExpandedProjectId(project.id)}
               >
@@ -140,18 +142,20 @@ const ProjectBoardSelector = () => {
               </div>
 
               <div
-                className={`pbs-boards ${
-                  project.id === expandedProjectId ? 'expanded' : 'collapsed'
+                className={`${styles.pbsBoards} ${
+                  project.id === expandedProjectId
+                    ? styles.expanded
+                    : styles.collapsed
                 }`}
               >
                 {project.boards?.map((b) => (
                   <button
                     key={b.id}
                     type="button"
-                    className={`pbs-board-item ${
+                    className={`${styles.pbsBoardItem} ${
                       b.id === selected.board?.id &&
                       project.id === selected.project.id
-                        ? 'selected'
+                        ? styles.selected
                         : ''
                     }`}
                     onClick={() => handleSelectBoard(project.id, b.id)}
@@ -162,7 +166,7 @@ const ProjectBoardSelector = () => {
                 {canCreateBoard(project) && (
                   <button
                     type="button"
-                    className="pbs-create-board-btn"
+                    className={styles.pbsCreateBoardBtn}
                     onClick={() => handleCreateBoard(project.id)}
                     title="Create new board"
                   >
@@ -176,7 +180,7 @@ const ProjectBoardSelector = () => {
           {user?.globalRole === 'GLOBAL_ADMIN' && (
             <button
               type="button"
-              className="pbs-create-project-btn"
+              className={styles.pbsCreateProjectBtn}
               onClick={handleCreateProject}
               title="Create new project"
             >

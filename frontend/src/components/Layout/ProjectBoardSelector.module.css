@@ -1,9 +1,9 @@
-.project-board-selector {
+.projectBoardSelector {
   position: relative;
   margin: 0 8px;
 }
 
-.pbs-toggle {
+.pbsToggle {
   width: 100%;
   display: flex;
   align-items: center;
@@ -18,27 +18,27 @@
   cursor: pointer;
 }
 
-.pbs-label {
+.pbsLabel {
   display: flex;
   flex-direction: column;
   text-align: left;
 }
 
-.pbs-project {
+.pbsProject {
   font-weight: 600;
   font-size: 13px;
 }
 
-.pbs-board {
+.pbsBoard {
   font-size: 12px;
   opacity: 0.85;
 }
 
-.pbs-caret {
+.pbsCaret {
   margin-left: 8px;
 }
 
-.pbs-menu {
+.pbsMenu {
   position: absolute;
   top: 100%;
   left: 0;
@@ -52,25 +52,25 @@
   padding: 8px;
 }
 
-.pbs-project-block + .pbs-project-block {
+.pbsProjectBlock + .pbsProjectBlock {
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.02);
 }
 
-.pbs-project-name {
+.pbsProjectName {
   font-weight: 700;
   cursor: pointer;
   padding: 4px 6px;
   border-radius: 4px;
 }
 
-.pbs-project-name.selected {
+.pbsProjectName.selected {
   color: #0f172a;
   background: #e2e8f0;
 }
 
-.pbs-project-settings {
+.pbsProjectSettings {
   margin-top: 4px;
   margin-left: 6px;
   padding: 4px 6px;
@@ -84,22 +84,22 @@
   text-align: left;
 }
 
-.pbs-project-settings:hover {
+.pbsProjectSettings:hover {
   background: #e2e8f0;
 }
 
-.pbs-boards {
+.pbsBoards {
   margin-left: 6px;
   margin-top: 6px;
   display: grid;
   gap: 4px;
 }
 
-.pbs-boards.collapsed {
+.pbsBoards.collapsed {
   display: none;
 }
 
-.pbs-board-item {
+.pbsBoardItem {
   padding: 4px 6px;
   cursor: pointer;
   border-radius: 4px;
@@ -110,17 +110,17 @@
   color: #334155;
 }
 
-.pbs-board-item:hover {
+.pbsBoardItem:hover {
   background: #f1f5f9;
 }
 
-.pbs-board-item.selected {
+.pbsBoardItem.selected {
   background: #edebeb;
   color: #334155;
   font-weight: 600;
 }
 
-.pbs-create-board {
+.pbsCreateBoard {
   padding: 6px;
   cursor: pointer;
   border-radius: 4px;
@@ -132,11 +132,11 @@
   font-weight: 600;
 }
 
-.pbs-create-board:hover {
+.pbsCreateBoard:hover {
   background: #cbcfd5;
 }
 
-.pbs-create-board-btn {
+.pbsCreateBoardBtn {
   padding: 6px 8px;
   cursor: pointer;
   border-radius: 4px;
@@ -150,12 +150,12 @@
   margin-top: 6px;
 }
 
-.pbs-create-board-btn:hover {
+.pbsCreateBoardBtn:hover {
   background: #eef2f7;
   color: #334155;
 }
 
-.pbs-create-project-btn {
+.pbsCreateProjectBtn {
   margin-top: 10px;
   padding: 7px 8px;
   cursor: pointer;
@@ -169,6 +169,18 @@
   font-weight: 600;
 }
 
-.pbs-create-project-btn:hover {
+.pbsCreateProjectBtn:hover {
   background: #e2e8f0;
+}
+
+.selected {
+}
+
+.expanded {
+}
+
+.collapsed {
+}
+
+.pbsPlaceholder {
 }

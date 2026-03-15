@@ -26,13 +26,13 @@
   font-family: Georgia, 'Times New Roman', serif;
 }
 
-nav {
+.nav {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.nav-item {
+.navItem {
   display: flex;
   align-items: center;
   padding: 10px 12px;
@@ -42,28 +42,30 @@ nav {
   width: 100%;
   font-size: 17px;
   border-radius: 10px;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    opacity 0.2s ease;
 }
 
-.nav-link {
+.navLink {
   color: inherit;
   text-decoration: none;
   border: none;
   background: transparent;
 }
 
-.nav-item:hover {
+.navItem:hover {
   opacity: 1;
   background-color: #414963;
 }
 
-.nav-item.active {
+.navItem.active {
   opacity: 1;
   background-color: #414963;
   box-shadow: inset 3px 0 0 #93c5fd;
 }
 
-.nav-icon {
+.navIcon {
   width: 20px;
   flex: 0 0 20px;
   display: flex;
@@ -97,7 +99,7 @@ nav {
   color: #f1f5f9;
 }
 
-.notification-badge {
+.notificationBadge {
   min-width: 24px;
   height: 24px;
   padding: 0 7px;
@@ -114,7 +116,7 @@ nav {
   box-shadow: 0 0 0 2px #414963;
 }
 
-.sidebar.collapsed .notification-badge {
+.sidebar.collapsed .notificationBadge {
   position: absolute;
   top: -6px;
   right: -6px;
@@ -122,11 +124,11 @@ nav {
   box-shadow: 0 0 0 2px #5c6883;
 }
 
-.sidebar.collapsed nav {
+.sidebar.collapsed .nav {
   align-items: center;
 }
 
-.sidebar.collapsed nav .nav-item {
+.sidebar.collapsed .nav .navItem {
   width: 44px;
   height: 44px;
   padding: 0;
@@ -134,22 +136,22 @@ nav {
   position: relative;
 }
 
-.sidebar.collapsed nav .nav-item.active {
+.sidebar.collapsed .nav .navItem.active {
   box-shadow: inset 0 0 0 2px #93c5fd;
 }
 
-.sidebar.collapsed nav .label {
+.sidebar.collapsed .nav .label {
   display: none;
 }
 
-.sidebar.collapsed nav .nav-icon {
+.sidebar.collapsed .nav .navIcon {
   width: 24px;
   height: 24px;
   flex: 0 0 24px;
   font-size: 14px;
 }
 
-.collapse-btn {
+.collapseBtn {
   align-self: flex-end;
   background: rgba(15, 23, 42, 0.14);
   border: none;
@@ -165,16 +167,16 @@ nav {
   justify-content: center;
 }
 
-.collapse-btn:hover {
+.collapseBtn:hover {
   color: #dbeafe;
   background-color: #414963;
 }
 
-.sidebar.collapsed .collapse-btn {
+.sidebar.collapsed .collapseBtn {
   align-self: center;
 }
 
-.sidebar.collapsed .user-info {
+.sidebar.collapsed .userInfo {
   justify-content: center;
 }
 
@@ -182,24 +184,24 @@ nav {
   margin: 0;
 }
 
-.sidebar-footer {
+.sidebarFooter {
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .sidebar.collapsed .icon,
-.sidebar.collapsed .nav-icon {
+.sidebar.collapsed .navIcon {
   margin: 0;
 }
 
-.sidebar-footer .nav-item {
+.sidebarFooter .navItem {
   position: relative;
   margin-top: 8px;
   color: #fca5a5;
 }
 
-.sidebar:not(.collapsed) .sidebar-footer .nav-item.logout .icon {
+.sidebar:not(.collapsed) .sidebarFooter .navItem.logout .icon {
   position: absolute;
   right: 12px;
   left: auto;
@@ -207,16 +209,30 @@ nav {
   margin-left: 0;
 }
 
-.sidebar.collapsed .sidebar-footer .nav-item .icon {
+.sidebar.collapsed .sidebarFooter .navItem .icon {
   position: static;
   transform: none;
   margin-left: 0;
 }
 
-.user-info {
+.userInfo {
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 8px;
+  margin-left: -8px;
+  margin-right: -8px;
   display: flex;
   align-items: center;
   margin-bottom: 4px;
+}
+
+.userInfo:hover {
+  background-color: #414963;
+}
+
+.userInfo:focus-visible {
+  outline: 2px solid #bfdbfe;
+  outline-offset: 2px;
 }
 
 .avatar {
@@ -237,16 +253,16 @@ nav {
   object-fit: cover;
 }
 
-.user-meta {
+.userMeta {
   margin-left: 10px;
 }
 
-.user-name {
+.userName {
   font-size: 13px;
   font-weight: 600;
 }
 
-.user-email {
+.userEmail {
   font-size: 11px;
   color: #cdd5e1;
 }
@@ -264,7 +280,7 @@ nav {
   margin: 10px auto 0;
 }
 
-.sidebar.collapsed .sidebar-footer .nav-item.logout {
+.sidebar.collapsed .sidebarFooter .navItem.logout {
   position: static;
 }
 

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { matchPath, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import ProjectBoardSelector from './ProjectBoardSelector';
-import './Layout.css';
+import styles from './Layout.module.css';
 
 interface Props {
   children: ReactNode;
@@ -20,20 +20,19 @@ const Layout = ({ children }: Props) => {
     );
 
   return (
-    <div className={`layout ${collapsed ? 'collapsed' : ''}`}>
-      <Sidebar
-        collapsed={collapsed}
-        toggle={() => setCollapsed(!collapsed)}
-      />
+    <div className={`${styles.layout} ${collapsed ? styles.collapsed : ''}`}>
+      <Sidebar collapsed={collapsed} toggle={() => setCollapsed(!collapsed)} />
 
-      <div className="main">
+      <div className={styles.main}>
         {showProjectBoardSelector && (
-          <header className="layout-header">
-            <ProjectBoardSelector />
+          <header className={styles.layoutHeader}>
+            <div className={styles.selectorWrap}>
+              <ProjectBoardSelector />
+            </div>
           </header>
         )}
 
-        <div className="content">{children}</div>
+        <div className={styles.content}>{children}</div>
       </div>
     </div>
   );

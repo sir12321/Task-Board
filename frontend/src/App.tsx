@@ -8,6 +8,8 @@ import AssignUsersPage from './pages/project-management/AssignUsersPage';
 import CreateProjectPage from './pages/project-management/CreateProjectPage';
 import EditProjectSettingsPage from './pages/project-management/EditProjectSettingsPage';
 import ProjectManagementPage from './pages/project-management/ProjectManagementPage';
+import UserSettingsPage from './pages/user-settings/UserSettingsPage';
+import UploadImagePage from './pages/user-settings/UploadImagePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -75,6 +77,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <EditProjectSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/user-settings"
+        element={
+          <ProtectedRoute>
+            <UserSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/user-settings/upload-image"
+        element={
+          <ProtectedRoute>
+            <UploadImagePage />
           </ProtectedRoute>
         }
       />

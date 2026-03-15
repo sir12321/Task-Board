@@ -1,4 +1,4 @@
-import './Sidebar.css';
+import styles from './Sidebar.module.css';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getInitials } from '../../utils/getInitials';
@@ -24,34 +24,38 @@ const Sidebar = ({ collapsed, toggle }: Props) => {
   if (!user) return null;
 
   return (
-    <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-      <button className="collapse-btn" onClick={toggle}>
+    <div className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
+      <button className={styles.collapseBtn} onClick={toggle}>
         {collapsed ? '→' : '←'}
       </button>
 
-      {!collapsed && <h2 className="logo">TaskFlow</h2>}
+      {!collapsed && <h2 className={styles.logo}>TaskFlow</h2>}
 
-      <nav>
+      <nav className={styles.nav}>
         <NavLink
           to="/dashboard"
           className={({ isActive }) =>
-            `nav-item nav-link dashboard-item ${isActive ? 'active' : ''}`
+            `${styles.navItem} ${styles.navLink} ${styles.dashboardItem} ${
+              isActive ? styles.active : ''
+            }`
           }
         >
-          <span className="nav-icon">⌂</span>
-          {!collapsed && <span className="label">Dashboard</span>}
+          <span className={styles.navIcon}>⌂</span>
+          {!collapsed && <span className={styles.label}>Dashboard</span>}
         </NavLink>
 
         <NavLink
           to="/notifications"
           className={({ isActive }) =>
-            `nav-item nav-link notifications-item ${isActive ? 'active' : ''}`
+            `${styles.navItem} ${styles.navLink} ${styles.notificationsItem} ${
+              isActive ? styles.active : ''
+            }`
           }
         >
-          <span className="nav-icon">⦿</span>
-          {!collapsed && <span className="label">Notifications</span>}
+          <span className={styles.navIcon}>⦿</span>
+          {!collapsed && <span className={styles.label}>Notifications</span>}
           {hasUnreadNotifications && (
-            <span className="notification-badge">
+            <span className={styles.notificationBadge}>
               {`${unreadNotificationCount}`}
             </span>
           )}
@@ -61,11 +65,13 @@ const Sidebar = ({ collapsed, toggle }: Props) => {
           <NavLink
             to="/create-project"
             className={({ isActive }) =>
-              `nav-item nav-link projectCreate-item ${isActive ? 'active' : ''}`
+              `${styles.navItem} ${styles.navLink} ${styles.projectCreateItem} ${
+                isActive ? styles.active : ''
+              }`
             }
           >
-            <span className="nav-icon">+</span>
-            {!collapsed && <span className="label">Create Project</span>}
+            <span className={styles.navIcon}>+</span>
+            {!collapsed && <span className={styles.label}>Create Project</span>}
           </NavLink>
         )}
 
@@ -73,28 +79,43 @@ const Sidebar = ({ collapsed, toggle }: Props) => {
           <NavLink
             to="/assign-users"
             className={({ isActive }) =>
-              `nav-item nav-link projectCreate-item ${isActive ? 'active' : ''}`
+              `${styles.navItem} ${styles.navLink} ${styles.projectCreateItem} ${
+                isActive ? styles.active : ''
+              }`
             }
           >
-            <span className="nav-icon">⇄</span>
-            {!collapsed && <span className="label">Assign Users</span>}
+            <span className={styles.navIcon}>⇄</span>
+            {!collapsed && <span className={styles.label}>Assign Users</span>}
           </NavLink>
         )}
 
         <NavLink
           to="/project-settings"
           className={({ isActive }) =>
-            `nav-item nav-link settings-item ${isActive ? 'active' : ''}`
+            `${styles.navItem} ${styles.navLink} ${styles.settingsItem} ${
+              isActive ? styles.active : ''
+            }`
           }
         >
-          <span className="nav-icon">⚙</span>
-          {!collapsed && <span className="label">Project Settings</span>}
+          <span className={styles.navIcon}>⚙</span>
+          {!collapsed && <span className={styles.label}>Project Settings</span>}
         </NavLink>
       </nav>
 
-      <div className="sidebar-footer">
-        <div className="user-info">
-          <div className="avatar">
+      <div className={styles.sidebarFooter}>
+        <div
+          className={styles.userInfo}
+          onClick={() => navigate('/user-settings')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigate('/user-settings');
+            }
+          }}
+        >
+          <div className={styles.avatar}>
             {user.avatarUrl ? (
               <img src={user.avatarUrl} alt="avatar" />
             ) : (
@@ -103,16 +124,19 @@ const Sidebar = ({ collapsed, toggle }: Props) => {
           </div>
 
           {!collapsed && (
-            <div className="user-meta">
-              <div className="user-name">{user.name}</div>
-              <div className="user-email">{user.email}</div>
+            <div className={styles.userMeta}>
+              <div className={styles.userName}>{user.name}</div>
+              <div className={styles.userEmail}>{user.email}</div>
             </div>
           )}
         </div>
 
-        <div className="nav-item logout" onClick={handleLogout}>
-          <span className="icon">↩</span>
-          {!collapsed && <span className="label">Logout</span>}
+        <div
+          className={`${styles.navItem} ${styles.logout}`}
+          onClick={handleLogout}
+        >
+          <span className={styles.icon}>↩</span>
+          {!collapsed && <span className={styles.label}>Logout</span>}
         </div>
       </div>
     </div>
