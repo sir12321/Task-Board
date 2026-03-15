@@ -16,10 +16,32 @@ export const makeComment = async (data: {
   });
   const task = await prisma.task.findUnique({
     where: { id: data.taskId },
-    select: { assigneeId: true, title: true },
+    select: {
+      assigneeId: true,
+      reporterId: true,
+      title: true,
+      board: {
+        select: { projectId: true },
+      },
+    },
   });
-  if (task?.assigneeId && task.assigneeId !== data.authorId) {
-    await createNotification(task.assigneeId, `New comment on your task "${task.title}": ${data.content}`);
+
+  if (task) {
+    const recipients = new Set<string>([
+      ...(task.assigneeId ? [task.assigneeId] : []),
+      task.reporterId,
+    ]);
+
+    recipients.delete(data.authorId);
+
+    await Promise.all(
+      Array.from(recipients).map((recipientId) =>
+        createNotification(
+          recipientId,
+          `New comment on task "${task.title}": ${data.content}`,
+        ),
+      ),
+    );
   }
 
   return comment;
