@@ -20,11 +20,18 @@ export const makeComment = async (data: {
       assigneeId: true,
       reporterId: true,
       title: true,
+<<<<<<< HEAD
       board: { select: { projectId: true } },
+=======
+      board: {
+        select: { projectId: true },
+      },
+>>>>>>> 2e2d3c860d51c79d6b183dbc95f95743264eee97
     },
   });
 
   if (task) {
+<<<<<<< HEAD
     const projectAdmins = await prisma.projectMember.findMany({
       where: {
         projectId: task.board.projectId,
@@ -37,6 +44,11 @@ export const makeComment = async (data: {
       ...(task.assigneeId ? [task.assigneeId] : []),
       task.reporterId,
       ...projectAdmins.map((member) => member.userId),
+=======
+    const recipients = new Set<string>([
+      ...(task.assigneeId ? [task.assigneeId] : []),
+      task.reporterId,
+>>>>>>> 2e2d3c860d51c79d6b183dbc95f95743264eee97
     ]);
 
     recipients.delete(data.authorId);
