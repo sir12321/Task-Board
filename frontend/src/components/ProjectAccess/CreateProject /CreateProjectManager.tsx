@@ -131,7 +131,7 @@ const CreateProjectManager = ({
       )
     ) {
       setStatusMessage(
-        'At least one project member must be assigned the PROJECT_ADMIN role.',
+        'At least one project member must be assigned the ADMIN role.',
       );
       return;
     }
