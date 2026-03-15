@@ -68,3 +68,26 @@ export const removeColumn = async (req: AuthRequest, res: Response) : Promise<vo
         }
     }
 };
+
+export const reorderColumn = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user?.id;
+        const globalRole = req.user?.globalRole;
+        const columnId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+        const { direction } = req.body;
+
+        if (!userId || !columnId || !['left', 'right'].includes(direction)) {
+            res.status(400).json({ error: 'Invalid request: direction must be "left" or "right"' });
+            return;
+        }
+
+        await columnService.reorderColumn(userId, columnId, direction, globalRole);
+        res.status(200).json({ message: 'Column reordered successfully' });
+    } catch (err: unknown) {
+        if (err instanceof Error && err.message.includes('Forbidden')) {
+            res.status(403).json({ error: err.message });
+        } else {
+            res.status(400).json({ error: err instanceof Error ? err.message : 'Failed to reorder column' });
+        }
+    }
+};

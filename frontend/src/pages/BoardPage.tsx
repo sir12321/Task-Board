@@ -379,14 +379,46 @@ export default function BoardPage() {
     [project, board],
   );
 
-  const reorderColumn = useCallback(async (): Promise<void> => {
-    if (!project) return;
-    if (project.userRole !== 'PROJECT_ADMIN') {
-      alert('Only ProjectAdmin can reorder columns.');
-      return;
-    }
-    alert('Column reorder via API is not yet supported.');
-  }, [project]);
+  const reorderColumn = useCallback(
+    async (columnId: string, direction: 'left' | 'right'): Promise<void> => {
+      if (!project || !board) return;
+      if (project.userRole !== 'PROJECT_ADMIN' && user?.globalRole !== 'GLOBAL_ADMIN') {
+        alert('Only ProjectAdmin can reorder columns.');
+        return;
+      }
+
+      try {
+        await apiClient(`/columns/${columnId}/reorder`, {
+          method: 'PUT',
+          body: JSON.stringify({ direction }),
+        });
+
+        setBoard((prev) => {
+          if (!prev) return prev;
+          const sorted = [...prev.columns].sort((a, b) => a.order - b.order);
+          const currentIndex = sorted.findIndex((c) => c.id === columnId);
+          const targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+          if (targetIndex < 0 || targetIndex >= sorted.length) return prev;
+
+          const currentOrder = sorted[currentIndex].order;
+          const targetOrder = sorted[targetIndex].order;
+
+          return {
+            ...prev,
+            columns: prev.columns.map((c) => {
+              if (c.id === sorted[currentIndex].id) return { ...c, order: targetOrder };
+              if (c.id === sorted[targetIndex].id) return { ...c, order: currentOrder };
+              return c;
+            }),
+          };
+        });
+      } catch (error) {
+        console.error('Failed to reorder column:', error);
+        alert('Failed to reorder column.');
+      }
+    },
+    [project, board, user],
+  );
 
   const updateColumnWip = useCallback(
     async (columnId: string, newWipLimit: number | null): Promise<void> => {

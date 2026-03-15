@@ -83,3 +83,42 @@ export const deleteColumn = async (userId: string, columnId: string, globalRole?
         where: { id: columnId },
     });
 };
+
+export const reorderColumn = async (
+    userId: string, 
+    columnId: string, 
+    direction: 'left' | 'right', 
+    globalRole?: string
+): Promise<void> => {
+    const column = await prisma.column.findUnique({
+        where: { id: columnId },
+        select: { boardId: true, order: true },
+    });
+
+    if (!column) {
+        throw new Error('Column not found');
+    }
+
+    await verifyAdmin(userId, column.boardId, globalRole);
+
+    const targetOrder = direction === 'left' ? column.order - 1 : column.order + 1;
+
+    const neighbor = await prisma.column.findFirst({
+        where: { boardId: column.boardId, order: targetOrder },
+    });
+
+    if (!neighbor) {
+        throw new Error('No adjacent column to swap with in that direction');
+    }
+
+    await prisma.$transaction([
+        prisma.column.update({
+            where: { id: columnId },
+            data: { order: targetOrder },
+        }),
+        prisma.column.update({
+            where: { id: neighbor.id },
+            data: { order: column.order },
+        }),
+    ]);
+};
