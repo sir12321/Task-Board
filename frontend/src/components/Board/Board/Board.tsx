@@ -17,7 +17,13 @@ import AddColumn from './AddColumn';
 import DeleteColumn from './DeleteColumn';
 import TaskDetailsModal from '../Task/TaskDetailsModal/TaskDetailsModal';
 import TaskCreateEditModal from '../Task/TaskCreate/TaskCreateEdit';
+import { apiClient } from '../../../utils/api';
 import styles from './Board.module.css';
+
+interface DirectoryUserRole {
+  id: string;
+  globalRole: 'GLOBAL_ADMIN' | 'USER';
+}
 
 // Props accepted by the Board component. All handler callbacks are optional to allow
 // the board to function in both controlled (parent-managed) and internal state
@@ -92,6 +98,9 @@ const Board = ({
     columnId: string;
     columnName: string;
   } | null>(null);
+  const [globalAdminUserIds, setGlobalAdminUserIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Some Boolean Helpers
   const canManageTasks =
@@ -105,6 +114,43 @@ const Board = ({
     (member) =>
       member.role === 'PROJECT_ADMIN' || member.role === 'PROJECT_MEMBER',
   );
+  const mentionableProjectMembers = assignableMembers.filter(
+    (member) => member.id !== user?.id && !globalAdminUserIds.has(member.id),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadGlobalAdminIds = async () => {
+      try {
+        const directoryUsers = (await apiClient(
+          '/users',
+        )) as DirectoryUserRole[];
+
+        if (cancelled) {
+          return;
+        }
+
+        const nextGlobalAdminIds = new Set<string>(
+          directoryUsers
+            .filter(
+              (directoryUser) => directoryUser.globalRole === 'GLOBAL_ADMIN',
+            )
+            .map((directoryUser) => directoryUser.id),
+        );
+
+        setGlobalAdminUserIds(nextGlobalAdminIds);
+      } catch (error) {
+        console.error('Failed to load global admin user IDs:', error);
+      }
+    };
+
+    void loadGlobalAdminIds();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Automatically clear shortError messages after a brief interval
   useEffect(() => {
@@ -444,6 +490,8 @@ const Board = ({
         <TaskDetailsModal
           task={state.board.tasks.find((t) => t.id === selectedTaskId)!}
           userRole={state.projectDetails.userRole}
+          projectMembers={state.projectDetails.members}
+          mentionableMembers={mentionableProjectMembers}
           currentUserId={user?.id}
           currentUserGlobalRole={user?.globalRole}
           onClose={() => setSelectedTaskId(null)}
