@@ -142,14 +142,7 @@ export const archiveProject = async (
 
 export const deleteProject = async (userId: string, projectId: string, globalRole: string): Promise<void> => {
     if (globalRole !== 'GLOBAL_ADMIN') {
-        const member = await prisma.projectMember.findUnique({
-            where: { userId_projectId: { userId, projectId } },
-            select: { role: true },
-        });
-
-        if (!member || member.role !== 'PROJECT_ADMIN') {
-            throw new Error('Forbidden: Only Global Admins or Project Admins can delete projects.');
-        }
+        throw new Error('Forbidden: Only Global Admins can delete projects.');
     }
 
     const project = await prisma.project.findUnique({ where: { id: projectId } });

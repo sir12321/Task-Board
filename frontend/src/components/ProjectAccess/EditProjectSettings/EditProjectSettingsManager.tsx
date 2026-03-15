@@ -186,8 +186,7 @@ const EditProjectSettingsManager = ({
 
   const canDeleteSelectedProject =
     Boolean(selectedProject) &&
-    user.globalRole === 'GLOBAL_ADMIN' &&
-    selectedProject?.userRole === 'PROJECT_ADMIN';
+    user.globalRole === 'GLOBAL_ADMIN';
 
   const handleDeleteProject = async (): Promise<void> => {
     if (!selectedProject) {
@@ -196,7 +195,7 @@ const EditProjectSettingsManager = ({
 
     if (!canDeleteSelectedProject) {
       setStatusMessage(
-        'Only users with GLOBAL_ADMIN and PROJECT_ADMIN access can delete this project.',
+        'Only Global Admins can delete projects.',
       );
       return;
     }
