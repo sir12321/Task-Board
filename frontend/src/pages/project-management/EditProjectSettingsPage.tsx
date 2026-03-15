@@ -166,10 +166,7 @@ const EditProjectSettingsPage = () => {
   const handleDeleteProject = useCallback(
     async ({ projectId }: { projectId: string }) => {
       await apiClient(`/projects/${projectId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          isArchived: true,
-        }),
+        method: 'DELETE',
       });
 
       setAdminProjects((prev) =>

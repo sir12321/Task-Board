@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { getUserProjects, createProject, archiveProject } from '../services/project.service';
+import { getUserProjects, createProject, archiveProject, deleteProject } from '../services/project.service';
 import { AuthRequest } from './auth.controller';
 
 export const getProjects = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -43,6 +43,35 @@ export const createNewProject = async (req: AuthRequest, res: Response): Promise
         res.status(201).json(project);
     } catch {
         res.status(500).json({ error: 'Failed to create project' });
+    }
+};
+
+export const deleteProjectHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user?.id;
+        const globalRole = req.user?.globalRole;
+        const projectId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+        if (!userId || !globalRole) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        if (!projectId) {
+            res.status(400).json({ error: 'Project ID is required' });
+            return;
+        }
+
+        await deleteProject(userId, projectId, globalRole);
+        res.status(200).json({ message: 'Project deleted successfully' });
+    } catch (error: unknown) {
+        if (error instanceof Error && error.message.includes('Forbidden')) {
+            res.status(403).json({ error: error.message });
+        } else if (error instanceof Error && error.message.includes('not found')) {
+            res.status(404).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: 'Failed to delete project' });
+        }
     }
 };
 
