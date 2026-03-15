@@ -140,7 +140,7 @@ export const archiveProject = async (
     });
 };
 
-export const deleteProject = async (userId: string, projectId: string, globalRole: string): Promise<void> => {
+export const deleteProject = async (projectId: string, globalRole: string): Promise<void> => {
     if (globalRole !== 'GLOBAL_ADMIN') {
         throw new Error('Forbidden: Only Global Admins can delete projects.');
     }

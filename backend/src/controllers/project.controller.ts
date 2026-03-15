@@ -62,7 +62,7 @@ export const deleteProjectHandler = async (req: AuthRequest, res: Response): Pro
             return;
         }
 
-        await deleteProject(userId, projectId, globalRole);
+        await deleteProject(projectId, globalRole);
         res.status(200).json({ message: 'Project deleted successfully' });
     } catch (error: unknown) {
         if (error instanceof Error && error.message.includes('Forbidden')) {
