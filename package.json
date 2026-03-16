@@ -1,5 +1,9 @@
 {
   "devDependencies": {
+    "@types/multer": "^2.1.0",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "multer": "^2.1.1"
   }
 }

@@ -4,7 +4,7 @@ import { createNotification } from './notification.service';
 import {
   getRichTextNotificationSnippet,
   getRichTextPlainText,
-  sanitizeRichTextComment,
+  correctRichTextComment,
 } from '../utils/richText.util';
 import { resolveMentionedUserIds } from '../utils/mention.util';
 
@@ -13,7 +13,7 @@ export const makeComment = async (data: {
   authorId: string;
   taskId: string;
 }): Promise<Comment> => {
-  const sanitizedContent = sanitizeRichTextComment(data.content);
+  const sanitizedContent = correctRichTextComment(data.content);
   const plainTextContent = getRichTextPlainText(sanitizedContent);
 
   if (!plainTextContent) {
@@ -106,7 +106,7 @@ export const editComment = async (
   content: string,
   globalRole?: string,
 ): Promise<Comment> => {
-  const sanitizedContent = sanitizeRichTextComment(content);
+  const sanitizedContent = correctRichTextComment(content);
   const plainTextContent = getRichTextPlainText(sanitizedContent);
 
   if (!plainTextContent) {

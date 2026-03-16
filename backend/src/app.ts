@@ -17,17 +17,19 @@ const allowedOrigins = (process.env.FRONTEND_ORIGIN || 'http://localhost:5173')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-      return;
-    }
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
 
-    callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true
-}));
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -40,6 +42,7 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/columns', columnRoutes);
 app.use('/api/users', userRoutes);
+app.use('/uploads', express.static('uploads'));
 
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });

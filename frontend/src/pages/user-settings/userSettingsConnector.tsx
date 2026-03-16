@@ -14,11 +14,18 @@ export const uploadUserAvatar = async (file: File): Promise<string | null> => {
   const formData = new FormData();
   formData.append('avatar', file);
 
-  const response = await fetch(`${BASE_URL}/users/me/avatar`, {
-    method: 'POST',
-    credentials: 'include',
-    body: formData,
-  });
+  const requestUpload = (endpoint: string) =>
+    fetch(`${BASE_URL}${endpoint}`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+
+  let response = await requestUpload('/users/avatar');
+
+  if (response.status === 404) {
+    response = await requestUpload('/users/me/avatar');
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
