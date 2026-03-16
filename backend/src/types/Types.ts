@@ -1,10 +1,10 @@
-export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
-export type TaskType = "STORY" | "TASK" | "BUG";
+export type TaskType = 'STORY' | 'TASK' | 'BUG';
 
-export type GlobalRole = "GLOBAL_ADMIN" | "USER";
+export type GlobalRole = 'GLOBAL_ADMIN' | 'USER';
 
-export type ProjectRole = "PROJECT_ADMIN" | "PROJECT_MEMBER" | "PROJECT_VIEWER";
+export type ProjectRole = 'PROJECT_ADMIN' | 'PROJECT_MEMBER' | 'PROJECT_VIEWER';
 
 export interface Comment {
   id: string;
@@ -51,7 +51,7 @@ export interface NewTaskInput {
   columnId: string;
   assigneeId?: string | null;
   parentId?: string | null;
-}                                     
+}
 
 export interface BoardColumn {
   id: string;
@@ -115,4 +115,18 @@ export interface ProjectMemberSummary {
   name: string;
   email: string; // what if multiple users have same email, must be handled
   role: ProjectRole;
+}
+
+export interface AuditLog {
+  id: string;
+  taskId: string;
+  userId: string;
+  action: string;
+  oldValue?: string | null;
+  newValue?: string | null;
+  timestamp: string;
+  user?: {
+    name: string;
+    avatarUrl?: string | null;
+  };
 }
