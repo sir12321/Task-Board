@@ -14,6 +14,7 @@ export const createComment = async (
   try {
     const { content, taskId } = req.body;
     const authorId = req.user?.id;
+    const globalRole = req.user?.globalRole;
 
     if (!authorId || !content || !taskId) {
       res.status(400).json({ error: 'Missing required fields' });
@@ -29,23 +30,28 @@ export const createComment = async (
       return;
     }
 
-    const member = await prisma.projectMember.findUnique({
-      where: {
-        userId_projectId: {
-          userId: authorId,
-          projectId: task.board.projectId,
+    if (globalRole !== 'GLOBAL_ADMIN') {
+      const member = await prisma.projectMember.findUnique({
+        where: {
+          userId_projectId: {
+            userId: authorId,
+            projectId: task.board.projectId,
+          },
         },
-      },
-    });
-    if (!member) {
-      res
-        .status(403)
-        .json({ error: 'Forbidden: You are not a member of this project' });
-      return;
-    }
-    if (member.role === 'PROJECT_VIEWER') {
-      res.status(403).json({ error: 'Forbidden: Viewers cannot add comments' });
-      return;
+      });
+
+      if (!member) {
+        res
+          .status(403)
+          .json({ error: 'Forbidden: You are not a member of this project' });
+        return;
+      }
+      if (member.role === 'PROJECT_VIEWER') {
+        res
+          .status(403)
+          .json({ error: 'Forbidden: Viewers cannot add comments' });
+        return;
+      }
     }
 
     const comment = await makeComment({ content, authorId, taskId });

@@ -81,7 +81,10 @@ export default function BoardPage() {
   const deleteTask = useCallback(
     async (taskId: string): Promise<void> => {
       if (!project || !board) return;
-      if (project.userRole === 'PROJECT_VIEWER') {
+      if (
+        project.userRole === 'PROJECT_VIEWER' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('You do not have permission to delete tasks.');
         return;
       }
@@ -99,13 +102,16 @@ export default function BoardPage() {
           : prev,
       );
     },
-    [board, project],
+    [board, project, user],
   );
 
   const createTask = useCallback(
     async (payload: NewTaskInput): Promise<void> => {
       if (!project || !board || !user) return;
-      if (project.userRole === 'PROJECT_VIEWER') {
+      if (
+        project.userRole === 'PROJECT_VIEWER' &&
+        user.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('You do not have permission to create tasks.');
         return;
       }
@@ -142,7 +148,10 @@ export default function BoardPage() {
   const updateTask = useCallback(
     async (taskId: string, payload: NewTaskInput): Promise<void> => {
       if (!project || !board) return;
-      if (project.userRole === 'PROJECT_VIEWER') {
+      if (
+        project.userRole === 'PROJECT_VIEWER' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('You do not have permission to edit tasks.');
         return;
       }
@@ -211,13 +220,16 @@ export default function BoardPage() {
         alert('Action failed. Transition may be invalid or WIP limit reached.');
       }
     },
-    [board, project],
+    [board, project, user],
   );
 
   const addComment = useCallback(
     async (taskId: string, content: string): Promise<void> => {
       if (!project) return;
-      if (project.userRole === 'PROJECT_VIEWER') {
+      if (
+        project.userRole === 'PROJECT_VIEWER' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('You do not have permission to add comments.');
         return;
       }
@@ -279,7 +291,7 @@ export default function BoardPage() {
       const isGlobalAdmin = user.globalRole === 'GLOBAL_ADMIN';
 
       if (!isGlobalAdmin && !isAuthor) {
-        alert("You can only delete your own comments.");
+        alert('You can only delete your own comments.');
         return;
       }
 
@@ -347,8 +359,11 @@ export default function BoardPage() {
   const renameColumn = useCallback(
     async (columnId: string, newName: string): Promise<void> => {
       if (!project || !board) return;
-      if (project.userRole !== 'PROJECT_ADMIN') {
-        alert('Only ProjectAdmin can rename columns.');
+      if (
+        project.userRole !== 'PROJECT_ADMIN' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
+        alert('Only Project Admins or Global Admins can rename columns.');
         return;
       }
 
@@ -376,13 +391,16 @@ export default function BoardPage() {
         alert('Failed to rename column.');
       }
     },
-    [project, board],
+    [project, board, user],
   );
 
   const reorderColumn = useCallback(
     async (columnId: string, direction: 'left' | 'right'): Promise<void> => {
       if (!project || !board) return;
-      if (project.userRole !== 'PROJECT_ADMIN' && user?.globalRole !== 'GLOBAL_ADMIN') {
+      if (
+        project.userRole !== 'PROJECT_ADMIN' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('Only ProjectAdmin can reorder columns.');
         return;
       }
@@ -397,7 +415,8 @@ export default function BoardPage() {
           if (!prev) return prev;
           const sorted = [...prev.columns].sort((a, b) => a.order - b.order);
           const currentIndex = sorted.findIndex((c) => c.id === columnId);
-          const targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+          const targetIndex =
+            direction === 'left' ? currentIndex - 1 : currentIndex + 1;
           if (targetIndex < 0 || targetIndex >= sorted.length) return prev;
 
           const currentOrder = sorted[currentIndex].order;
@@ -406,8 +425,10 @@ export default function BoardPage() {
           return {
             ...prev,
             columns: prev.columns.map((c) => {
-              if (c.id === sorted[currentIndex].id) return { ...c, order: targetOrder };
-              if (c.id === sorted[targetIndex].id) return { ...c, order: currentOrder };
+              if (c.id === sorted[currentIndex].id)
+                return { ...c, order: targetOrder };
+              if (c.id === sorted[targetIndex].id)
+                return { ...c, order: currentOrder };
               return c;
             }),
           };
@@ -423,8 +444,11 @@ export default function BoardPage() {
   const updateColumnWip = useCallback(
     async (columnId: string, newWipLimit: number | null): Promise<void> => {
       if (!project || !board) return;
-      if (project.userRole !== 'PROJECT_ADMIN') {
-        alert('Only ProjectAdmin can edit WIP limits.');
+      if (
+        project.userRole !== 'PROJECT_ADMIN' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
+        alert('Only Project Admins or Global Admins can edit WIP limits.');
         return;
       }
 
@@ -449,14 +473,17 @@ export default function BoardPage() {
         alert('Failed to update WIP limit.');
       }
     },
-    [project, board],
+    [project, board, user],
   );
 
   const deleteColumn = useCallback(
     async (columnId: string): Promise<void> => {
       if (!project || !board) return;
-      if (project.userRole !== 'PROJECT_ADMIN') {
-        alert('Only ProjectAdmin can delete columns.');
+      if (
+        project.userRole !== 'PROJECT_ADMIN' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
+        alert('Only Project Admins or Global Admins can delete columns.');
         return;
       }
 
@@ -480,7 +507,7 @@ export default function BoardPage() {
         );
       }
     },
-    [project, board],
+    [project, board, user],
   );
 
   if (loading && !board) {

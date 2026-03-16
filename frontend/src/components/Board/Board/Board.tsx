@@ -102,13 +102,18 @@ const Board = ({
     new Set(),
   );
 
+  const effectiveProjectRole =
+    user?.globalRole === 'GLOBAL_ADMIN'
+      ? 'PROJECT_ADMIN'
+      : state.projectDetails.userRole;
+
   // Some Boolean Helpers
   const canManageTasks =
-    state.projectDetails.userRole === 'PROJECT_ADMIN' ||
-    state.projectDetails.userRole === 'PROJECT_MEMBER' ||
+    effectiveProjectRole === 'PROJECT_ADMIN' ||
+    effectiveProjectRole === 'PROJECT_MEMBER' ||
     user?.globalRole === 'GLOBAL_ADMIN';
   const canManageColumns =
-    state.projectDetails.userRole === 'PROJECT_ADMIN' ||
+    effectiveProjectRole === 'PROJECT_ADMIN' ||
     user?.globalRole === 'GLOBAL_ADMIN';
   const assignableMembers = state.projectDetails.members.filter(
     (member) =>
@@ -305,7 +310,7 @@ const Board = ({
               return (
                 <Column
                   key={column.id}
-                  userRole={state.projectDetails.userRole}
+                  userRole={effectiveProjectRole}
                   column={column}
                   // sort tasks within column by priority, due date, title
                   tasks={state.board.tasks
@@ -332,9 +337,7 @@ const Board = ({
 
                       return a.title.localeCompare(b.title);
                     })}
-                  isDraggable={
-                    state.projectDetails.userRole !== 'PROJECT_VIEWER'
-                  }
+                  isDraggable={canManageTasks}
                   onDropTask={async (taskId, colId) => {
                     if (
                       !canMoveTask(
@@ -489,7 +492,7 @@ const Board = ({
       {selectedTaskId && (
         <TaskDetailsModal
           task={state.board.tasks.find((t) => t.id === selectedTaskId)!}
-          userRole={state.projectDetails.userRole}
+          userRole={effectiveProjectRole}
           projectMembers={state.projectDetails.members}
           mentionableMembers={mentionableProjectMembers}
           currentUserId={user?.id}
