@@ -12,6 +12,7 @@ export interface AuthRequest extends Request {
         id: string;
         globalRole: string;
     };
+    file?: Express.Multer.File;
 }
 
 export const register = async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
