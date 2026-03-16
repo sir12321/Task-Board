@@ -5,6 +5,6 @@ export const PROJECT_ROLE_OPTIONS: Array<{
   label: string;
 }> = [
   { value: 'PROJECT_ADMIN', label: 'Admin' },
-  { value: 'PROJECT_MEMBER', label: 'User' },
+  { value: 'PROJECT_MEMBER', label: 'Member' },
   { value: 'PROJECT_VIEWER', label: 'Viewer' },
 ];
