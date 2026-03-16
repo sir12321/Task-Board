@@ -9,11 +9,12 @@
 
 .modal {
   background: white;
-  width: 820px;
-  max-width: 88%;
-  height: 54vh;
-  max-height: 54vh;
-  overflow: hidden;
+  width: min(1040px, 90vw);
+  max-width: 100%;
+  height: auto;
+  max-height: 90vh;
+  overflow: auto;
+  overscroll-behavior: contain;
   padding: 20px;
   border-radius: 10px;
   position: relative;
@@ -124,7 +125,7 @@
 
 .container {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: minmax(520px, 1fr) 320px;
   gap: 20px;
   min-height: 0;
   flex: 1;
