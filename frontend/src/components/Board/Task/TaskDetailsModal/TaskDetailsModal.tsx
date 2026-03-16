@@ -770,13 +770,6 @@ const TaskDetailsModal = ({
                 </div>
               </div>
 
-              <div className={styles.detailRow}>
-                <div className={styles.detailLabel}>Activity</div>
-                <div className={styles.detailValue}>
-                  {task.comments ? task.comments.length : 0}
-                </div>
-              </div>
-
               {/* Only show delete button when user has sufficient role and a
                   delete handler is provided. The parent component handles
                   any error reporting for deletions. */}
