@@ -1,7 +1,11 @@
 import { Response } from 'express';
 import prisma from '../utils/prisma';
 import { AuthRequest } from './auth.controller';
-import { updateAvatar } from '../services/user.service';
+import {
+  updateAvatar,
+  updateName,
+  updatePassword,
+} from '../services/user.service';
 
 export const listUsers = async (
   req: AuthRequest,
@@ -60,5 +64,60 @@ export const updateUserAvatar = async (
   } catch (error) {
     console.error('Error updating avatar:', error);
     res.status(500).json({ error: 'Failed to update avatar' });
+  }
+};
+
+export const changeName = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { name } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (!name) {
+      res.status(400).json({ error: 'Name is required' });
+      return;
+    }
+
+    const updatedUser = await updateName(userId, name);
+    res.status(200).json({
+      message: 'Name updated successfully',
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error('Error updating name:', error);
+    res.status(500).json({ error: 'Failed to update name' });
+  }
+};
+
+export const changePassword = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ error: 'Current and new passwords are required' });
+      return;
+    }
+
+    await updatePassword(userId, currentPassword, newPassword);
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error updating password:', error);
+    res.status(500).json({ error: 'Failed to update password' });
   }
 };
