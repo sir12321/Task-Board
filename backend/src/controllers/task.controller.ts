@@ -1,5 +1,10 @@
 import { Response } from 'express';
-import { makeTask, moveTask, removeTask } from '../services/task.service';
+import {
+  makeTask,
+  moveTask,
+  removeTask,
+  getData,
+} from '../services/task.service';
 import { AuthRequest } from './auth.controller';
 import { createNotification } from '../services/notification.service';
 import { logAct } from '../services/audit.service';
@@ -289,5 +294,30 @@ export const editTask = async (
       }
     }
     res.status(500).json({ error: 'Failed to update task' });
+  }
+};
+
+export const getTaskData = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const id = req.params.id;
+
+    if (!id || typeof id != 'string') {
+      res.status(400).json({ error: 'Invalid request' });
+      return;
+    }
+
+    const task = await getData(id);
+
+    if (!task) {
+      res.status(404).json({ error: 'Task not found' });
+      return;
+    }
+
+    res.status(200).json(task);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch task data' });
   }
 };
