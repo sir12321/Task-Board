@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout/Layout';
 import UploadImageManager from '../../components/UserSettings/UploadImageManager';
 import { useAuth } from '../../context/AuthContext';
-import { uploadUserAvatar } from './userSettingsConnector';
+import { uploadUserAvatar } from './UserSettingsConnector';
 
 const UploadImagePage = () => {
   const { user, setUser } = useAuth();
@@ -12,8 +12,8 @@ const UploadImagePage = () => {
     return null;
   }
 
-  const handleSaveImage = async (file: File): Promise<void> => {
-    const uploadedAvatarUrl = await uploadUserAvatar(file);
+  const handleSaveImage = async (avatarUrl: string): Promise<void> => {
+    const uploadedAvatarUrl = await uploadUserAvatar(avatarUrl);
     setUser((prev) =>
       prev
         ? {

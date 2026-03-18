@@ -1,13 +1,35 @@
 import {
   createContext,
   useContext,
-  useState,
+  useReducer,
   useCallback,
   useEffect,
+  useState,
 } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { apiClient } from '../utils/api';
 import type { AuthUser } from '../types/Types';
+
+type AuthAction =
+  | { type: 'SET_USER'; payload: AuthUser | null }
+  | {
+      type: 'SET_USER_FN';
+      payload: (prev: AuthUser | null) => AuthUser | null;
+    };
+
+const authReducer = (
+  state: AuthUser | null,
+  action: AuthAction,
+): AuthUser | null => {
+  switch (action.type) {
+    case 'SET_USER':
+      return action.payload;
+    case 'SET_USER_FN':
+      return action.payload(state);
+    default:
+      return state;
+  }
+};
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -19,8 +41,22 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, dispatch] = useReducer(authReducer, null);
   const [loading, setLoading] = useState(true);
+
+  const setUser: Dispatch<SetStateAction<AuthUser | null>> = useCallback(
+    (action) => {
+      if (typeof action === 'function') {
+        dispatch({
+          type: 'SET_USER_FN',
+          payload: action as (prev: AuthUser | null) => AuthUser | null,
+        });
+      } else {
+        dispatch({ type: 'SET_USER', payload: action });
+      }
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
     try {
@@ -28,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       // ignore — clear local state regardless
     }
-    setUser(null);
+    dispatch({ type: 'SET_USER', payload: null });
   }, []);
 
   const fetchUser = useCallback(async () => {
@@ -37,10 +73,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // request will be authenticated.
       const data = await apiClient('/auth/refresh', { method: 'POST' });
       if (data?.user) {
-        setUser(data.user);
+        dispatch({ type: 'SET_USER', payload: data.user });
       }
     } catch {
-      setUser(null);
+      dispatch({ type: 'SET_USER', payload: null });
     } finally {
       setLoading(false);
     }

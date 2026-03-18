@@ -42,7 +42,6 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/columns', columnRoutes);
 app.use('/api/users', userRoutes);
-app.use('/uploads', express.static('uploads'));
 
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });

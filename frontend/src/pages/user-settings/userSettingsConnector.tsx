@@ -10,15 +10,17 @@ interface UploadAvatarResponse {
   };
 }
 
-export const uploadUserAvatar = async (file: File): Promise<string | null> => {
-  const formData = new FormData();
-  formData.append('avatar', file);
-
+export const uploadUserAvatar = async (
+  avatarUrl: string,
+): Promise<string | null> => {
   const requestUpload = (endpoint: string) =>
     fetch(`${BASE_URL}${endpoint}`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       credentials: 'include',
-      body: formData,
+      body: JSON.stringify({ avatarUrl }),
     });
 
   let response = await requestUpload('/users/avatar');
