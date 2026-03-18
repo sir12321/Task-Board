@@ -1,11 +1,7 @@
 import { Response } from 'express';
 import prisma from '../utils/prisma';
 import { AuthRequest } from './auth.controller';
-import {
-  updateAvatar,
-  updateName,
-  updatePassword,
-} from '../services/user.service';
+import { updateName, updatePassword } from '../services/user.service';
 
 export const listUsers = async (
   req: AuthRequest,
@@ -42,24 +38,19 @@ export const updateUserAvatar = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const file = req.file;
+    const { avatarUrl: aUrl } = req.body;
 
-    if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
+    if (!userId || !aUrl || typeof aUrl !== 'string') {
+      res.status(400).json({ error: 'Invalid request' });
       return;
     }
 
-    if (!file) {
-      res.status(400).json({ error: 'No file uploaded' });
-      return;
-    }
-
-    const avatarUrl = `/uploads/${file.filename}`;
-    const updatedUser = await updateAvatar(userId, avatarUrl);
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl: aUrl },
+    });
     res.status(200).json({
-      message: 'Avatar updated successfully',
-      avatarUrl,
-      user: updatedUser,
+      avatarUrl: updatedUser.avatarUrl,
     });
   } catch (error) {
     console.error('Error updating avatar:', error);

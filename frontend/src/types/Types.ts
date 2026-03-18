@@ -37,6 +37,7 @@ export interface Task {
   parentId?: string | null;
   parentName?: string | null;
   comments?: Comment[];
+  auditLogs?: AuditLog[];
 }
 
 export interface NewTaskInput {
@@ -133,4 +134,18 @@ export interface ManagedProject extends Project {
     name: string;
   }[];
   isArchived?: boolean;
+}
+
+export interface AuditLog {
+  id: string;
+  taskId: string;
+  userId: string;
+  action: string;
+  oldValue?: string | null;
+  newValue?: string | null;
+  timestamp: string;
+  user?: {
+    name: string;
+    avatarUrl?: string | null;
+  };
 }

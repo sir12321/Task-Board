@@ -6,10 +6,11 @@ import UserSettingsActions from './UserSettingsActions';
 import ChangeNameModal from './ChangeNameModal';
 import ChangePasswordModal from './ChangePasswordModal';
 import type { AuthUser } from '../../types/Types';
+import ChangeAvatarModal from './ChangeAvatarModal';
 
 interface Props {
   user: AuthUser;
-  onUploadImageClick: () => void;
+  onChangeAvatar: (avatarUrl: string) => Promise<void>;
   onChangeName: (nextName: string) => Promise<void>;
   onChangePassword: (input: {
     currentPassword: string;
@@ -19,18 +20,22 @@ interface Props {
 
 const UserSettingsManager = ({
   user,
-  onUploadImageClick,
+  onChangeAvatar,
   onChangeName,
   onChangePassword,
 }: Props) => {
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showNameModal, setShowNameModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [name, setName] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const [avatarError, setAvatarError] = useState('');
+  const [avatarStatus, setAvatarStatus] = useState('');
   const [nameError, setNameError] = useState('');
   const [nameStatus, setNameStatus] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -39,6 +44,26 @@ const UserSettingsManager = ({
   useEffect(() => {
     setName(user.name || '');
   }, [user]);
+
+  useEffect(() => {
+    if (!avatarError) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setAvatarError('');
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [avatarError]);
+
+  useEffect(() => {
+    if (!avatarStatus) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setAvatarStatus('');
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [avatarStatus]);
 
   useEffect(() => {
     if (!nameError) {
@@ -79,6 +104,29 @@ const UserSettingsManager = ({
     }, 3000);
     return () => window.clearTimeout(timer);
   }, [passwordStatus]);
+
+  const handleSaveAvatar = async (e: SyntheticEvent) => {
+    e.preventDefault();
+    setAvatarError('');
+    setAvatarStatus('');
+
+    const trimmedUrl = avatarUrl.trim();
+
+    if (!trimmedUrl) {
+      setAvatarError('Avatar URL cannot be empty.');
+      return;
+    }
+
+    try {
+      await onChangeAvatar(trimmedUrl);
+      setAvatarStatus('Avatar updated.');
+      setShowAvatarModal(false);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to update avatar.';
+      setAvatarError(message);
+    }
+  };
 
   const handleSaveName = async (e: SyntheticEvent) => {
     e.preventDefault();
@@ -143,7 +191,12 @@ const UserSettingsManager = ({
         <UserSettingsHeader
           name={user.name}
           avatarUrl={user.avatarUrl}
-          onImageClick={onUploadImageClick}
+          onImageClick={() => {
+            setAvatarError('');
+            setAvatarStatus('');
+            setAvatarUrl(user.avatarUrl || '');
+            setShowAvatarModal(true);
+          }}
         />
         <UserSettingsActions
           onChangeName={() => {
@@ -164,6 +217,15 @@ const UserSettingsManager = ({
           passwordStatus={passwordStatus}
         />
       </div>
+
+      <ChangeAvatarModal
+        open={showAvatarModal}
+        avatarUrl={avatarUrl}
+        error={avatarError}
+        onClose={() => setShowAvatarModal(false)}
+        onAvatarUrlChange={setAvatarUrl}
+        onSubmit={handleSaveAvatar}
+      />
 
       <ChangeNameModal
         open={showNameModal}

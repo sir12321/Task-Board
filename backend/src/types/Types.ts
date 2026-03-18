@@ -40,6 +40,7 @@ export interface Task {
   parentName?: string | null;
 
   comments?: Comment[];
+  auditLogs?: AuditLog[];
 }
 
 export interface NewTaskInput {
