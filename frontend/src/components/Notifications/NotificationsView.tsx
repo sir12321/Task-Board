@@ -30,24 +30,39 @@ const NotificationsView = () => {
     [setUser],
   );
 
-  const loadNotifications = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await apiClient('/notifications');
-      setNotifications(data);
-      syncNotificationsInUser(data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to load notifications.',
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [syncNotificationsInUser]);
+  const loadNotifications = useCallback(
+    async (isBackground = false) => {
+      try {
+        if (!isBackground) {
+          setLoading(true);
+        }
+        if (!isBackground) {
+          setError(null);
+        }
+        const data = await apiClient('/notifications');
+        setNotifications(data);
+        syncNotificationsInUser(data);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to load notifications.',
+        );
+      } finally {
+        if (!isBackground) {
+          setLoading(false);
+        }
+      }
+    },
+    [syncNotificationsInUser],
+  );
 
   useEffect(() => {
-    loadNotifications();
+    loadNotifications(false);
+
+    const pollInterval = setInterval(() => {
+      loadNotifications(true);
+    }, 10000);
+
+    return () => clearInterval(pollInterval);
   }, [loadNotifications]);
 
   const markAsRead = async (notificationId: string) => {
@@ -112,7 +127,8 @@ const NotificationsView = () => {
         <div>
           <h1 className={styles.title}>Notifications</h1>
           <p className={styles.subtitle}>
-            {unreadCount} unread {unreadCount === 1 ? 'notification' : 'notifications'}
+            {unreadCount} unread{' '}
+            {unreadCount === 1 ? 'notification' : 'notifications'}
           </p>
         </div>
         <button
@@ -124,11 +140,15 @@ const NotificationsView = () => {
         </button>
       </div>
 
-      {loading && <div className={styles.loading}>Loading notifications...</div>}
+      {loading && (
+        <div className={styles.loading}>Loading notifications...</div>
+      )}
       {error && !loading && <div className={styles.error}>{error}</div>}
 
       {!loading && !error && notifications.length === 0 && (
-        <div className={styles.empty}>You do not have any notifications yet.</div>
+        <div className={styles.empty}>
+          You do not have any notifications yet.
+        </div>
       )}
 
       {!loading && !error && notifications.length > 0 && (
