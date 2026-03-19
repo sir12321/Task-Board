@@ -185,8 +185,7 @@ const EditProjectSettingsManager = ({
   };
 
   const canDeleteSelectedProject =
-    Boolean(selectedProject) &&
-    user.globalRole === 'GLOBAL_ADMIN';
+    Boolean(selectedProject) && user.globalRole === 'GLOBAL_ADMIN';
 
   const handleDeleteProject = async (): Promise<void> => {
     if (!selectedProject) {
@@ -194,9 +193,7 @@ const EditProjectSettingsManager = ({
     }
 
     if (!canDeleteSelectedProject) {
-      setStatusMessage(
-        'Only Global Admins can delete projects.',
-      );
+      setStatusMessage('Only Global Admins can delete projects.');
       return;
     }
 

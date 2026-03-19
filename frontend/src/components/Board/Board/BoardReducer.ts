@@ -12,7 +12,7 @@ export interface BoardState {
 
 export type BoardAction =
   | {
-      type: "MOVE_TASK";
+      type: 'MOVE_TASK';
       payload: {
         taskId: string;
         targetColumnId: string;
@@ -79,11 +79,11 @@ export type BoardAction =
 
 export const BoardReducer = (
   state: BoardState,
-  action: BoardAction
+  action: BoardAction,
 ): BoardState => {
   const storyColumnId = state.board.columns[0]?.id ?? 'col-story';
   switch (action.type) {
-    case "MOVE_TASK": {
+    case 'MOVE_TASK': {
       const { taskId, targetColumnId } = action.payload;
 
       const task = state.board.tasks.find((t) => t.id === taskId);
@@ -96,15 +96,14 @@ export const BoardReducer = (
       }
 
       // WIP Enforcement
-      const column = state.board.columns.find(
-        (c) => c.id === targetColumnId
-      );
+      const column = state.board.columns.find((c) => c.id === targetColumnId);
 
       const sourceColumn = state.board.columns.find(
-        (c) => c.id === task.columnId
+        (c) => c.id === task.columnId,
       );
 
-      const storyColumnId = state.board.columns.find((c) => c.order === 0)?.id || 'col-story';
+      const storyColumnId =
+        state.board.columns.find((c) => c.order === 0)?.id || 'col-story';
 
       if (sourceColumn && column) {
         const orderDiff = column.order - sourceColumn.order;
@@ -122,20 +121,21 @@ export const BoardReducer = (
       }
 
       const tasksInColumn = state.board.tasks.filter(
-        (t) => t.columnId === targetColumnId
+        (t) => t.columnId === targetColumnId,
       );
 
-      if (
-        column?.wipLimit &&
-        tasksInColumn.length >= column.wipLimit
-      ) {
+      if (column?.wipLimit && tasksInColumn.length >= column.wipLimit) {
         return state;
       }
 
       const updatedTasks = state.board.tasks.map((t) =>
         t.id === taskId
-          ? { ...t, columnId: targetColumnId, columnName: column?.name || t.columnName }
-          : t
+          ? {
+              ...t,
+              columnId: targetColumnId,
+              columnName: column?.name || t.columnName,
+            }
+          : t,
       );
 
       return {
@@ -186,15 +186,16 @@ export const BoardReducer = (
             const assigneeName =
               updates.assigneeId === undefined
                 ? task.assigneeName
-                : state.projectDetails.members.find(
+                : (state.projectDetails.members.find(
                     (member) => member.id === updates.assigneeId,
-                  )?.name ?? null;
+                  )?.name ?? null);
 
             const parentName =
               updates.parentId === undefined
                 ? task.parentName
-                : state.board.tasks.find((candidate) => candidate.id === updates.parentId)
-                    ?.title ?? null;
+                : (state.board.tasks.find(
+                    (candidate) => candidate.id === updates.parentId,
+                  )?.title ?? null);
 
             return {
               ...task,
@@ -259,7 +260,11 @@ export const BoardReducer = (
           ),
           tasks: state.board.tasks.map((task) =>
             task.columnId === columnId
-              ? { ...task, columnName: trimmedName, updatedAt: new Date().toISOString() }
+              ? {
+                  ...task,
+                  columnName: trimmedName,
+                  updatedAt: new Date().toISOString(),
+                }
               : task,
           ),
         },
@@ -276,7 +281,9 @@ export const BoardReducer = (
         return state;
       }
 
-      const ordered = [...state.board.columns].sort((a, b) => a.order - b.order);
+      const ordered = [...state.board.columns].sort(
+        (a, b) => a.order - b.order,
+      );
       const currentIndex = ordered.findIndex(
         (column) => column.id === action.payload.columnId,
       );
@@ -285,7 +292,9 @@ export const BoardReducer = (
       }
 
       const targetIndex =
-        action.payload.direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+        action.payload.direction === 'left'
+          ? currentIndex - 1
+          : currentIndex + 1;
       if (targetIndex < 0 || targetIndex >= ordered.length) {
         return state;
       }
@@ -300,7 +309,10 @@ export const BoardReducer = (
       return {
         board: {
           ...state.board,
-          columns: ordered.map((column, index) => ({ ...column, order: index })),
+          columns: ordered.map((column, index) => ({
+            ...column,
+            order: index,
+          })),
         },
         projectDetails: state.projectDetails,
       };
@@ -332,13 +344,16 @@ export const BoardReducer = (
         return state;
       }
       const todoColumnId = state.board.columns[1]?.id;
-      const doneColumnId = state.board.columns[state.board.columns.length - 1]?.id;
+      const doneColumnId =
+        state.board.columns[state.board.columns.length - 1]?.id;
       const { columnId } = action.payload;
       if ([storyColumnId, todoColumnId, doneColumnId].includes(columnId)) {
         return state;
       }
 
-      const hasTasks = state.board.tasks.some((task) => task.columnId === columnId);
+      const hasTasks = state.board.tasks.some(
+        (task) => task.columnId === columnId,
+      );
       if (hasTasks) {
         return state;
       }

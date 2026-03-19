@@ -64,7 +64,9 @@ const AssignUsersPage = () => {
         if (!cancelled) {
           setAdminProjects(
             removeGlobalAdminsFromProjects(
-              projects.filter((project) => project.userRole === 'PROJECT_ADMIN'),
+              projects.filter(
+                (project) => project.userRole === 'PROJECT_ADMIN',
+              ),
               globalAdminEmails,
             ),
           );

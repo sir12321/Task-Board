@@ -31,7 +31,9 @@ export const getProjectDirectoryUsers = async (): Promise<DirectoryUser[]> => {
   }));
 };
 
-export const getGlobalAdminEmails = (directoryUsers: DirectoryUser[]): Set<string> =>
+export const getGlobalAdminEmails = (
+  directoryUsers: DirectoryUser[],
+): Set<string> =>
   new Set(
     directoryUsers
       .filter((directoryUser) => directoryUser.globalRole === 'GLOBAL_ADMIN')

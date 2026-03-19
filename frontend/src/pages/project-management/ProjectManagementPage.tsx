@@ -10,7 +10,9 @@ const ProjectManagementPage = () => {
 
   return (
     <Navigate
-      to={user.globalRole === 'GLOBAL_ADMIN' ? '/create-project' : '/assign-users'}
+      to={
+        user.globalRole === 'GLOBAL_ADMIN' ? '/create-project' : '/assign-users'
+      }
       replace
     />
   );

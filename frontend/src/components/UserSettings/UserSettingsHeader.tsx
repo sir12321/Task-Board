@@ -17,7 +17,11 @@ const UserSettingsHeader = ({ name, avatarUrl, onImageClick }: Props) => {
         title="Upload image"
       >
         {avatarUrl ? (
-          <img src={avatarUrl} alt={`${name} avatar`} className={styles.avatar} />
+          <img
+            src={avatarUrl}
+            alt={`${name} avatar`}
+            className={styles.avatar}
+          />
         ) : (
           <div className={styles.avatarFallback}>{getInitials(name)}</div>
         )}
