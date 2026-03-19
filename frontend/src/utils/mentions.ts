@@ -18,7 +18,9 @@ const stripDiacritics = (rawText: string): string => {
 
 const isAsciiLetter = (character: string) => {
   const charCode = character.charCodeAt(0);
-  return (charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122);
+  return (
+    (charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122)
+  );
 };
 
 const isDigit = (character: string) => {
@@ -100,7 +102,8 @@ const replaceCharacter = (
   let transformedText = '';
 
   for (const character of sourceText) {
-    transformedText += character === characterToReplace ? replacementText : character;
+    transformedText +=
+      character === characterToReplace ? replacementText : character;
   }
 
   return transformedText;

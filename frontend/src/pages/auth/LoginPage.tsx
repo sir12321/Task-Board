@@ -12,7 +12,9 @@ function LoginPage() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
     e.preventDefault();
 
     if (!email || !password) {
