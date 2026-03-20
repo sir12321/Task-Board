@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint';
 
 export default [
   {
-    ignores: ['dist', 'node_modules', 'jest.config.js']
+    ignores: ['dist', 'node_modules', 'jest.config.js'],
   },
 
   js.configs.recommended,
@@ -14,7 +14,7 @@ export default [
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': 'error',
-      '@typescript-eslint/explicit-function-return-type': 'warn'
-    }
-  }
+      '@typescript-eslint/explicit-function-return-type': 'warn',
+    },
+  },
 ];

@@ -1,108 +1,134 @@
 import { Response } from 'express';
-import { getUserProjects, createProject, archiveProject, deleteProject } from '../services/project.service';
+import {
+  getUserProjects,
+  createProject,
+  archiveProject,
+  deleteProject,
+} from '../services/project.service';
 import { AuthRequest } from './auth.controller';
 
-export const getProjects = async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-        const userId = req.user?.id;
-        const globalRole = req.user?.globalRole;
+export const getProjects = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const globalRole = req.user?.globalRole;
 
-        if (!userId) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
-        }
-
-        const projects = await getUserProjects(userId, globalRole);
-        res.status(200).json(projects);
-    } catch {
-        res.status(500).json({ error: 'Failed to fetch projects' });
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
+
+    const projects = await getUserProjects(userId, globalRole);
+    res.status(200).json(projects);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch projects' });
+  }
 };
 
-export const createNewProject = async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-        const userId = req.user?.id;
-        const { name, description } = req.body;
+export const createNewProject = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { name, description } = req.body;
 
-        if (!userId) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
-        }
-
-        if (req.user?.globalRole !== 'GLOBAL_ADMIN') {
-            res.status(403).json({ error: 'Forbidden: Only Global Admins can create projects.' });
-            return;
-        }
-
-        if (!name) {
-            res.status(400).json({ error: 'Project name is required' });
-            return;
-        }
-
-        const project = await createProject(userId, { name, description });
-        res.status(201).json(project);
-    } catch {
-        res.status(500).json({ error: 'Failed to create project' });
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
+
+    if (req.user?.globalRole !== 'GLOBAL_ADMIN') {
+      res
+        .status(403)
+        .json({ error: 'Forbidden: Only Global Admins can create projects.' });
+      return;
+    }
+
+    if (!name) {
+      res.status(400).json({ error: 'Project name is required' });
+      return;
+    }
+
+    const project = await createProject(userId, { name, description });
+    res.status(201).json(project);
+  } catch {
+    res.status(500).json({ error: 'Failed to create project' });
+  }
 };
 
-export const deleteProjectHandler = async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-        const userId = req.user?.id;
-        const globalRole = req.user?.globalRole;
-        const projectId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+export const deleteProjectHandler = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const globalRole = req.user?.globalRole;
+    const projectId = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
 
-        if (!userId || !globalRole) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
-        }
-
-        if (!projectId) {
-            res.status(400).json({ error: 'Project ID is required' });
-            return;
-        }
-
-        await deleteProject(projectId, globalRole);
-        res.status(200).json({ message: 'Project deleted successfully' });
-    } catch (error: unknown) {
-        if (error instanceof Error && error.message.includes('Forbidden')) {
-            res.status(403).json({ error: error.message });
-        } else if (error instanceof Error && error.message.includes('not found')) {
-            res.status(404).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: 'Failed to delete project' });
-        }
+    if (!userId || !globalRole) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
+
+    if (!projectId) {
+      res.status(400).json({ error: 'Project ID is required' });
+      return;
+    }
+
+    await deleteProject(projectId, globalRole);
+    res.status(200).json({ message: 'Project deleted successfully' });
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message.includes('Forbidden')) {
+      res.status(403).json({ error: error.message });
+    } else if (error instanceof Error && error.message.includes('not found')) {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Failed to delete project' });
+    }
+  }
 };
 
-export const archiveProjectHandler = async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-        const userId = req.user?.id;
-        const globalRole = req.user?.globalRole;
-        const projectId = req.params.id;
-        const { isArchived, name, description } = req.body;
+export const archiveProjectHandler = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const globalRole = req.user?.globalRole;
+    const projectId = req.params.id;
+    const { isArchived, name, description } = req.body;
 
-        if (!userId || !globalRole) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
-        }
-
-        if (!projectId) {
-            res.status(400).json({ error: 'Project ID is required' });
-            return;
-        }
-
-        const project = await archiveProject(userId, projectId as string, globalRole, {
-            isArchived,
-            name,
-            description,
-        });
-        res.status(200).json({ message: 'Project updated successfully', project });
-    } catch (error: unknown) {
-        if (error instanceof Error && error.message.includes('Forbidden')) {
-            res.status(403).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: 'Failed to archive project' });
-        }
+    if (!userId || !globalRole) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
+
+    if (!projectId) {
+      res.status(400).json({ error: 'Project ID is required' });
+      return;
+    }
+
+    const project = await archiveProject(
+      userId,
+      projectId as string,
+      globalRole,
+      {
+        isArchived,
+        name,
+        description,
+      },
+    );
+    res.status(200).json({ message: 'Project updated successfully', project });
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message.includes('Forbidden')) {
+      res.status(403).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Failed to archive project' });
+    }
+  }
 };

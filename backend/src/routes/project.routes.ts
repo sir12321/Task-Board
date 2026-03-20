@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import { getProjects, createNewProject, archiveProjectHandler, deleteProjectHandler } from '../controllers/project.controller';
+import {
+  getProjects,
+  createNewProject,
+  archiveProjectHandler,
+  deleteProjectHandler,
+} from '../controllers/project.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 import memberRoutes from './project-member.routes';
 

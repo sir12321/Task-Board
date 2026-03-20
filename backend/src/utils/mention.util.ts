@@ -6,7 +6,9 @@ const mentionMaxLength = 50;
 
 const isAsciiLetter = (character: string) => {
   const charCode = character.charCodeAt(0);
-  return (charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122);
+  return (
+    (charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122)
+  );
 };
 
 const isDigit = (character: string) => {
@@ -26,7 +28,9 @@ const isBoundaryCharacter = (leftNeighborCharacter: string | undefined) => {
     return true;
   }
 
-  return !isMentionCharacter(leftNeighborCharacter) && leftNeighborCharacter !== '@';
+  return (
+    !isMentionCharacter(leftNeighborCharacter) && leftNeighborCharacter !== '@'
+  );
 };
 
 const collapseWhitespaceToSeparator = (
@@ -37,7 +41,8 @@ const collapseWhitespaceToSeparator = (
   let lastCharacterWasWhitespace = false;
 
   for (const character of sourceText) {
-    const isWhitespace = character === ' ' || character === '\n' || character === '\t';
+    const isWhitespace =
+      character === ' ' || character === '\n' || character === '\t';
 
     if (isWhitespace) {
       if (!lastCharacterWasWhitespace) {

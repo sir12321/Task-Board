@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { createComment, removeComment, updateComment } from '../controllers/comment.controller';
+import {
+  createComment,
+  removeComment,
+  updateComment,
+} from '../controllers/comment.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
