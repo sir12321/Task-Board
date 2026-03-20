@@ -107,6 +107,13 @@ const Board = ({
       ? 'PROJECT_ADMIN'
       : state.projectDetails.userRole;
 
+  const projectRoleLabel =
+    effectiveProjectRole === 'PROJECT_ADMIN'
+      ? 'Project Admin'
+      : effectiveProjectRole === 'PROJECT_MEMBER'
+        ? 'Project Member'
+        : 'Viewer';
+
   // Some Boolean Helpers
   const canManageTasks =
     effectiveProjectRole === 'PROJECT_ADMIN' ||
@@ -276,6 +283,7 @@ const Board = ({
         <div className={styles['project-description']}>
           {state.projectDetails.description}
         </div>
+        <div className={styles.projectRoleChip}>{projectRoleLabel}</div>
         <div className={styles.boardHeader}>
           <h2>{state.board.name}</h2>
           {canManageColumns && (

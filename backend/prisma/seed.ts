@@ -1,660 +1,622 @@
 /// <reference types="node" />
-import prisma from '../src/utils/prisma';
 import bcrypt from 'bcrypt';
+import prisma from '../src/utils/prisma';
+
+type SeedUser = {
+  email: string;
+  name: string;
+  globalRole: 'GLOBAL_ADMIN' | 'USER';
+};
+
+type ProjectBlueprint = {
+  name: string;
+  description: string;
+};
+
+type BoardTaskSummary = {
+  id: string;
+  reporterId: string;
+  createdAt: Date;
+};
+
+const PASSWORD = '111';
+const TARGET_TASK_COUNT = 245;
+
+const projectRoleCycle = [
+  'PROJECT_ADMIN',
+  'PROJECT_MEMBER',
+  'PROJECT_VIEWER',
+] as const;
+
+const projectBlueprints: ProjectBlueprint[] = [
+  {
+    name: 'Latveria Contingency Protocol',
+    description:
+      'Coordinate counter-intelligence and logistics to contain Doom-level escalation risks.',
+  },
+  {
+    name: 'Baxter Recovery Initiative',
+    description:
+      'Secure high-risk research assets and rebuild chain-of-custody reliability.',
+  },
+  {
+    name: 'Kang Signal Intercept',
+    description:
+      'Track temporal anomalies and stabilize multiverse-adjacent telemetry channels.',
+  },
+  {
+    name: 'Vibranium Shield Grid',
+    description:
+      'Expand defensive mesh coverage over vulnerable metropolitan corridors.',
+  },
+  {
+    name: 'Sokovia Archive Reconstruction',
+    description:
+      'Reassemble fragmented incident records for legal, diplomatic, and strategic review.',
+  },
+  {
+    name: 'Sanctum Ward Reinforcement',
+    description:
+      'Harden magical containment boundaries against coordinated breach attempts.',
+  },
+  {
+    name: 'Stark Orbital Readiness',
+    description:
+      'Recalibrate orbital response assets for rapid global threat redeployment.',
+  },
+  {
+    name: 'Midtown Evacuation Matrix',
+    description:
+      'Tune civilian safety routing and emergency comms under urban combat constraints.',
+  },
+];
+
+const boardNames = ['War Room', 'Field Ops', 'Debrief'];
+
+const commentSnippets = [
+  'Cross-checked this against Stark satellite feeds; one outlier remains in the east corridor.',
+  'I pushed a narrow mitigation first so Strange can validate timeline side effects.',
+  'Before rollout, can we lock evac priority rules for noncombat districts?',
+  'Replayed the incident with degraded comms and got a mismatch near the Latverian relay.',
+  'Stable in local simulations, but we still need a full pass on higher threat volumes.',
+  'I can own the handoff once Fury confirms field-team readiness.',
+];
 
 async function main(): Promise<void> {
-  const commonPassword = await bcrypt.hash('111', 10);
+  const commonPassword = await bcrypt.hash(PASSWORD, 10);
 
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@taskboard.com' },
-    update: {},
-    create: {
-      email: 'admin@taskboard.com',
-      name: 'Global Admin',
-      password: commonPassword,
+  // Start from a clean collaboration graph while preserving existing user accounts.
+  await prisma.auditLog.deleteMany();
+  await prisma.comment.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.task.deleteMany();
+  await prisma.column.deleteMany();
+  await prisma.board.deleteMany();
+  await prisma.projectMember.deleteMany();
+  await prisma.project.deleteMany();
+
+  const usersToSeed: SeedUser[] = [
+    {
+      email: 'nick.fury@avengershq.org',
+      name: 'Nick Fury',
       globalRole: 'GLOBAL_ADMIN',
     },
-  });
-
-  const admin2 = await prisma.user.upsert({
-    where: { email: 'admin2@taskboard.com' },
-    update: {},
-    create: {
-      email: 'admin2@taskboard.com',
-      name: 'Global Admin 2',
-      password: commonPassword,
+    {
+      email: 'victor.doom@latveria.gov',
+      name: 'Victor Von Doom',
       globalRole: 'GLOBAL_ADMIN',
     },
-  });
-
-  // Create users matching mock data
-  const manya = await prisma.user.upsert({
-    where: { email: 'manya@iitd.ac.in' },
-    update: {},
-    create: {
-      email: 'manya@iitd.ac.in',
-      name: 'Manya Jain',
-      password: commonPassword,
+    {
+      email: 'sam.wilson@avengershq.org',
+      name: 'Sam Wilson',
       globalRole: 'USER',
     },
-  });
-
-  const john = await prisma.user.upsert({
-    where: { email: 'john@iitd.ac.in' },
-    update: {},
-    create: {
-      email: 'john@iitd.ac.in',
-      name: 'John Doe',
-      password: commonPassword,
+    {
+      email: 'bucky.barnes@avengershq.org',
+      name: 'Bucky Barnes',
       globalRole: 'USER',
     },
-  });
-
-  const alice = await prisma.user.upsert({
-    where: { email: 'alice@iitd.ac.in' },
-    update: {},
-    create: {
-      email: 'alice@iitd.ac.in',
-      name: 'Alice Smith',
-      password: commonPassword,
+    {
+      email: 'carol.danvers@avengershq.org',
+      name: 'Carol Danvers',
       globalRole: 'USER',
     },
-  });
+    { email: 'shuri@wakanda.gov', name: 'Shuri', globalRole: 'USER' },
+    {
+      email: 'peter.parker@midtown.edu',
+      name: 'Peter Parker',
+      globalRole: 'USER',
+    },
+    {
+      email: 'stephen.strange@sanctum.org',
+      name: 'Stephen Strange',
+      globalRole: 'USER',
+    },
+    {
+      email: 'wanda.maximoff@westview.org',
+      name: 'Wanda Maximoff',
+      globalRole: 'USER',
+    },
+    {
+      email: 'thor.odinson@newasgard.no',
+      name: 'Thor Odinson',
+      globalRole: 'USER',
+    },
+    {
+      email: 'bruce.banner@avengershq.org',
+      name: 'Bruce Banner',
+      globalRole: 'USER',
+    },
+    {
+      email: 'scott.lang@xconmail.com',
+      name: 'Scott Lang',
+      globalRole: 'USER',
+    },
+    {
+      email: 'hope.vandyne@pymtech.com',
+      name: 'Hope van Dyne',
+      globalRole: 'USER',
+    },
+    {
+      email: 'reed.richards@baxter.foundation',
+      name: 'Reed Richards',
+      globalRole: 'USER',
+    },
+    {
+      email: 'sue.storm@baxter.foundation',
+      name: 'Sue Storm',
+      globalRole: 'USER',
+    },
+    {
+      email: 'johnny.storm@baxter.foundation',
+      name: 'Johnny Storm',
+      globalRole: 'USER',
+    },
+    {
+      email: 'ben.grimm@baxter.foundation',
+      name: 'Ben Grimm',
+      globalRole: 'USER',
+    },
+  ];
 
-  console.log(
-    '✓ Seeded users:',
-    [manya.email, john.email, alice.email].join(', '),
+  const seededUsers = await Promise.all(
+    usersToSeed.map((u) =>
+      prisma.user.upsert({
+        where: { email: u.email },
+        update: {
+          name: u.name,
+          globalRole: u.globalRole,
+          password: commonPassword,
+        },
+        create: {
+          email: u.email,
+          name: u.name,
+          password: commonPassword,
+          globalRole: u.globalRole,
+        },
+      }),
+    ),
   );
 
-  // Create Demo Project
-  let demoProject = await prisma.project.findFirst({
-    where: { name: 'Demo Project' },
-  });
-  if (!demoProject) {
-    demoProject = await prisma.project.create({
+  const userByEmail = Object.fromEntries(
+    seededUsers.map((u) => [u.email, u]),
+  ) as Record<string, (typeof seededUsers)[number]>;
+
+  const globalAdmins = [
+    userByEmail['nick.fury@avengershq.org'],
+    userByEmail['victor.doom@latveria.gov'],
+  ];
+
+  const contributors = [
+    userByEmail['sam.wilson@avengershq.org'],
+    userByEmail['bucky.barnes@avengershq.org'],
+    userByEmail['carol.danvers@avengershq.org'],
+    userByEmail['shuri@wakanda.gov'],
+    userByEmail['peter.parker@midtown.edu'],
+    userByEmail['stephen.strange@sanctum.org'],
+    userByEmail['wanda.maximoff@westview.org'],
+    userByEmail['thor.odinson@newasgard.no'],
+    userByEmail['bruce.banner@avengershq.org'],
+    userByEmail['scott.lang@xconmail.com'],
+    userByEmail['hope.vandyne@pymtech.com'],
+    userByEmail['reed.richards@baxter.foundation'],
+    userByEmail['sue.storm@baxter.foundation'],
+    userByEmail['johnny.storm@baxter.foundation'],
+    userByEmail['ben.grimm@baxter.foundation'],
+  ];
+
+  const allTaskSummaries: BoardTaskSummary[] = [];
+  let totalTaskCount = 0;
+  let firstBacklogBoardId = '';
+
+  for (
+    let projectIndex = 0;
+    projectIndex < projectBlueprints.length;
+    projectIndex++
+  ) {
+    const blueprint = projectBlueprints[projectIndex];
+
+    const activeMembers = [
+      contributors[projectIndex % contributors.length],
+      contributors[(projectIndex + 2) % contributors.length],
+      contributors[(projectIndex + 4) % contributors.length],
+    ];
+
+    const project = await prisma.project.create({
       data: {
-        name: 'Demo Project',
-        description: 'A demo project for TaskFlow',
+        name: blueprint.name,
+        description: blueprint.description,
         members: {
           create: [
-            { user: { connect: { id: admin.id } }, role: 'PROJECT_ADMIN' },
-            { user: { connect: { id: manya.id } }, role: 'PROJECT_ADMIN' },
-            { user: { connect: { id: john.id } }, role: 'PROJECT_MEMBER' },
-            { user: { connect: { id: alice.id } }, role: 'PROJECT_VIEWER' },
+            {
+              user: { connect: { id: globalAdmins[0].id } },
+              role: 'PROJECT_ADMIN',
+            },
+            {
+              user: { connect: { id: globalAdmins[1].id } },
+              role: 'PROJECT_ADMIN',
+            },
+            // Every non-admin gets a project-specific role that rotates by project index.
+            ...contributors.map((member, memberIndex) => ({
+              user: { connect: { id: member.id } },
+              role: projectRoleCycle[
+                (memberIndex + projectIndex) % projectRoleCycle.length
+              ],
+            })),
           ],
         },
       },
     });
-  }
 
-  console.log('✓ Seeded project:', demoProject.name);
-
-  // Create Demo Board
-  let demoBoard = await prisma.board.findFirst({
-    where: { name: 'Demo Board', projectId: demoProject.id },
-  });
-  if (!demoBoard) {
-    demoBoard = await prisma.board.create({
-      data: {
-        name: 'Demo Board',
-        project: { connect: { id: demoProject.id } },
-      },
-    });
-  }
-
-  // Create standard columns
-  const storyCol = await prisma.column.upsert({
-    where: { id: 'col-story' },
-    update: {},
-    create: {
-      id: 'col-story',
-      name: 'Stories',
-      order: 0,
-      board: { connect: { id: demoBoard.id } },
-    },
-  });
-
-  const backlogCol = await prisma.column.upsert({
-    where: { id: 'col-backlog' },
-    update: {},
-    create: {
-      id: 'col-backlog',
-      name: 'To Do',
-      order: 1,
-      board: { connect: { id: demoBoard.id } },
-    },
-  });
-
-  const progressCol = await prisma.column.upsert({
-    where: { id: 'col-progress' },
-    update: {},
-    create: {
-      id: 'col-progress',
-      name: 'In Progress',
-      order: 2,
-      wipLimit: 3,
-      board: { connect: { id: demoBoard.id } },
-    },
-  });
-
-  const reviewCol = await prisma.column.upsert({
-    where: { id: 'col-review' },
-    update: {},
-    create: {
-      id: 'col-review',
-      name: 'Review',
-      order: 3,
-      wipLimit: 3,
-      board: { connect: { id: demoBoard.id } },
-    },
-  });
-
-  const doneCol = await prisma.column.upsert({
-    where: { id: 'col-done' },
-    update: {},
-    create: {
-      id: 'col-done',
-      name: 'Done',
-      order: 4,
-      board: { connect: { id: demoBoard.id } },
-    },
-  });
-
-  console.log('✓ Seeded columns');
-
-  // Create tasks
-  let task1 = await prisma.task.findFirst({
-    where: { title: 'Set up project', boardId: demoBoard.id },
-  });
-  if (!task1) {
-    task1 = await prisma.task.create({
-      data: {
-        title: 'Set up project',
-        description: 'Initialize repository and tooling',
-        type: 'BUG',
-        priority: 'HIGH',
-        board: { connect: { id: demoBoard.id } },
-        column: { connect: { id: progressCol.id } },
-        reporter: { connect: { id: manya.id } },
-        assignee: { connect: { id: john.id } },
-        dueDate: new Date('2026-03-10T00:00:00.000Z'),
-      },
-    });
-  }
-
-  let task2 = await prisma.task.findFirst({
-    where: { title: 'Implement login', boardId: demoBoard.id },
-  });
-  if (!task2) {
-    task2 = await prisma.task.create({
-      data: {
-        title: 'Implement login',
-        description: 'Create login UI and navigation',
-        type: 'STORY',
-        priority: 'MEDIUM',
-        board: { connect: { id: demoBoard.id } },
-        column: { connect: { id: storyCol.id } },
-        reporter: { connect: { id: manya.id } },
-        assignee: { connect: { id: manya.id } },
-        dueDate: new Date('2026-03-12T00:00:00.000Z'),
-      },
-    });
-  }
-
-  const task3 = await prisma.task.findFirst({
-    where: { title: 'Configure CI', boardId: demoBoard.id },
-  });
-  if (!task3) {
-    await prisma.task.create({
-      data: {
-        title: 'Configure CI',
-        description: 'Add lint and build steps',
-        type: 'TASK',
-        priority: 'HIGH',
-        board: { connect: { id: demoBoard.id } },
-        column: { connect: { id: backlogCol.id } },
-        reporter: { connect: { id: manya.id } },
-        assignee: { connect: { id: manya.id } },
-        parent: { connect: { id: task2.id } },
-        dueDate: new Date('2026-03-13T00:00:00.000Z'),
-      },
-    });
-  }
-
-  let task4 = await prisma.task.findFirst({
-    where: { title: 'Write documentation', boardId: demoBoard.id },
-  });
-  if (!task4) {
-    task4 = await prisma.task.create({
-      data: {
-        title: 'Write documentation',
-        description: 'Document API endpoints and usage',
-        type: 'TASK',
-        priority: 'MEDIUM',
-        board: { connect: { id: demoBoard.id } },
-        column: { connect: { id: reviewCol.id } },
-        reporter: { connect: { id: john.id } },
-        assignee: { connect: { id: alice.id } },
-        dueDate: new Date('2026-03-15T00:00:00.000Z'),
-      },
-    });
-  }
-
-  const task5 = await prisma.task.findFirst({
-    where: { title: 'Setup database migrations', boardId: demoBoard.id },
-  });
-  if (!task5) {
-    await prisma.task.create({
-      data: {
-        title: 'Setup database migrations',
-        description: 'Configure Prisma migrations and seed scripts',
-        type: 'TASK',
-        priority: 'HIGH',
-        board: { connect: { id: demoBoard.id } },
-        column: { connect: { id: doneCol.id } },
-        reporter: { connect: { id: john.id } },
-        assignee: { connect: { id: john.id } },
-        dueDate: new Date('2026-03-05T00:00:00.000Z'),
-        resolvedAt: new Date('2026-03-07T16:00:00.000Z'),
-        closedAt: new Date('2026-03-07T16:30:00.000Z'),
-      },
-    });
-  }
-
-  console.log('✓ Seeded tasks');
-
-  // --- Additional seeded users, projects, boards, columns and tasks ---
-  // Create 4 extra users and for each create 2-3 projects, each with 2-3 boards.
-  // Each board will get standard columns and each column will receive 1-3 tasks.
-  const extraUsersData = [
-    { email: 'bob@iitd.ac.in', name: 'Bob Martin' },
-    { email: 'carol@iitd.ac.in', name: 'Carol Nguyen' },
-    { email: 'dave@iitd.ac.in', name: 'Dave Patel' },
-    { email: 'eve@iitd.ac.in', name: 'Eve Lopez' },
-  ];
-
-  const extraUsers = [] as any[];
-  for (const u of extraUsersData) {
-    // upsert user
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const created = await prisma.user.upsert({
-      where: { email: u.email },
-      update: {},
-      create: {
-        email: u.email,
-        name: u.name,
-        password: commonPassword,
-        globalRole: 'USER',
-      },
-    });
-    extraUsers.push(created);
-  }
-
-  console.log(
-    '✓ Seeded extra users:',
-    extraUsers.map((x) => x.email).join(', '),
-  );
-
-  // Helper to pick a random integer between min and max inclusive
-  const randInt = (min: number, max: number) =>
-    Math.floor(Math.random() * (max - min + 1)) + min;
-
-  const taskTypes = ['TASK', 'STORY', 'BUG'] as const;
-  const priorities = ['LOW', 'MEDIUM', 'HIGH'] as const;
-
-  for (const user of extraUsers) {
-    const projectsCount = randInt(2, 3);
-    for (let p = 0; p < projectsCount; p++) {
-      const projectNamesPool = [
-        'Website Redesign',
-        'Mobile App Revamp',
-        'Marketing Automation',
-        'Analytics Dashboard',
-        'Integrations Platform',
-        'Customer Portal',
-        'Onboarding Flow',
-      ];
-
-      const projectDescriptionsPool = [
-        'Revamp the public website to improve conversions and accessibility.',
-        'Modernize the mobile app UX and add offline support.',
-        'Automate marketing workflows and improve lead scoring.',
-        'Build a dashboard for product analytics and KPIs.',
-        'Develop connectors and integrations with popular third-party services.',
-        'Create a self-service portal for customers to manage accounts.',
-        'Improve user onboarding with guided tours and tips.',
-      ];
-
-      const baseProjectName = projectNamesPool[p % projectNamesPool.length];
-      const projectName = `${user.name.split(' ')[0]}'s ${baseProjectName}`;
-      const projectDescription =
-        projectDescriptionsPool[p % projectDescriptionsPool.length];
-
-      let project = await prisma.project.findFirst({
-        where: { name: projectName },
+    for (let boardIndex = 0; boardIndex < boardNames.length; boardIndex++) {
+      const board = await prisma.board.create({
+        data: {
+          name: `${boardNames[boardIndex]} - ${project.name}`,
+          project: { connect: { id: project.id } },
+        },
       });
-      if (!project) {
-        project = await prisma.project.create({
-          data: {
-            name: projectName,
-            description: projectDescription,
-            members: {
-              create: [
-                { user: { connect: { id: user.id } }, role: 'PROJECT_ADMIN' },
-                { user: { connect: { id: manya.id } }, role: 'PROJECT_MEMBER' },
-                { user: { connect: { id: john.id } }, role: 'PROJECT_MEMBER' },
-              ],
-            },
-          },
-        });
-      }
 
-      const boardsCount = randInt(2, 3);
-      const boardNamesPool = [
-        'Development',
-        'Design',
-        'QA',
-        'Backlog',
-        'Sprint',
-      ];
-      for (let b = 0; b < boardsCount; b++) {
-        const baseBoardName = boardNamesPool[b % boardNamesPool.length];
-        const boardName = `${baseBoardName} Board`;
-        let board = await prisma.board.findFirst({
-          where: { name: boardName, projectId: project.id },
-        });
-        if (!board) {
-          board = await prisma.board.create({
+      const [storiesCol, backlogCol, progressCol, reviewCol, doneCol] =
+        await Promise.all([
+          prisma.column.create({
             data: {
-              name: boardName,
-              project: { connect: { id: project.id } },
-            },
-          });
-        }
-
-        // create five columns for the board (Stories must be first)
-        const columnsSpec = [
-          { key: 'stories', name: 'Stories', order: 0 },
-          { key: 'backlog', name: 'To Do', order: 1 },
-          { key: 'progress', name: 'In Progress', order: 2 },
-          { key: 'review', name: 'Review', order: 3 },
-          { key: 'done', name: 'Done', order: 4 },
-        ];
-
-        const createdColumns: any[] = [];
-        for (const colSpec of columnsSpec) {
-          const col = await prisma.column.create({
-            data: {
-              name: colSpec.name,
-              order: colSpec.order,
-              wipLimit:
-                colSpec.key === 'progress' || colSpec.key === 'review'
-                  ? randInt(1, 4)
-                  : undefined,
+              name: 'Stories',
+              order: 0,
               board: { connect: { id: board.id } },
             },
-          });
-          createdColumns.push(col);
-        }
+          }),
+          prisma.column.create({
+            data: {
+              name: 'To Do',
+              order: 1,
+              board: { connect: { id: board.id } },
+            },
+          }),
+          prisma.column.create({
+            data: {
+              name: 'In Progress',
+              order: 2,
+              wipLimit: 4,
+              board: { connect: { id: board.id } },
+            },
+          }),
+          prisma.column.create({
+            data: {
+              name: 'Review',
+              order: 3,
+              wipLimit: 3,
+              board: { connect: { id: board.id } },
+            },
+          }),
+          prisma.column.create({
+            data: {
+              name: 'Done',
+              order: 4,
+              board: { connect: { id: board.id } },
+            },
+          }),
+        ]);
 
-        // concise sample tasks per column
-        const tasksByColumn: Record<string, string[]> = {
-          Stories: ['Story 1', 'Story 2', 'Story 3'],
-          'To Do': ['Reqs', 'Wireframes', 'API'],
-          'In Progress': ['Auth', 'UI', 'Payments'],
-          Review: ['Code review', 'A11y', 'Tests'],
-          Done: ['Deploy', 'Merge hotfix', 'Tracking'],
-        };
-
-        // For each column, create 1-3 short tasks
-        for (const col of createdColumns) {
-          const pool = tasksByColumn[col.name] ?? [
-            `Work: ${col.name}`,
-            `Follow: ${col.name}`,
-          ];
-          // respect column wipLimit when seeding so we don't exceed WIP
-          const maxAllowed =
-            typeof col.wipLimit === 'number' && col.wipLimit > 0
-              ? Math.floor(col.wipLimit)
-              : 3;
-          const tasksCount = randInt(1, Math.max(1, Math.min(3, maxAllowed)));
-          for (let t = 0; t < tasksCount; t++) {
-            const sample = pool[t % pool.length];
-            const title = sample; // keep title short
-            const existing = await prisma.task.findFirst({
-              where: { title, boardId: board.id },
-            });
-            if (existing) continue;
-
-            // enforce story-only in the Stories column; other columns get TASK or BUG
-            let type: string;
-            if (col.name === 'Stories') {
-              type = 'STORY';
-            } else {
-              const nonStory = ['TASK', 'BUG'];
-              type = nonStory[randInt(0, nonStory.length - 1)];
-            }
-            const priority = priorities[randInt(0, priorities.length - 1)];
-            const assigneeChoice = [user, manya, john][randInt(0, 2)];
-
-            await prisma.task.create({
-              data: {
-                title,
-                description: `${sample} (${col.name})`,
-                type: type as any,
-                priority: priority as any,
-                board: { connect: { id: board.id } },
-                column: { connect: { id: col.id } },
-                reporter: { connect: { id: manya.id } },
-                assignee: { connect: { id: assigneeChoice.id } },
-                dueDate: new Date(
-                  Date.now() + randInt(3, 30) * 24 * 60 * 60 * 1000,
-                ),
-              },
-            });
-          }
-        }
+      if (!firstBacklogBoardId) {
+        firstBacklogBoardId = board.id;
       }
+
+      const projectTag = project.name.split(' ').slice(0, 2).join(' ');
+
+      const story = await prisma.task.create({
+        data: {
+          title: `${projectTag}: baseline scope map`,
+          description:
+            'Define the smallest end-to-end slice and map sequencing constraints.',
+          type: 'STORY',
+          priority: 'HIGH',
+          board: { connect: { id: board.id } },
+          column: { connect: { id: storiesCol.id } },
+          reporter: { connect: { id: activeMembers[0].id } },
+          assignee: { connect: { id: activeMembers[0].id } },
+          dueDate: new Date(
+            `2026-04-${String(6 + boardIndex).padStart(2, '0')}T18:00:00.000Z`,
+          ),
+        },
+      });
+
+      allTaskSummaries.push({
+        id: story.id,
+        reporterId: activeMembers[0].id,
+        createdAt: story.createdAt,
+      });
+
+      const boardTaskPayloads = [
+        {
+          title: `${projectTag}: intel source contracts`,
+          description:
+            'Catalog upstream intelligence sources and confidence levels.',
+          type: 'TASK' as const,
+          priority: 'MEDIUM' as const,
+          columnId: backlogCol.id,
+          assigneeId: activeMembers[1].id,
+          parentId: story.id,
+        },
+        {
+          title: `${projectTag}: anomaly reconciliation`,
+          description:
+            'Capture malformed signatures from prior multiverse incident reports.',
+          type: 'BUG' as const,
+          priority: 'HIGH' as const,
+          columnId: backlogCol.id,
+          assigneeId: activeMembers[2].id,
+          parentId: story.id,
+        },
+        {
+          title: `${projectTag}: containment guardrails`,
+          description:
+            'Add fail-safe constraints and fallback handling for partial telemetry.',
+          type: 'TASK' as const,
+          priority: 'HIGH' as const,
+          columnId: progressCol.id,
+          assigneeId: activeMembers[0].id,
+          parentId: story.id,
+        },
+        {
+          title: `${projectTag}: response queue hardening`,
+          description:
+            'Reduce duplicate response dispatches under comms jitter and packet loss.',
+          type: 'TASK' as const,
+          priority: 'CRITICAL' as const,
+          columnId: progressCol.id,
+          assigneeId: activeMembers[1].id,
+          parentId: story.id,
+        },
+        {
+          title: `${projectTag}: command dashboard parity`,
+          description:
+            'Validate parity between command dashboards and raw field events.',
+          type: 'BUG' as const,
+          priority: 'MEDIUM' as const,
+          columnId: progressCol.id,
+          assigneeId: activeMembers[2].id,
+          parentId: story.id,
+        },
+        {
+          title: `${projectTag}: strike-team verification`,
+          description:
+            'Run structured peer verification on assumptions and alert thresholds.',
+          type: 'TASK' as const,
+          priority: 'MEDIUM' as const,
+          columnId: reviewCol.id,
+          assigneeId: activeMembers[0].id,
+          parentId: null,
+        },
+        {
+          title: `${projectTag}: deployment readiness checklist`,
+          description:
+            'Confirm rollback plans before entering high-risk mission windows.',
+          type: 'TASK' as const,
+          priority: 'HIGH' as const,
+          columnId: reviewCol.id,
+          assigneeId: activeMembers[1].id,
+          parentId: null,
+        },
+        {
+          title: `${projectTag}: operations handoff`,
+          description:
+            'Archive runbooks and transfer on-call ownership for sustained monitoring.',
+          type: 'TASK' as const,
+          priority: 'LOW' as const,
+          columnId: doneCol.id,
+          assigneeId: activeMembers[2].id,
+          parentId: null,
+        },
+        {
+          title: `${projectTag}: incident retrospective`,
+          description:
+            'Summarize misses and convert findings into backlog-ready actions.',
+          type: 'TASK' as const,
+          priority: 'LOW' as const,
+          columnId: doneCol.id,
+          assigneeId: activeMembers[0].id,
+          parentId: null,
+        },
+      ];
+
+      for (
+        let payloadIndex = 0;
+        payloadIndex < boardTaskPayloads.length;
+        payloadIndex++
+      ) {
+        const payload = boardTaskPayloads[payloadIndex];
+        const reporterId =
+          activeMembers[payloadIndex % activeMembers.length].id;
+        const created = await prisma.task.create({
+          data: {
+            title: payload.title,
+            description: payload.description,
+            type: payload.type,
+            priority: payload.priority,
+            board: { connect: { id: board.id } },
+            column: { connect: { id: payload.columnId } },
+            reporter: { connect: { id: reporterId } },
+            assignee: { connect: { id: payload.assigneeId } },
+            dueDate: new Date(
+              `2026-04-${String(9 + boardIndex + (payloadIndex % 3)).padStart(2, '0')}T16:00:00.000Z`,
+            ),
+            parent:
+              payload.parentId !== null
+                ? { connect: { id: payload.parentId } }
+                : undefined,
+            resolvedAt:
+              payload.columnId === doneCol.id
+                ? new Date(
+                    `2026-03-${String(20 + (payloadIndex % 5)).padStart(2, '0')}T11:00:00.000Z`,
+                  )
+                : undefined,
+            closedAt:
+              payload.columnId === doneCol.id
+                ? new Date(
+                    `2026-03-${String(20 + (payloadIndex % 5)).padStart(2, '0')}T13:00:00.000Z`,
+                  )
+                : undefined,
+          },
+        });
+
+        allTaskSummaries.push({
+          id: created.id,
+          reporterId,
+          createdAt: created.createdAt,
+        });
+      }
+
+      totalTaskCount += 10;
     }
   }
 
-  console.log('✓ Seeded extra projects, boards, columns and tasks');
-  // Add multiple comments on task1 for testing alignment
-  const task1CommentsCount = await prisma.comment.count({
-    where: { taskId: task1.id },
-  });
-  if (task1CommentsCount === 0) {
-    await prisma.comment.createMany({
-      data: [
-        {
-          content:
-            'Started working on this. Setting up the dev environment now.',
-          authorId: john.id,
-          taskId: task1.id,
-          createdAt: new Date('2026-03-08T10:00:00.000Z'),
-        },
-        {
-          content:
-            'Great! Let me know if you need any help with the config files.',
-          authorId: manya.id,
-          taskId: task1.id,
-          createdAt: new Date('2026-03-08T10:15:00.000Z'),
-        },
-        {
-          content: 'Thanks! I might need help with Docker setup later.',
-          authorId: john.id,
-          taskId: task1.id,
-          createdAt: new Date('2026-03-08T10:30:00.000Z'),
-        },
-        {
-          content: 'No problem. I can pair with you this afternoon if needed.',
-          authorId: manya.id,
-          taskId: task1.id,
-          createdAt: new Date('2026-03-08T11:00:00.000Z'),
-        },
-        {
-          content: 'Perfect! How about 2 PM?',
-          authorId: john.id,
-          taskId: task1.id,
-          createdAt: new Date('2026-03-08T11:15:00.000Z'),
-        },
-      ],
+  if (totalTaskCount < TARGET_TASK_COUNT && firstBacklogBoardId) {
+    const remaining = TARGET_TASK_COUNT - totalTaskCount;
+    const fallbackReporter = contributors[0];
+
+    const firstBacklogColumn = await prisma.column.findFirstOrThrow({
+      where: { boardId: firstBacklogBoardId, name: 'To Do' },
+      select: { id: true },
     });
+
+    for (let i = 0; i < remaining; i++) {
+      const extraTask = await prisma.task.create({
+        data: {
+          title: `Omega watchlist triage ${i + 1}`,
+          description:
+            'Track cross-project blockers that can delay synchronized mission timelines.',
+          type: i % 2 === 0 ? 'TASK' : 'BUG',
+          priority: i % 3 === 0 ? 'CRITICAL' : 'HIGH',
+          board: { connect: { id: firstBacklogBoardId } },
+          column: { connect: { id: firstBacklogColumn.id } },
+          reporter: { connect: { id: fallbackReporter.id } },
+          assignee: {
+            connect: { id: contributors[(i + 1) % contributors.length].id },
+          },
+          dueDate: new Date(
+            `2026-04-${String(20 + (i % 8)).padStart(2, '0')}T12:00:00.000Z`,
+          ),
+        },
+      });
+
+      allTaskSummaries.push({
+        id: extraTask.id,
+        reporterId: fallbackReporter.id,
+        createdAt: extraTask.createdAt,
+      });
+    }
+
+    totalTaskCount = TARGET_TASK_COUNT;
   }
 
-  // Add comments on task2
-  const task2CommentsCount = await prisma.comment.count({
-    where: { taskId: task2.id },
-  });
-  if (task2CommentsCount === 0) {
-    await prisma.comment.createMany({
-      data: [
-        {
-          content:
-            'This is the main user story for authentication. Breaking it down into subtasks.',
-          authorId: manya.id,
-          taskId: task2.id,
-          createdAt: new Date('2026-03-07T09:00:00.000Z'),
-        },
-        {
-          content: 'Sounds good. Should we also include social login?',
-          authorId: john.id,
-          taskId: task2.id,
-          createdAt: new Date('2026-03-07T09:30:00.000Z'),
-        },
-        {
-          content: "Yes, let's add Google and GitHub OAuth as well.",
-          authorId: manya.id,
-          taskId: task2.id,
-          createdAt: new Date('2026-03-07T10:00:00.000Z'),
-        },
-      ],
-    });
-  }
+  const commentBatch: {
+    content: string;
+    authorId: string;
+    taskId: string;
+    createdAt: Date;
+  }[] = [];
+  const commentTasks = allTaskSummaries.slice(0, 40);
 
-  // Add comments on task4
-  const task4CommentsCount = await prisma.comment.count({
-    where: { taskId: task4.id },
-  });
-  if (task4CommentsCount === 0) {
-    await prisma.comment.createMany({
-      data: [
-        {
-          content:
-            'Working on the API documentation. Should have a draft ready by tomorrow.',
-          authorId: john.id,
-          taskId: task4.id,
-          createdAt: new Date('2026-03-08T14:00:00.000Z'),
-        },
-        {
-          content: 'Excellent! Make sure to include request/response examples.',
-          authorId: john.id,
-          taskId: task4.id,
-          createdAt: new Date('2026-03-08T14:30:00.000Z'),
-        },
-        {
-          content: 'Will do! Also adding authentication flow diagrams.',
-          authorId: john.id,
-          taskId: task4.id,
-          createdAt: new Date('2026-03-08T15:00:00.000Z'),
-        },
-        {
-          content:
-            'Great work Alice! This will be really helpful for the team.',
-          authorId: manya.id,
-          taskId: task4.id,
-          createdAt: new Date('2026-03-08T16:00:00.000Z'),
-        },
-      ],
-    });
-  }
-
-  const existingNotificationCount = await prisma.notification.count({
-    where: {
-      userId: {
-        in: [manya.id, john.id, alice.id],
-      },
-    },
-  });
-
-  if (existingNotificationCount === 0) {
-    await prisma.notification.createMany({
-      data: [
-        {
-          userId: manya.id,
-          content: 'John Doe commented on "Set up project".',
-          isRead: false,
-          createdAt: new Date('2026-03-09T10:35:00.000Z'),
-        },
-        {
-          userId: manya.id,
-          content: 'Task "Configure CI" is due in 2 days.',
-          isRead: false,
-          createdAt: new Date('2026-03-09T17:00:00.000Z'),
-        },
-        {
-          userId: john.id,
-          content: 'You have been assigned to "Set up project".',
-          isRead: true,
-          createdAt: new Date('2026-03-08T08:00:00.000Z'),
-        },
-        {
-          userId: john.id,
-          content: 'Status changed on your task: "Set up project".',
-          isRead: false,
-          createdAt: new Date('2026-03-10T12:20:00.000Z'),
-        },
-        {
-          userId: alice.id,
-          content: 'New comment on your task: "Write documentation".',
-          isRead: false,
-          createdAt: new Date('2026-03-10T14:30:00.000Z'),
-        },
-      ],
-    });
-  }
-
-  const tasksWithoutCreatedLog = await prisma.task.findMany({
-    where: {
-      auditLogs: {
-        none: { action: 'CREATED' },
-      },
-    },
-    select: {
-      id: true,
-      reporterId: true,
-      createdAt: true,
-    },
-  });
-
-  if (tasksWithoutCreatedLog.length > 0) {
-    await prisma.auditLog.createMany({
-      data: tasksWithoutCreatedLog.map((task) => ({
+  for (let i = 0; i < commentTasks.length; i++) {
+    const task = commentTasks[i];
+    for (let j = 0; j < 3; j++) {
+      commentBatch.push({
+        content: commentSnippets[(i + j) % commentSnippets.length],
+        authorId: contributors[(i + j) % contributors.length].id,
         taskId: task.id,
-        userId: task.reporterId,
-        action: 'CREATED',
-        oldValue: null,
-        newValue: null,
-        timestamp: task.createdAt,
-      })),
-    });
+        createdAt: new Date(
+          task.createdAt.getTime() + (j + 1) * 60 * 60 * 1000,
+        ),
+      });
+    }
   }
 
-  console.log('\n════════════════════════════════════════════');
-  console.log('📧 Login credentials (password: 111)');
-  console.log('════════════════════════════════════════════');
-  console.log('  admin@taskboard.com → GLOBAL_ADMIN');
-  console.log('  admin2@taskboard.com → GLOBAL_ADMIN');
-  console.log('  manya@iitd.ac.in    → PROJECT_ADMIN');
-  console.log('  john@iitd.ac.in     → PROJECT_MEMBER');
-  console.log('  alice@iitd.ac.in    → PROJECT_VIEWER');
-  console.log('════════════════════════════════════════════\n');
-  console.log('✨ Seed completed successfully!\n');
+  await prisma.comment.createMany({ data: commentBatch });
+
+  await prisma.notification.createMany({
+    data: contributors.map((u, idx) => ({
+      userId: u.id,
+      content:
+        idx % 2 === 0
+          ? 'You were tagged in a threat-board debrief comment.'
+          : 'A mission task assigned to you has moved to debrief.',
+      isRead: idx % 3 === 0,
+      createdAt: new Date(
+        `2026-03-${String(10 + idx).padStart(2, '0')}T10:30:00.000Z`,
+      ),
+    })),
+  });
+
+  const createdAuditLogs = allTaskSummaries.map((task, idx) => ({
+    taskId: task.id,
+    userId: task.reporterId,
+    action: 'CREATED',
+    oldValue: null,
+    newValue: null,
+    timestamp: task.createdAt,
+  }));
+
+  await prisma.auditLog.createMany({ data: createdAuditLogs });
+
+  const statusAuditLogs = allTaskSummaries.slice(0, 36).map((task, idx) => ({
+    taskId: task.id,
+    userId: contributors[idx % contributors.length].id,
+    action: idx % 2 === 0 ? 'STATUS_CHANGED' : 'ASSIGNEE_CHANGED',
+    oldValue:
+      idx % 2 === 0
+        ? 'TO_DO'
+        : contributors[(idx + 2) % contributors.length].name,
+    newValue:
+      idx % 2 === 0
+        ? 'IN_PROGRESS'
+        : contributors[(idx + 3) % contributors.length].name,
+    // Keep follow-up activity after creation (+4h to +8h) for consistent timeline ordering.
+    timestamp: new Date(
+      task.createdAt.getTime() + (4 + (idx % 5)) * 60 * 60 * 1000,
+    ),
+  }));
+
+  await prisma.auditLog.createMany({ data: statusAuditLogs });
+
+  console.log('============================================');
+  console.log('Seed complete with Avengers Doomsday topology');
+  console.log('============================================');
+  console.log(`Projects: ${projectBlueprints.length}`);
+  console.log(`Boards: ${projectBlueprints.length * boardNames.length}`);
+  console.log(`Tasks: ${totalTaskCount}`);
+  console.log(`Comments: ${commentBatch.length}`);
+  console.log('Login password for seeded users: 616');
+  console.log('Primary users:');
+  usersToSeed.forEach((u) => {
+    const suffix = u.globalRole === 'GLOBAL_ADMIN' ? ' (GLOBAL_ADMIN)' : '';
+    console.log(`  ${u.email}${suffix}`);
+  });
+  console.log('============================================');
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
+  .catch((error) => {
+    console.error(error);
     process.exit(1);
   })
   .finally(async () => {
