@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type {
   Task as Task,
   ProjectRole as ProjectRole,
@@ -20,6 +21,7 @@ const TaskCard = ({
   onEdit,
   projectRole,
 }: Properties) => {
+  const [isDragging, setIsDragging] = useState(false);
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null;
     const d = new Date(dateStr);
@@ -39,14 +41,18 @@ const TaskCard = ({
 
   return (
     <div
-      className={`${styles.taskCard} ${styles[taskType]} ${!isDraggable ? styles.notDraggable : ''}`}
+      className={`${styles.taskCard} ${styles[taskType]} ${!isDraggable ? styles.notDraggable : ''} ${isDragging ? styles.isDragging : ''}`}
       draggable={isDraggable}
       onClick={onClick}
       // When dragging starts, place the task id on the dataTransfer so
       // drop targets can identify which task is being moved.
       onDragStart={(e) => {
         if (!isDraggable) return;
+        setTimeout(() => setIsDragging(true), 0);
         e.dataTransfer.setData('taskId', task.id);
+      }}
+      onDragEnd={() => {
+        setIsDragging(false);
       }}
       role={onClick ? 'button' : undefined}
     >

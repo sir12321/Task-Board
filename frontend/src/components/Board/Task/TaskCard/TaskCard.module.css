@@ -186,3 +186,7 @@
 .taskCard .editTaskBtn:hover {
   background: #f8fafc;
 }
+
+.isDragging {
+  opacity: 0.4;
+}
