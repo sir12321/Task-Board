@@ -623,6 +623,17 @@ async function main(): Promise<void> {
 
   await prisma.comment.createMany({ data: commentBatch });
 
+  const commentAuditLogs = commentBatch.map((comment) => ({
+    taskId: comment.taskId,
+    userId: comment.authorId,
+    action: 'COMMENT_ADDED',
+    oldValue: null,
+    newValue: comment.content,
+    timestamp: comment.createdAt,
+  }));
+
+  await prisma.auditLog.createMany({ data: commentAuditLogs });
+
   await prisma.notification.createMany({
     data: contributors.map((u, idx) => ({
       userId: u.id,
