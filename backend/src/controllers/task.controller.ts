@@ -256,7 +256,12 @@ export const editTask = async (
 
     const oldTask = await prisma.task.findUnique({
       where: { id },
-      select: { assigneeId: true },
+      select: {
+        assigneeId: true,
+        assignee: {
+          select: { name: true },
+        },
+      },
     });
 
     const { updateTask } = await import('../services/task.service');
@@ -273,12 +278,25 @@ export const editTask = async (
       assigneeId !== undefined &&
       oldTask.assigneeId !== assigneeId
     ) {
+      let newAssigneeLabel = 'Unassigned';
+
+      if (assigneeId) {
+        const assigneeUser = await prisma.user.findUnique({
+          where: { id: assigneeId },
+          select: { name: true },
+        });
+        newAssigneeLabel = assigneeUser?.name || assigneeId;
+      }
+
+      const oldAssigneeLabel =
+        oldTask.assignee?.name || oldTask.assigneeId || 'Unassigned';
+
       await logAct(
         id,
         userId,
         'ASSIGNEE_CHANGED',
-        oldTask.assigneeId || 'Unassigned',
-        assigneeId || 'Unassigned',
+        oldAssigneeLabel,
+        newAssigneeLabel,
       );
     }
 

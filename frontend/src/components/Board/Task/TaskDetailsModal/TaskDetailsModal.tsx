@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   ProjectMemberSummary,
-  Task as Task,
-  ProjectRole as ProjectRole,
+  Task,
+  ProjectRole,
+  Comment,
+  AuditLog,
 } from '../../../../types/Types';
 import styles from './TaskDetailsModal.module.css';
 import { getInitials } from '../../../../utils/getInitials';
@@ -15,6 +17,7 @@ import {
   getCanonicalMentionHandle,
   getMentionSuggestions,
 } from '../../../../utils/mentions';
+import { apiClient } from '../../../../utils/api';
 
 const toolbarButtons = [
   { label: 'B', title: 'Bold', command: 'bold' },
@@ -90,6 +93,48 @@ const parseMentionQueryAtCaret = (textBeforeCaret: string) => {
   };
 };
 
+type TimeLineComment = Comment & {
+  timelineType: 'COMMENT';
+  timestampMs: number;
+};
+type TimeLineAuditLog = AuditLog & {
+  timelineType: 'AUDIT_LOG';
+  timestampMs: number;
+};
+type TimeLineItem = TimeLineComment | TimeLineAuditLog;
+
+const getAuditActionLabel = (action: string): string => {
+  if (action === 'STATUS_CHANGED') return 'changed status';
+  if (action === 'ASSIGNEE_CHANGED') return 'changed assignee';
+  if (action === 'CREATED') return 'created this task';
+  if (action === 'COMMENT_ADDED') return 'added a comment';
+  if (action === 'COMMENT_EDITED') return 'edited a comment';
+  if (action === 'COMMENT_DELETED') return 'deleted a comment';
+
+  return action.replace(/_/g, ' ').toLowerCase();
+};
+
+const formatAuditValue = (value: string | null | undefined, action: string) => {
+  if (!value) {
+    return 'None';
+  }
+
+  const normalized = action.startsWith('COMMENT_')
+    ? getRichTextPlainText(value)
+    : value;
+  const compact = normalized.replace(/\s+/g, ' ').trim();
+
+  if (!compact) {
+    return 'None';
+  }
+
+  if (compact.length > 120) {
+    return `${compact.slice(0, 120).trimEnd()}...`;
+  }
+
+  return compact;
+};
+
 /**
  * Props for the TaskDetailsModal component.
  * - `userRole`: role of the current user in the project (may affect actions)
@@ -162,6 +207,48 @@ const TaskDetailsModal = ({
     () => getMentionSuggestions(mentionQuery, mentionSourceMembers),
     [mentionQuery, mentionSourceMembers],
   );
+
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(task.auditLogs || []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchTaskDetails = async () => {
+      try {
+        const data = await apiClient(`/tasks/${task.id}`);
+        if (isMounted && data.auditLogs) {
+          setAuditLogs(data.auditLogs);
+        }
+      } catch (error) {
+        console.error('Failed to fetch task details:', error);
+      }
+    };
+
+    void fetchTaskDetails();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [task.id, task.updatedAt, task.comments?.length]);
+
+  const timelineItems = useMemo<TimeLineItem[]>(() => {
+    const comments: TimeLineComment[] = (task.comments || []).map(
+      (comment) => ({
+        ...comment,
+        timelineType: 'COMMENT',
+        timestampMs: new Date(comment.createdAt).getTime(),
+      }),
+    );
+
+    const logs: TimeLineAuditLog[] = auditLogs
+      .filter((log) => log.action !== 'COMMENT_ADDED')
+      .map((log) => ({
+        ...log,
+        timelineType: 'AUDIT_LOG',
+        timestampMs: new Date(log.timestamp).getTime(),
+      }));
+
+    return [...comments, ...logs].sort((a, b) => a.timestampMs - b.timestampMs);
+  }, [task.comments, auditLogs]);
 
   const getMentionContext = () => {
     const selection = window.getSelection();
@@ -416,65 +503,94 @@ const TaskDetailsModal = ({
             <section className={styles.section}>
               <h3 className={styles.sectionTitle}>Activity</h3>
               <div className={styles.commentList}>
-                {task.comments && task.comments.length > 0 ? (
-                  task.comments.map((c) => {
-                    const isMine = c.authorId === currentUserId;
-                    const isGlobalAdmin =
-                      currentUserGlobalRole === 'GLOBAL_ADMIN';
-                    const createdAtMs = new Date(c.createdAt).getTime();
-                    const isWithinDeleteWindow =
-                      Number.isFinite(createdAtMs) &&
-                      Date.now() - createdAtMs <= commentDeleteWindowMs;
-                    const canDelete =
-                      Boolean(onDeleteComment) &&
-                      (isGlobalAdmin || (isMine && isWithinDeleteWindow));
-                    return (
-                      <div
-                        className={`${styles.comment} ${
-                          isMine ? styles.commentMine : ''
-                        }`}
-                        key={c.id}
-                      >
-                        <div className={styles.commentAvatar}>
-                          {getInitials(c.authorName)}
-                        </div>
-                        <div className={styles.commentBody}>
-                          <div className={styles.commentMeta}>
-                            <strong>{c.authorName}</strong> · {/*bold*/}
-                            <span className={styles.commentTime}>
-                              {new Date(c.createdAt).toLocaleString()}
-                            </span>
-                            {canDelete && (
-                              <button
-                                type="button"
-                                className={styles.commentDeleteButton}
-                                onClick={() => {
-                                  if (
-                                    window.confirm(
-                                      'Are you sure you want to delete this comment?',
-                                    )
-                                  ) {
-                                    onDeleteComment?.(c.id);
-                                  }
-                                }}
-                              >
-                                Delete
-                              </button>
-                            )}
+                {timelineItems.length > 0 ? (
+                  timelineItems.map((item) => {
+                    if (item.timelineType === 'COMMENT') {
+                      const isMine = item.authorId === currentUserId;
+                      const isGlobalAdmin =
+                        currentUserGlobalRole === 'GLOBAL_ADMIN';
+                      const isWithinDeleteWindow =
+                        Number.isFinite(item.timestampMs) &&
+                        Date.now() - item.timestampMs <= commentDeleteWindowMs;
+                      const canDelete =
+                        Boolean(onDeleteComment) &&
+                        (isGlobalAdmin || (isMine && isWithinDeleteWindow));
+
+                      return (
+                        <div
+                          className={`${styles.comment} ${
+                            isMine ? styles.commentMine : ''
+                          }`}
+                          key={`comment-${item.id}`}
+                        >
+                          <div className={styles.commentAvatar}>
+                            {getInitials(item.authorName)}
                           </div>
-                          <div
-                            className={styles.commentText}
-                            dangerouslySetInnerHTML={{
-                              __html: renderRichText(c.content, projectMembers),
-                            }}
-                          />
+                          <div className={styles.commentBody}>
+                            <div className={styles.commentMeta}>
+                              <strong>{item.authorName}</strong>
+                              <span className={styles.commentTimestamp}>
+                                {new Date(item.createdAt).toLocaleString()}
+                              </span>
+                              {canDelete && (
+                                <button
+                                  type="button"
+                                  className={styles.deleteCommentButton}
+                                  onClick={() => {
+                                    if (
+                                      window.confirm(
+                                        'Are you sure you want to delete this comment?',
+                                      )
+                                    ) {
+                                      void onDeleteComment?.(item.id);
+                                    }
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                            <div
+                              className={styles.commentText}
+                              dangerouslySetInnerHTML={{
+                                __html: renderRichText(
+                                  item.content,
+                                  projectMembers,
+                                ),
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className={styles.auditLog} key={`audit-${item.id}`}>
+                        <div className={styles.auditLogDot} />
+                        <div className={styles.auditLogContent}>
+                          <strong>{item.user?.name || 'Unknown User'}</strong>{' '}
+                          <span className={styles.auditLogAction}>
+                            {getAuditActionLabel(item.action)}
+                          </span>{' '}
+                          {item.action !== 'COMMENT_DELETED' &&
+                            (item.oldValue || item.newValue) && (
+                              <span className={styles.auditLogDetails}>
+                                ({formatAuditValue(item.oldValue, item.action)}{' '}
+                                &rarr;{' '}
+                                {formatAuditValue(item.newValue, item.action)})
+                              </span>
+                            )}
+                          <span className={styles.commentTimestamp}>
+                            {' '}
+                            · {new Date(item.timestamp).toLocaleString()}
+                          </span>
                         </div>
                       </div>
                     );
                   })
                 ) : (
                   <div className={styles.activityPlaceholder}>
-                    No comments yet.
+                    No activity yet.
                   </div>
                 )}
               </div>

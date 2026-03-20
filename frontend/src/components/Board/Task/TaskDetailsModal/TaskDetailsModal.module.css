@@ -491,3 +491,61 @@
   background: #9ca3af;
   cursor: not-allowed;
 }
+
+.commentTimestamp {
+  color: #475569;
+  font-size: 12px;
+}
+
+.deleteCommentButton {
+  margin-left: 12px;
+  color: #ef4444;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.deleteCommentButton:hover {
+  color: #dc2626;
+}
+
+.auditLog {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 4px 12px;
+  color: #64748b;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.auditLogDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #cbd5e1;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.auditLogContent {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.auditLogContent strong {
+  color: #334155;
+  font-weight: 600;
+}
+
+.auditLogAction {
+  color: #475569;
+}
+
+.auditLogDetails {
+  color: #64748b;
+  font-style: italic;
+  margin-left: 4px;
+}

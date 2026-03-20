@@ -614,6 +614,32 @@ async function main(): Promise<void> {
     });
   }
 
+  const tasksWithoutCreatedLog = await prisma.task.findMany({
+    where: {
+      auditLogs: {
+        none: { action: 'CREATED' },
+      },
+    },
+    select: {
+      id: true,
+      reporterId: true,
+      createdAt: true,
+    },
+  });
+
+  if (tasksWithoutCreatedLog.length > 0) {
+    await prisma.auditLog.createMany({
+      data: tasksWithoutCreatedLog.map((task) => ({
+        taskId: task.id,
+        userId: task.reporterId,
+        action: 'CREATED',
+        oldValue: null,
+        newValue: null,
+        timestamp: task.createdAt,
+      })),
+    });
+  }
+
   console.log('\n════════════════════════════════════════════');
   console.log('📧 Login credentials (password: 111)');
   console.log('════════════════════════════════════════════');
