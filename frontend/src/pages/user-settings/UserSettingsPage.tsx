@@ -10,17 +10,6 @@ const UserSettingsPage = () => {
     return null;
   }
 
-  const handleChangeAvatar = async (avatarUrl: string): Promise<void> => {
-    const response = await apiClient('/users/avatar', {
-      method: 'POST',
-      body: JSON.stringify({ avatarUrl }),
-    });
-
-    setUser((prev) =>
-      prev ? { ...prev, avatarUrl: response.avatarUrl ?? avatarUrl } : prev,
-    );
-  };
-
   const handleChangeName = async (nextName: string): Promise<void> => {
     const response = await apiClient('/users/name', {
       method: 'POST',
@@ -46,7 +35,6 @@ const UserSettingsPage = () => {
     <Layout>
       <UserSettingsManager
         user={user}
-        onChangeAvatar={handleChangeAvatar}
         onChangeName={handleChangeName}
         onChangePassword={handleChangePassword}
       />

@@ -5,6 +5,7 @@ import type {
   ProjectRole,
 } from '../../../types/Types';
 import { PROJECT_ROLE_OPTIONS } from '../../../utils/getUtils';
+import { getInitials } from '../../../utils/getInitials';
 import styles from './AssignUsersManager.module.css';
 
 const roleLabel = (role: ProjectRole): string => role.replace('PROJECT_', '');
@@ -116,9 +117,21 @@ const AssignUsersManager = ({
                 <div className={styles.membersList}>
                   {visibleMembers.map((member) => (
                     <div key={member.id} className={styles.memberCard}>
-                      <div>
-                        <div className={styles.userName}>{member.name}</div>
-                        <div className={styles.userEmail}>{member.email}</div>
+                      <div className={styles.userIdentity}>
+                        <div className={styles.userAvatar}>
+                          {member.avatarUrl ? (
+                            <img src={member.avatarUrl} alt={member.name} />
+                          ) : (
+                            getInitials(member.name)
+                          )}
+                        </div>
+                        <div>
+                          <div className={styles.userName}>{member.name}</div>
+                          <div className={styles.userEmail}>{member.email}</div>
+                          <div className={styles.userAvatarUrl}>
+                            {member.avatarUrl ?? 'No avatar URL'}
+                          </div>
+                        </div>
                       </div>
                       <div className={styles.memberRoleField}>
                         <select

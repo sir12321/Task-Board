@@ -12,6 +12,7 @@ export const getDirectoryUser = (user: AuthUser): DirectoryUser => ({
   name: user.name,
   email: user.email,
   globalRole: user.globalRole,
+  avatarUrl: user.avatarUrl,
 });
 
 interface ApiDirectoryUser {
@@ -19,6 +20,7 @@ interface ApiDirectoryUser {
   name: string;
   email: string;
   globalRole: 'GLOBAL_ADMIN' | 'USER';
+  avatarUrl?: string | null;
 }
 
 export const getProjectDirectoryUsers = async (): Promise<DirectoryUser[]> => {
@@ -28,6 +30,7 @@ export const getProjectDirectoryUsers = async (): Promise<DirectoryUser[]> => {
     name: user.name,
     email: user.email,
     globalRole: user.globalRole,
+    avatarUrl: user.avatarUrl,
   }));
 };
 
@@ -50,6 +53,7 @@ interface ApiProjectSummary {
     name: string;
     email: string;
     role: string;
+    avatarUrl?: string | null;
   }[];
   boards: { id: string; name: string }[];
 }
@@ -93,6 +97,7 @@ const mapApiProjectToManagedProject = (
     name: member.name,
     email: member.email,
     role: member.role as ProjectRole,
+    avatarUrl: member.avatarUrl,
   })),
 });
 

@@ -88,7 +88,11 @@ const TaskCard = ({
       {assignee && (
         <div className={styles.assignees}>
           <div className={styles.assignee} title={`Assignee: ${assignee}`}>
-            {getInitials(assignee)}
+            {task.assigneeAvatarUrl ? (
+              <img src={task.assigneeAvatarUrl} alt={assignee} />
+            ) : (
+              getInitials(assignee)
+            )}
           </div>
         </div>
       )}

@@ -180,6 +180,14 @@
   justify-content: center;
   font-weight: 700;
   color: #08306b;
+  overflow: hidden;
+}
+
+.commentAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .commentBody {
@@ -359,6 +367,14 @@
   color: #08306b;
   font-weight: 700;
   border: 1px solid rgba(9, 30, 66, 0.06);
+  overflow: hidden;
+}
+
+.avatarSmall img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .commentComposer {
   margin-top: 16px;

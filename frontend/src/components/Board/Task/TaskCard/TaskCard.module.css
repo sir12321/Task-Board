@@ -158,6 +158,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
+  overflow: hidden;
   background: linear-gradient(180deg, #eef6ff, #e1efff);
   color: #08306b;
   display: flex;
@@ -167,6 +168,13 @@
   font-weight: 700;
   box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
   border: 1px solid rgba(9, 30, 66, 0.06);
+}
+
+.taskCard .assignee img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .taskCard .editTaskBtn {

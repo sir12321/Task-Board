@@ -13,6 +13,7 @@ export interface Comment {
   updatedAt: string;
   authorId: string;
   authorName: string;
+  authorAvatarUrl?: string | null;
   taskId: string;
 }
 
@@ -32,8 +33,10 @@ export interface Task {
   status: string;
   reporterId: string;
   reporterName: string;
+  reporterAvatarUrl?: string | null;
   assigneeId?: string | null;
   assigneeName?: string | null;
+  assigneeAvatarUrl?: string | null;
   parentId?: string | null;
   parentName?: string | null;
   comments?: Comment[];
@@ -125,6 +128,7 @@ export interface ProjectMemberSummary {
   name: string;
   email: string;
   role: ProjectRole;
+  avatarUrl?: string | null;
 }
 
 export interface ManagedProject extends Project {
@@ -149,3 +153,15 @@ export interface AuditLog {
     avatarUrl?: string | null;
   };
 }
+
+export type TimeLineComment = Comment & {
+  timelineType: 'COMMENT';
+  timestampMs: number;
+};
+
+export type TimeLineAuditLog = AuditLog & {
+  timelineType: 'AUDIT_LOG';
+  timestampMs: number;
+};
+
+export type TimeLineItem = TimeLineComment | TimeLineAuditLog;

@@ -15,6 +15,48 @@ export default function BoardPage() {
   const [project, setProject] = useState<ProjectDetails | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const hydrateBoardAvatars = useCallback(
+    (rawBoard: Board, projectDetails: ProjectDetails): Board => {
+      const memberById = new Map(
+        projectDetails.members.map((member) => [member.id, member]),
+      );
+
+      return {
+        ...rawBoard,
+        tasks: rawBoard.tasks.map((task) => {
+          const assigneeMember = task.assigneeId
+            ? memberById.get(task.assigneeId)
+            : undefined;
+          const reporterMember = memberById.get(task.reporterId);
+
+          return {
+            ...task,
+            assigneeAvatarUrl:
+              task.assigneeAvatarUrl ?? assigneeMember?.avatarUrl ?? null,
+            reporterAvatarUrl:
+              task.reporterAvatarUrl ??
+              reporterMember?.avatarUrl ??
+              (task.reporterId === user?.id ? user.avatarUrl : null) ??
+              null,
+            comments: task.comments?.map((comment) => {
+              const authorMember = memberById.get(comment.authorId);
+
+              return {
+                ...comment,
+                authorAvatarUrl:
+                  comment.authorAvatarUrl ??
+                  authorMember?.avatarUrl ??
+                  (comment.authorId === user?.id ? user.avatarUrl : null) ??
+                  null,
+              };
+            }),
+          };
+        }),
+      };
+    },
+    [user?.avatarUrl, user?.id],
+  );
+
   // Fetch projects list, then resolve which board to show
   useEffect(() => {
     let cancelled = false;
@@ -63,7 +105,7 @@ export default function BoardPage() {
         const boardData: Board = await apiClient(`/boards/${resolvedBoardId}`);
         if (!cancelled) {
           setProject(resolvedProject);
-          setBoard(boardData);
+          setBoard(hydrateBoardAvatars(boardData, resolvedProject));
         }
       } catch (err) {
         console.error('Failed to load board:', err);
@@ -76,7 +118,7 @@ export default function BoardPage() {
     return () => {
       cancelled = true;
     };
-  }, [projectId, boardId, navigate]);
+  }, [projectId, boardId, navigate, hydrateBoardAvatars]);
 
   const deleteTask = useCallback(
     async (taskId: string): Promise<void> => {
@@ -126,6 +168,9 @@ export default function BoardPage() {
       });
 
       const column = board.columns.find((c) => c.id === payload.columnId);
+      const assigneeMember = project.members.find(
+        (member) => member.id === payload.assigneeId,
+      );
       setBoard((prev) =>
         prev
           ? {
@@ -134,6 +179,11 @@ export default function BoardPage() {
                 {
                   ...created,
                   columnName: column?.name ?? 'Unknown',
+                  reporterAvatarUrl:
+                    created.reporterAvatarUrl ?? user.avatarUrl ?? null,
+                  assigneeName: created.assigneeName ?? assigneeMember?.name,
+                  assigneeAvatarUrl:
+                    created.assigneeAvatarUrl ?? assigneeMember?.avatarUrl,
                   comments: [],
                 },
                 ...prev.tasks,
@@ -179,9 +229,10 @@ export default function BoardPage() {
         });
 
         const column = board.columns.find((c) => c.id === payload.columnId);
-        const assigneeName =
-          project.members.find((member) => member.id === payload.assigneeId)
-            ?.name ?? null;
+        const assigneeMember = project.members.find(
+          (member) => member.id === payload.assigneeId,
+        );
+        const assigneeName = assigneeMember?.name ?? null;
         const parentName =
           board.tasks.find((task) => task.id === payload.parentId)?.title ??
           null;
@@ -201,6 +252,10 @@ export default function BoardPage() {
                         dueDate: payload.dueDate,
                         assigneeId: payload.assigneeId ?? null,
                         assigneeName: updatedTask.assigneeName ?? assigneeName,
+                        assigneeAvatarUrl:
+                          updatedTask.assigneeAvatarUrl ??
+                          assigneeMember?.avatarUrl ??
+                          null,
                         parentId: payload.parentId ?? null,
                         parentName: updatedTask.parentName ?? parentName,
                         columnName:
@@ -242,11 +297,14 @@ export default function BoardPage() {
         }),
       });
 
-      const authorName =
-        project.members.find((member) => member.id === createdComment.authorId)
-          ?.name ??
-        user?.name ??
-        'Unknown User';
+      const authorMember = project.members.find(
+        (member) => member.id === createdComment.authorId,
+      );
+      const authorName = authorMember?.name ?? user?.name ?? 'Unknown User';
+      const authorAvatarUrl =
+        authorMember?.avatarUrl ??
+        (createdComment.authorId === user?.id ? user?.avatarUrl : null) ??
+        null;
 
       setBoard((prev) =>
         prev
@@ -261,6 +319,7 @@ export default function BoardPage() {
                         {
                           ...createdComment,
                           authorName,
+                          authorAvatarUrl,
                         },
                       ],
                     }
@@ -323,9 +382,7 @@ export default function BoardPage() {
                 comment.id === commentId
                   ? {
                       ...comment,
-                      content:
-                        updatedComment.content ??
-                        content,
+                      content: updatedComment.content ?? content,
                       updatedAt:
                         updatedComment.updatedAt ?? new Date().toISOString(),
                     }

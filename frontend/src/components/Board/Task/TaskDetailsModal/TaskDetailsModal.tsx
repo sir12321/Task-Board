@@ -3,8 +3,10 @@ import type {
   ProjectMemberSummary,
   Task,
   ProjectRole,
-  Comment,
   AuditLog,
+  TimeLineComment,
+  TimeLineAuditLog,
+  TimeLineItem,
 } from '../../../../types/Types';
 import styles from './TaskDetailsModal.module.css';
 import { getInitials } from '../../../../utils/getInitials';
@@ -92,16 +94,6 @@ const parseMentionQueryAtCaret = (textBeforeCaret: string) => {
     mentionStartOffset: index,
   };
 };
-
-type TimeLineComment = Comment & {
-  timelineType: 'COMMENT';
-  timestampMs: number;
-};
-type TimeLineAuditLog = AuditLog & {
-  timelineType: 'AUDIT_LOG';
-  timestampMs: number;
-};
-type TimeLineItem = TimeLineComment | TimeLineAuditLog;
 
 const getAuditActionLabel = (action: string): string => {
   if (action === 'STATUS_CHANGED') return 'changed status';
@@ -583,7 +575,14 @@ const TaskDetailsModal = ({
                           key={`comment-${item.id}`}
                         >
                           <div className={styles.commentAvatar}>
-                            {getInitials(item.authorName)}
+                            {item.authorAvatarUrl ? (
+                              <img
+                                src={item.authorAvatarUrl}
+                                alt={item.authorName}
+                              />
+                            ) : (
+                              getInitials(item.authorName)
+                            )}
                           </div>
                           <div className={styles.commentBody}>
                             <div className={styles.commentMeta}>
@@ -873,7 +872,14 @@ const TaskDetailsModal = ({
                       title={`Assignee: ${assigneeName}`}
                     >
                       <div className={styles.avatarSmall}>
-                        {getInitials(assigneeName)}
+                        {task.assigneeAvatarUrl ? (
+                          <img
+                            src={task.assigneeAvatarUrl}
+                            alt={assigneeName}
+                          />
+                        ) : (
+                          getInitials(assigneeName)
+                        )}
                       </div>
                       <div className={styles.assigneeName}>{assigneeName}</div>
                     </div>
@@ -892,7 +898,14 @@ const TaskDetailsModal = ({
                       title={`Reporter: ${reporterName}`}
                     >
                       <div className={styles.avatarSmall}>
-                        {getInitials(reporterName)}
+                        {task.reporterAvatarUrl ? (
+                          <img
+                            src={task.reporterAvatarUrl}
+                            alt={reporterName}
+                          />
+                        ) : (
+                          getInitials(reporterName)
+                        )}
                       </div>
                       <div className={styles.assigneeName}>{reporterName}</div>
                     </div>

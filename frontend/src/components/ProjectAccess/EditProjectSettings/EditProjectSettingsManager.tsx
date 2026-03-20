@@ -439,7 +439,11 @@ const EditProjectSettingsManager = ({
                         >
                           <div className={styles.userIdentity}>
                             <div className={styles.userAvatar}>
-                              {getInitials(person.name)}
+                              {person.avatarUrl ? (
+                                <img src={person.avatarUrl} alt={person.name} />
+                              ) : (
+                                getInitials(person.name)
+                              )}
                             </div>
                             <div>
                               <div className={styles.userName}>
@@ -521,7 +525,11 @@ const EditProjectSettingsManager = ({
                     <div key={member.id} className={styles.memberCardRow}>
                       <div className={styles.userIdentity}>
                         <div className={styles.userAvatar}>
-                          {getInitials(member.name)}
+                          {member.avatarUrl ? (
+                            <img src={member.avatarUrl} alt={member.name} />
+                          ) : (
+                            getInitials(member.name)
+                          )}
                         </div>
                         <div>
                           <div className={styles.userName}>{member.name}</div>
