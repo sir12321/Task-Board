@@ -6,6 +6,7 @@ type SeedUser = {
   email: string;
   name: string;
   globalRole: 'GLOBAL_ADMIN' | 'USER';
+  avatarUrl: string;
 };
 
 type ProjectBlueprint = {
@@ -163,82 +164,120 @@ async function main(): Promise<void> {
       email: 'nick.fury@avengershq.org',
       name: 'Nick Fury',
       globalRole: 'GLOBAL_ADMIN',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/489-nick-fury.jpg',
     },
     {
       email: 'victor.doom@latveria.gov',
       name: 'Victor Von Doom',
       globalRole: 'GLOBAL_ADMIN',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/222-doctor-doom.jpg',
     },
     {
       email: 'sam.wilson@avengershq.org',
       name: 'Sam Wilson',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/251-falcon.jpg',
     },
     {
       email: 'bucky.barnes@avengershq.org',
       name: 'Bucky Barnes',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/714-winter-soldier.jpg',
     },
     {
       email: 'carol.danvers@avengershq.org',
       name: 'Carol Danvers',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/157-captain-marvel.jpg',
     },
-    { email: 'shuri@wakanda.gov', name: 'Shuri', globalRole: 'USER' },
+    {
+      email: 'shuri@wakanda.gov',
+      name: 'Shuri',
+      globalRole: 'USER',
+      avatarUrl:
+        'https://static.wikia.nocookie.net/marveldatabase/images/9/98/Wakanda_Vol_1_1_Textless.jpg/revision/latest?cb=20220729225619',
+    },
     {
       email: 'peter.parker@midtown.edu',
       name: 'Peter Parker',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/620-spider-man.jpg',
     },
     {
       email: 'stephen.strange@sanctum.org',
       name: 'Stephen Strange',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/226-doctor-strange.jpg',
     },
     {
       email: 'wanda.maximoff@westview.org',
       name: 'Wanda Maximoff',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/579-scarlet-witch.jpg',
     },
     {
       email: 'thor.odinson@newasgard.no',
       name: 'Thor Odinson',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/659-thor.jpg',
     },
     {
       email: 'bruce.banner@avengershq.org',
       name: 'Bruce Banner',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/332-hulk.jpg',
     },
     {
       email: 'scott.lang@xconmail.com',
       name: 'Scott Lang',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/30-ant-man.jpg',
     },
     {
       email: 'hope.vandyne@pymtech.com',
       name: 'Hope van Dyne',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/708-wasp.jpg',
     },
     {
       email: 'reed.richards@baxter.foundation',
       name: 'Reed Richards',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/456-mister-fantastic.jpg',
     },
     {
       email: 'sue.storm@baxter.foundation',
       name: 'Sue Storm',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/344-invisible-woman.jpg',
     },
     {
       email: 'johnny.storm@baxter.foundation',
       name: 'Johnny Storm',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/333-human-torch.jpg',
     },
     {
       email: 'ben.grimm@baxter.foundation',
       name: 'Ben Grimm',
       globalRole: 'USER',
+      avatarUrl:
+        'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/images/md/658-thing.jpg',
     },
   ];
 
@@ -250,12 +289,14 @@ async function main(): Promise<void> {
           name: u.name,
           globalRole: u.globalRole,
           password: commonPassword,
+          avatarUrl: u.avatarUrl,
         },
         create: {
           email: u.email,
           name: u.name,
           password: commonPassword,
           globalRole: u.globalRole,
+          avatarUrl: u.avatarUrl,
         },
       }),
     ),
@@ -648,7 +689,7 @@ async function main(): Promise<void> {
     })),
   });
 
-  const createdAuditLogs = allTaskSummaries.map((task, idx) => ({
+  const createdAuditLogs = allTaskSummaries.map((task) => ({
     taskId: task.id,
     userId: task.reporterId,
     action: 'CREATED',

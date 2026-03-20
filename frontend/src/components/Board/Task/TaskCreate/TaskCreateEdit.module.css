@@ -18,6 +18,64 @@
   box-shadow: 0 20px 40px rgba(16, 24, 40, 0.2);
 }
 
+.deleteConfirmOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+}
+
+.deleteConfirmDialog {
+  width: min(420px, calc(100% - 32px));
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 24px 40px rgba(2, 6, 23, 0.24);
+  padding: 16px;
+}
+
+.deleteConfirmTitle {
+  margin: 0;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.deleteConfirmText {
+  margin: 8px 0 14px;
+  color: #475569;
+}
+
+.deleteConfirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ghostButton {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.deleteConfirmButton {
+  background: #dc2626;
+  color: #fff;
+  border: 1px solid #dc2626;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.deleteConfirmButton:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
 .closeButton {
   position: absolute;
   right: 12px;

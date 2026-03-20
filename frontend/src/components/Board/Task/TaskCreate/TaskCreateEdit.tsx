@@ -60,6 +60,8 @@ const TaskCreateEditModal = ({
   const [parentId, setParentId] = useState(task?.parentId ?? '');
 
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const columnName = useMemo(
@@ -121,6 +123,25 @@ const TaskCreateEditModal = ({
       setError('Failed to save task.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!onDelete || !task) {
+      return;
+    }
+
+    setError(null);
+    setDeleting(true);
+    try {
+      await onDelete(task.id);
+      setShowDeleteConfirm(false);
+      onClose();
+    } catch (deleteError) {
+      console.error('Failed to delete task:', deleteError);
+      setError('Failed to delete task.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -253,17 +274,8 @@ const TaskCreateEditModal = ({
               <button
                 type="button"
                 className={styles.deleteButton}
-                onClick={async () => {
-                  const ok = window.confirm('Delete this task?');
-                  if (!ok) return;
-                  try {
-                    await onDelete(task.id);
-                    onClose();
-                  } catch (error) {
-                    console.error('Failed to delete task:', error);
-                    setError('Failed to delete task.');
-                  }
-                }}
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={saving || deleting}
               >
                 Delete task
               </button>
@@ -282,6 +294,47 @@ const TaskCreateEditModal = ({
             </button>
           </div>
         </form>
+
+        {showDeleteConfirm && (
+          <div
+            className={styles.deleteConfirmOverlay}
+            onClick={() => {
+              if (!deleting) {
+                setShowDeleteConfirm(false);
+              }
+            }}
+          >
+            <div
+              className={styles.deleteConfirmDialog}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className={styles.deleteConfirmTitle}>Delete this task?</h3>
+              <p className={styles.deleteConfirmText}>
+                This action cannot be undone.
+              </p>
+              <div className={styles.deleteConfirmActions}>
+                <button
+                  type="button"
+                  className={styles.ghostButton}
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={styles.deleteConfirmButton}
+                  onClick={() => {
+                    void handleDeleteTask();
+                  }}
+                  disabled={deleting}
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
