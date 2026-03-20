@@ -11,6 +11,8 @@ type SeedUser = {
 type ProjectBlueprint = {
   name: string;
   description: string;
+  localMembers: string[];
+  supportMembers: string[];
 };
 
 type BoardTaskSummary = {
@@ -19,7 +21,7 @@ type BoardTaskSummary = {
   createdAt: Date;
 };
 
-const PASSWORD = '111';
+const PASSWORD = '616';
 const TARGET_TASK_COUNT = 245;
 
 const projectRoleCycle = [
@@ -33,41 +35,102 @@ const projectBlueprints: ProjectBlueprint[] = [
     name: 'Latveria Contingency Protocol',
     description:
       'Coordinate counter-intelligence and logistics to contain Doom-level escalation risks.',
+    localMembers: [
+      'sam.wilson@avengershq.org',
+      'bucky.barnes@avengershq.org',
+      'shuri@wakanda.gov',
+    ],
+    supportMembers: [
+      'stephen.strange@sanctum.org',
+      'carol.danvers@avengershq.org',
+    ],
   },
   {
     name: 'Baxter Recovery Initiative',
     description:
       'Secure high-risk research assets and rebuild chain-of-custody reliability.',
+    localMembers: [
+      'reed.richards@baxter.foundation',
+      'sue.storm@baxter.foundation',
+      'johnny.storm@baxter.foundation',
+      'ben.grimm@baxter.foundation',
+    ],
+    supportMembers: ['peter.parker@midtown.edu', 'shuri@wakanda.gov'],
   },
   {
     name: 'Kang Signal Intercept',
     description:
       'Track temporal anomalies and stabilize multiverse-adjacent telemetry channels.',
+    localMembers: [
+      'stephen.strange@sanctum.org',
+      'wanda.maximoff@westview.org',
+      'carol.danvers@avengershq.org',
+    ],
+    supportMembers: ['bruce.banner@avengershq.org', 'scott.lang@xconmail.com'],
   },
   {
     name: 'Vibranium Shield Grid',
     description:
       'Expand defensive mesh coverage over vulnerable metropolitan corridors.',
+    localMembers: [
+      'shuri@wakanda.gov',
+      'sam.wilson@avengershq.org',
+      'carol.danvers@avengershq.org',
+    ],
+    supportMembers: [
+      'thor.odinson@newasgard.no',
+      'bucky.barnes@avengershq.org',
+    ],
   },
   {
     name: 'Sokovia Archive Reconstruction',
     description:
       'Reassemble fragmented incident records for legal, diplomatic, and strategic review.',
+    localMembers: [
+      'bucky.barnes@avengershq.org',
+      'wanda.maximoff@westview.org',
+      'bruce.banner@avengershq.org',
+    ],
+    supportMembers: ['sam.wilson@avengershq.org', 'peter.parker@midtown.edu'],
   },
   {
     name: 'Sanctum Ward Reinforcement',
     description:
       'Harden magical containment boundaries against coordinated breach attempts.',
+    localMembers: [
+      'stephen.strange@sanctum.org',
+      'wanda.maximoff@westview.org',
+      'thor.odinson@newasgard.no',
+    ],
+    supportMembers: [
+      'reed.richards@baxter.foundation',
+      'sue.storm@baxter.foundation',
+    ],
   },
   {
     name: 'Stark Orbital Readiness',
     description:
       'Recalibrate orbital response assets for rapid global threat redeployment.',
+    localMembers: [
+      'carol.danvers@avengershq.org',
+      'bruce.banner@avengershq.org',
+      'sam.wilson@avengershq.org',
+    ],
+    supportMembers: [
+      'thor.odinson@newasgard.no',
+      'reed.richards@baxter.foundation',
+    ],
   },
   {
     name: 'Midtown Evacuation Matrix',
     description:
       'Tune civilian safety routing and emergency comms under urban combat constraints.',
+    localMembers: [
+      'peter.parker@midtown.edu',
+      'scott.lang@xconmail.com',
+      'hope.vandyne@pymtech.com',
+    ],
+    supportMembers: ['sam.wilson@avengershq.org', 'shuri@wakanda.gov'],
   },
 ];
 
@@ -235,11 +298,18 @@ async function main(): Promise<void> {
     projectIndex++
   ) {
     const blueprint = projectBlueprints[projectIndex];
+    const projectMemberEmails = [
+      ...blueprint.localMembers,
+      ...blueprint.supportMembers,
+    ];
+    const projectMembers = projectMemberEmails.map(
+      (email) => userByEmail[email],
+    );
 
     const activeMembers = [
-      contributors[projectIndex % contributors.length],
-      contributors[(projectIndex + 2) % contributors.length],
-      contributors[(projectIndex + 4) % contributors.length],
+      projectMembers[0],
+      projectMembers[1],
+      projectMembers[2],
     ];
 
     const project = await prisma.project.create({
@@ -256,8 +326,8 @@ async function main(): Promise<void> {
               user: { connect: { id: globalAdmins[1].id } },
               role: 'PROJECT_ADMIN',
             },
-            // Every non-admin gets a project-specific role that rotates by project index.
-            ...contributors.map((member, memberIndex) => ({
+            // Members are project-local plus support, with role rotation inside this project.
+            ...projectMembers.map((member, memberIndex) => ({
               user: { connect: { id: member.id } },
               role: projectRoleCycle[
                 (memberIndex + projectIndex) % projectRoleCycle.length
@@ -605,7 +675,7 @@ async function main(): Promise<void> {
   console.log(`Boards: ${projectBlueprints.length * boardNames.length}`);
   console.log(`Tasks: ${totalTaskCount}`);
   console.log(`Comments: ${commentBatch.length}`);
-  console.log('Login password for seeded users: 616');
+  console.log(`Login password for seeded users: ${PASSWORD}`);
   console.log('Primary users:');
   usersToSeed.forEach((u) => {
     const suffix = u.globalRole === 'GLOBAL_ADMIN' ? ' (GLOBAL_ADMIN)' : '';
