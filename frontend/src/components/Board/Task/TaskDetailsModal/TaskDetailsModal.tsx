@@ -151,6 +151,10 @@ interface Properties {
   currentUserGlobalRole?: string;
   onClose: () => void;
   onAddComment?: (content: string) => Promise<void> | void;
+  onEditComment?: (
+    commentId: string,
+    newContent: string,
+  ) => Promise<void> | void;
   onDeleteComment?: (commentId: string) => Promise<void> | void;
 }
 
@@ -171,6 +175,7 @@ const TaskDetailsModal = ({
 
   onAddComment,
   onDeleteComment,
+  onEditComment,
 }: Properties) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [mentionQuery, setMentionQuery] = useState('');
@@ -201,12 +206,15 @@ const TaskDetailsModal = ({
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const commentDeleteWindowMs = 2 * 24 * 60 * 60 * 1000;
+  const commentEditWindowMs = 2 * 24 * 60 * 60 * 1000 * 3;
   const isCommentEmpty = getRichTextPlainText(newComment) === '';
   const mentionSourceMembers = mentionableMembers ?? projectMembers;
   const mentionSuggestions = useMemo(
     () => getMentionSuggestions(mentionQuery, mentionSourceMembers),
     [mentionQuery, mentionSourceMembers],
   );
+  const [editComment, setEditComment] = useState(false);
+  const [editCommentId, setEditCommentId] = useState<string | null>(null);
 
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(task.auditLogs || []);
 
@@ -442,31 +450,57 @@ const TaskDetailsModal = ({
     focusEditor();
   };
 
+  const resetComposer = (resetEditState = false) => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = '';
+    }
+
+    setNewComment('');
+    setIsMentionMenuOpen(false);
+    setMentionQuery('');
+    setActiveMentionIndex(0);
+
+    if (resetEditState) {
+      setEditComment(false);
+      setEditCommentId(null);
+    }
+  };
+
   const handleAddComment = async () => {
     const content = correctRichText(editorRef.current?.innerHTML ?? newComment);
 
     if (getRichTextPlainText(content) === '') return;
 
+    if (editComment && editCommentId) {
+      if (!onEditComment) {
+        console.warn('Comment edit handler is not provided.');
+        return;
+      }
+
+      try {
+        setIsSubmitting(true);
+        await onEditComment(editCommentId, content);
+        resetComposer(true);
+      } catch (error) {
+        console.error('Failed to edit comment:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
+
+      return;
+    }
+
     if (!onAddComment) {
       // to be removed in future when onAddComment is guaranteed to be provided
       console.log('New comment:', content);
-      if (editorRef.current) {
-        editorRef.current.innerHTML = '';
-      }
-      setNewComment('');
-      setIsMentionMenuOpen(false);
-      setMentionQuery('');
+      resetComposer();
       return;
     }
+
     try {
       setIsSubmitting(true);
       await onAddComment(content);
-      if (editorRef.current) {
-        editorRef.current.innerHTML = '';
-      }
-      setNewComment('');
-      setIsMentionMenuOpen(false);
-      setMentionQuery('');
+      resetComposer();
     } catch (error) {
       console.error('Failed to add comment:', error);
     } finally {
@@ -474,12 +508,31 @@ const TaskDetailsModal = ({
     }
   };
 
+  const handleEditComment = (id: string, content: string) => {
+    setEditComment(true);
+    setEditCommentId(id);
+    if (editorRef.current) {
+      editorRef.current.innerHTML = content;
+    }
+    setNewComment(correctRichText(content));
+    setIsMentionMenuOpen(false);
+    setMentionQuery('');
+    setActiveMentionIndex(0);
+    focusEditor();
+    refreshToolbarState();
+  };
+
+  const handleModalClose = () => {
+    resetComposer(true);
+    onClose();
+  };
+
   return (
     // Clicking the overlay closes the modal. The inner modal stops
     // propagation so clicks inside do not close it unintentionally.
-    <div className={styles['overall-modal']} onClick={onClose}>
+    <div className={styles['overall-modal']} onClick={handleModalClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <button className={styles['close-btn']} onClick={onClose}>
+        <button className={styles['close-btn']} onClick={handleModalClose}>
           ✕
         </button>
 
@@ -512,9 +565,15 @@ const TaskDetailsModal = ({
                       const isWithinDeleteWindow =
                         Number.isFinite(item.timestampMs) &&
                         Date.now() - item.timestampMs <= commentDeleteWindowMs;
+                      const isWithinEditWindow =
+                        Number.isFinite(item.timestampMs) &&
+                        Date.now() - item.timestampMs <= commentEditWindowMs;
                       const canDelete =
                         Boolean(onDeleteComment) &&
                         (isGlobalAdmin || (isMine && isWithinDeleteWindow));
+                      const canEdit =
+                        Boolean(onEditComment) &&
+                        (isGlobalAdmin || (isMine && isWithinEditWindow));
 
                       return (
                         <div
@@ -547,6 +606,17 @@ const TaskDetailsModal = ({
                                   }}
                                 >
                                   Delete
+                                </button>
+                              )}
+                              {canEdit && (
+                                <button
+                                  type="button"
+                                  className={styles.editCommentButton}
+                                  onClick={() =>
+                                    handleEditComment?.(item.id, item.content)
+                                  }
+                                >
+                                  Edit
                                 </button>
                               )}
                             </div>

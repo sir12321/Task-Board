@@ -38,6 +38,7 @@ interface Props {
     payload: NewTaskInput,
   ) => Promise<void> | void;
   onAddComment?: (taskId: string, content: string) => Promise<void> | void;
+  onEditComment?: (commentId: string, content: string) => Promise<void> | void;
   onDeleteComment?: (commentId: string) => Promise<void> | void;
   onAddColumn?: (columnName: string) => Promise<void> | void;
   onRenameColumn?: (columnId: string, newName: string) => Promise<void> | void;
@@ -59,6 +60,7 @@ const Board = ({
   onCreateTask,
   onUpdateTask,
   onAddComment,
+  onEditComment,
   onDeleteComment,
   onAddColumn,
   onRenameColumn,
@@ -506,6 +508,38 @@ const Board = ({
           currentUserId={user?.id}
           currentUserGlobalRole={user?.globalRole}
           onClose={() => setSelectedTaskId(null)}
+          onEditComment={async (commentId: string, content: string) => {
+            if (onEditComment) {
+              await onEditComment(commentId, content);
+              return;
+            }
+
+            const now = new Date().toISOString();
+            dispatch({
+              type: 'SET_BOARD',
+              payload: {
+                board: {
+                  ...state.board,
+                  tasks: state.board.tasks.map((task) =>
+                    task.id === selectedTaskId
+                      ? {
+                          ...task,
+                          comments: task.comments?.map((comment) =>
+                            comment.id === commentId
+                              ? {
+                                  ...comment,
+                                  content,
+                                  updatedAt: now,
+                                }
+                              : comment,
+                          ),
+                        }
+                      : task,
+                  ),
+                },
+              },
+            });
+          }}
           onAddComment={async (content: string) => {
             if (onAddComment) {
               await onAddComment(selectedTaskId, content);

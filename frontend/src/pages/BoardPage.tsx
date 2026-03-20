@@ -273,6 +273,75 @@ export default function BoardPage() {
     [project, user],
   );
 
+  const editComment = useCallback(
+    async (commentId: string, content: string): Promise<void> => {
+      if (!board || !user) return;
+      const commentEditWindowMs = 2 * 24 * 60 * 60 * 1000 * 3;
+
+      const commentToEdit = board.tasks
+        .flatMap((task) => task.comments ?? [])
+        .find((comment) => comment.id === commentId);
+
+      if (!commentToEdit) {
+        alert('Comment not found.');
+        return;
+      }
+
+      const isAuthor = commentToEdit.authorId === user.id;
+      const isGlobalAdmin = user.globalRole === 'GLOBAL_ADMIN';
+
+      if (!isGlobalAdmin && !isAuthor) {
+        alert('You can only edit your own comments.');
+        return;
+      }
+
+      if (!isGlobalAdmin) {
+        const createdAtMs = new Date(commentToEdit.createdAt).getTime();
+        const isWithinEditWindow =
+          Number.isFinite(createdAtMs) &&
+          Date.now() - createdAtMs <= commentEditWindowMs;
+
+        if (!isWithinEditWindow) {
+          alert('You can only edit a comment within 6 days of posting it.');
+          return;
+        }
+      }
+
+      try {
+        const updatedComment = await apiClient(`/comments/${commentId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ content }),
+        });
+
+        setBoard((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            tasks: prev.tasks.map((task) => ({
+              ...task,
+              comments: task.comments?.map((comment) =>
+                comment.id === commentId
+                  ? {
+                      ...comment,
+                      content:
+                        updatedComment.content ??
+                        content,
+                      updatedAt:
+                        updatedComment.updatedAt ?? new Date().toISOString(),
+                    }
+                  : comment,
+              ),
+            })),
+          };
+        });
+      } catch (error) {
+        console.error('Failed to edit comment:', error);
+        alert('Failed to edit comment.');
+      }
+    },
+    [board, user],
+  );
+
   const deleteComment = useCallback(
     async (commentId: string): Promise<void> => {
       if (!board || !user) return;
@@ -553,6 +622,7 @@ export default function BoardPage() {
           onCreateTask={createTask}
           onUpdateTask={updateTask}
           onAddComment={addComment}
+          onEditComment={editComment}
           onDeleteComment={deleteComment}
           onAddColumn={addColumn}
           onRenameColumn={renameColumn}

@@ -511,6 +511,20 @@
   color: #dc2626;
 }
 
+.editCommentButton {
+  margin-left: 12px;
+  color: #449fef;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.editCommentButton:hover {
+  color: #4a26dc;
+}
+
 .auditLog {
   display: flex;
   align-items: flex-start;
