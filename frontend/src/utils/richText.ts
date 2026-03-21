@@ -458,9 +458,7 @@ const getNodeTextForComposer = (node: Node): string => {
 };
 
 const getListItemTextForComposer = (element: HTMLElement): string =>
-  getNodeTextForComposer(element)
-    .replace(/\s+/g, ' ')
-    .trim();
+  getNodeTextForComposer(element).replace(/\s+/g, ' ').trim();
 
 const getBlockTextForComposer = (node: Node): string => {
   if (node.nodeType === Node.TEXT_NODE) {
