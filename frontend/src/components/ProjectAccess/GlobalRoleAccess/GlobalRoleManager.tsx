@@ -133,10 +133,6 @@ const GlobalRoleManager = ({
                         ))}
                       </select>
                     </div>
-
-                    <div className={styles.userRoleMeta}>
-                      Current: {roleLabel(currentRole)}
-                    </div>
                   </div>
                 );
               })}
