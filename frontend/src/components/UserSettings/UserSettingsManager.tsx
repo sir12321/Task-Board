@@ -119,7 +119,7 @@ const UserSettingsManager = ({
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('New password and confirm password do not match.');
+      setPasswordError('New password and confirmed password do not match.');
       return;
     }
 
