@@ -8,8 +8,6 @@ import { PROJECT_ROLE_OPTIONS } from '../../../utils/getUtils';
 import { getInitials } from '../../../utils/getInitials';
 import styles from './AssignUsersManager.module.css';
 
-const roleLabel = (role: ProjectRole): string => role.replace('PROJECT_', '');
-
 interface Props {
   user: AuthUser;
   adminProjects: ProjectDetails[];
