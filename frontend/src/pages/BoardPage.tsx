@@ -1,4 +1,4 @@
-import type { Board, NewTaskInput, ProjectDetails } from '../types/Types';
+import type { Board, NewTaskInput, ProjectDetails, Task } from '../types/Types';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
@@ -179,6 +179,7 @@ export default function BoardPage() {
                 {
                   ...created,
                   columnName: column?.name ?? 'Unknown',
+                  reporterName: created.reporterName ?? user.name,
                   reporterAvatarUrl:
                     created.reporterAvatarUrl ?? user.avatarUrl ?? null,
                   assigneeName: created.assigneeName ?? assigneeMember?.name,
@@ -209,7 +210,7 @@ export default function BoardPage() {
       try {
         const existingTask = board.tasks.find((t) => t.id === taskId);
         const statusChanged =
-          Boolean(existingTask) && existingTask.columnId !== payload.columnId;
+          !!existingTask && existingTask.columnId !== payload.columnId;
 
         const hasTaskFieldChanges =
           !existingTask ||

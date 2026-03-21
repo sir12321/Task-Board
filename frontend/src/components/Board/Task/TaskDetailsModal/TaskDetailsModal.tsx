@@ -163,7 +163,7 @@ const TaskDetailsModal = ({
   const [activeMentionIndex, setActiveMentionIndex] = useState(0);
 
   const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return 'In progress';
+    if (!dateStr) return '-';
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
     // Use UTC to avoid timezone shifting for dates stored at noon UTC
@@ -187,14 +187,19 @@ const TaskDetailsModal = ({
   const commentEditWindowMs = 2 * 24 * 60 * 60 * 1000 * 3;
   const mentionSourceMembers = mentionableMembers ?? projectMembers;
   const isCommentEmpty =
-    getRichTextPlainText(renderRichText(newComment, mentionSourceMembers)) ===
-    '';
+    getRichTextPlainText(
+      renderRichText(newComment, mentionSourceMembers),
+    ).trim().length === 0;
   const mentionSuggestions = useMemo(
     () => getMentionSuggestions(mentionQuery, mentionSourceMembers),
     [mentionQuery, mentionSourceMembers],
   );
   const [editComment, setEditComment] = useState(false);
   const [editCommentId, setEditCommentId] = useState<string | null>(null);
+  const [pendingDeleteCommentId, setPendingDeleteCommentId] = useState<
+    string | null
+  >(null);
+  const [isDeletingComment, setIsDeletingComment] = useState(false);
 
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(task.auditLogs || []);
 
@@ -387,7 +392,8 @@ const TaskDetailsModal = ({
     const content = newComment;
 
     if (
-      getRichTextPlainText(renderRichText(content, mentionSourceMembers)) === ''
+      getRichTextPlainText(renderRichText(content, mentionSourceMembers)).trim()
+        .length === 0
     )
       return;
 
@@ -446,7 +452,37 @@ const TaskDetailsModal = ({
 
   const handleModalClose = () => {
     resetComposer(true);
+    setPendingDeleteCommentId(null);
+    setIsDeletingComment(false);
     onClose();
+  };
+
+  const requestCommentDelete = (commentId: string) => {
+    setPendingDeleteCommentId(commentId);
+  };
+
+  const closeCommentDeleteConfirm = () => {
+    if (isDeletingComment) {
+      return;
+    }
+
+    setPendingDeleteCommentId(null);
+  };
+
+  const confirmCommentDelete = async () => {
+    if (!pendingDeleteCommentId || !onDeleteComment) {
+      return;
+    }
+
+    try {
+      setIsDeletingComment(true);
+      await onDeleteComment(pendingDeleteCommentId);
+      setPendingDeleteCommentId(null);
+    } catch (error) {
+      console.error('Failed to delete comment:', error);
+    } finally {
+      setIsDeletingComment(false);
+    }
   };
 
   return (
@@ -524,15 +560,7 @@ const TaskDetailsModal = ({
                                 <button
                                   type="button"
                                   className={styles.deleteCommentButton}
-                                  onClick={() => {
-                                    if (
-                                      window.confirm(
-                                        'Are you sure you want to delete this comment?',
-                                      )
-                                    ) {
-                                      void onDeleteComment?.(item.id);
-                                    }
-                                  }}
+                                  onClick={() => requestCommentDelete(item.id)}
                                 >
                                   Delete
                                 </button>
@@ -711,8 +739,8 @@ const TaskDetailsModal = ({
                   )}
                   <div className={styles.commentHint}>
                     Use Markdown: **bold**, *italic*, __underline__, ~~strike~~,
-                    `inline code`, [links](https://example.com), and lists. Type
-                    @ to mention collaborators.
+                    `inline code`, [links](https://example.com), lists with -
+                    item or 1. item. Type @ to mention collaborators.
                   </div>
                   <div className={styles.commentActions}>
                     <button
@@ -843,6 +871,48 @@ const TaskDetailsModal = ({
             </div>
           </aside>
         </div>
+
+        {pendingDeleteCommentId && (
+          <div
+            className={styles.confirmOverlay}
+            onClick={closeCommentDeleteConfirm}
+          >
+            <div
+              className={styles.confirmCard}
+              onClick={(event) => event.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="delete-comment-title"
+            >
+              <h4 id="delete-comment-title" className={styles.confirmTitle}>
+                Delete comment?
+              </h4>
+              <p className={styles.confirmText}>
+                This action cannot be undone.
+              </p>
+              <div className={styles.confirmActions}>
+                <button
+                  type="button"
+                  className={styles.confirmCancelButton}
+                  onClick={closeCommentDeleteConfirm}
+                  disabled={isDeletingComment}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={styles.confirmDeleteButton}
+                  onClick={() => {
+                    void confirmCommentDelete();
+                  }}
+                  disabled={isDeletingComment}
+                >
+                  {isDeletingComment ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

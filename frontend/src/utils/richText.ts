@@ -238,12 +238,13 @@ const parseMarkdownLikeText = (content: string): string => {
       continue;
     }
 
-    // Regular line with inline formatting
-    output.push(parseInlineMarkdown(line));
+    // Regular line with inline formatting. Wrap in a block element so
+    // authored newlines are preserved visually instead of collapsing to spaces.
+    output.push(`<div>${parseInlineMarkdown(line)}</div>`);
     index += 1;
   }
 
-  return output.join('\n');
+  return output.join('');
 };
 
 const hasHtmlTags = (content: string): boolean => {
@@ -395,31 +396,10 @@ export const getRichTextPlainText = (content: string): string => {
   const container = document.createElement('div');
   container.innerHTML = correctRichText(content);
 
-  const text = container.textContent ?? '';
-  let output = '';
-  let previousWasWhitespace = true;
-
-  for (const character of text) {
-    const normalizedCharacter = character === '\u00a0' ? ' ' : character;
-    const isWhitespace =
-      normalizedCharacter === ' ' ||
-      normalizedCharacter === '\n' ||
-      normalizedCharacter === '\t';
-
-    if (isWhitespace) {
-      if (!previousWasWhitespace) {
-        output += ' ';
-      }
-
-      previousWasWhitespace = true;
-      continue;
-    }
-
-    output += normalizedCharacter;
-    previousWasWhitespace = false;
-  }
-
-  return output.trim();
+  return (container.textContent ?? '')
+    .replace(/\u00a0/g, ' ')
+    .replaceAll('\r\n', '\n')
+    .replaceAll('\r', '\n');
 };
 
 const normalizeEditableText = (value: string): string =>

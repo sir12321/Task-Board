@@ -25,7 +25,7 @@
 }
 
 .taskCard.story {
-  border-color: rgba(155, 135, 195, 0.4);
+  border-color: rgba(155, 135, 195, 0.6);
   background-color: rgb(242, 237, 247) !important;
   background: linear-gradient(
     180deg,
@@ -59,8 +59,8 @@
   border-color: rgba(155, 135, 195, 0.6);
   background: linear-gradient(
     180deg,
-    rgba(217, 204, 227, 0.45) 0%,
-    rgba(228, 217, 240, 0.3) 100%
+    rgba(217, 204, 227, 0.55) 0%,
+    rgba(228, 217, 240, 0.4) 100%
   );
 }
 
