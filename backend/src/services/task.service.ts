@@ -97,6 +97,38 @@ const isTaskLockedInClosedColumn = async (
   return workflow.closedColumnId === columnId;
 };
 
+const validateAssignableMember = async (
+  boardId: string,
+  assigneeId: string,
+): Promise<void> => {
+  const board = await prisma.board.findUnique({
+    where: { id: boardId },
+    select: { projectId: true },
+  });
+
+  if (!board) {
+    throw new Error('Board not found');
+  }
+
+  const member = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        projectId: board.projectId,
+        userId: assigneeId,
+      },
+    },
+    select: { role: true },
+  });
+
+  if (!member) {
+    throw new Error('Assignee must be a member of the project');
+  }
+
+  if (member.role === 'PROJECT_VIEWER') {
+    throw new Error('Assignee must be a project admin or project member');
+  }
+};
+
 export const makeTask = async (
   data: {
     title: string;
@@ -116,25 +148,7 @@ export const makeTask = async (
   await verifyTaskPermissions(userId, data.boardId, globalRole);
 
   if (data.assigneeId) {
-    const board = await prisma.board.findUnique({
-      where: { id: data.boardId },
-      select: { projectId: true },
-    });
-
-    if (!board) {
-      throw new Error('Board not found');
-    }
-
-    const isMember = await prisma.projectMember.findFirst({
-      where: {
-        projectId: board.projectId,
-        userId: data.assigneeId,
-      },
-    });
-
-    if (!isMember) {
-      throw new Error('Assignee must be a member of the project');
-    }
+    await validateAssignableMember(data.boardId, data.assigneeId);
   }
 
   await checkWipLimit(data.columnId);
@@ -411,27 +425,7 @@ export const updateTask = async (
 
   if (data.assigneeId !== undefined && data.assigneeId !== task.assigneeId) {
     if (data.assigneeId) {
-      const board = await prisma.board.findUnique({
-        where: { id: task.boardId },
-        select: { projectId: true },
-      });
-
-      if (!board) {
-        throw new Error('Board not found');
-      }
-
-      const isMember = await prisma.projectMember.findUnique({
-        where: {
-          userId_projectId: {
-            projectId: board.projectId,
-            userId: data.assigneeId,
-          },
-        },
-      });
-
-      if (!isMember) {
-        throw new Error('Assignee must be a member of the project');
-      }
+      await validateAssignableMember(task.boardId, data.assigneeId);
     }
   }
 
