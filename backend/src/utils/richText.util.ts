@@ -1,5 +1,7 @@
 import correctHtml from 'sanitize-html';
 
+const htmlTagPattern = /<\/?[a-z][a-z0-9-]*(?:\s[^<>]*?)?>/i;
+
 const allowedTags = [
   'a',
   'b',
@@ -26,7 +28,7 @@ export const correctRichTextComment = (content: string): string => {
   const trimmed = content.trim();
 
   // Check if content contains HTML tags
-  const hasHtmlTags = /<[a-z][a-z0-9]*>/i.test(trimmed);
+  const hasHtmlTags = htmlTagPattern.test(trimmed);
 
   if (!hasHtmlTags) {
     // Plain markdown text: return as-is, it's safe
@@ -54,7 +56,7 @@ export const getRichTextPlainText = (content: string): string => {
   const trimmed = content.trim();
 
   // Check if content contains HTML tags
-  const hasHtmlTags = /<[a-z][a-z0-9]*>/i.test(trimmed);
+  const hasHtmlTags = htmlTagPattern.test(trimmed);
 
   if (!hasHtmlTags) {
     // Plain markdown text: normalize whitespace and trim
