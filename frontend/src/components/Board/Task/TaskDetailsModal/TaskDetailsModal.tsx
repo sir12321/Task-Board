@@ -304,10 +304,16 @@ const TaskDetailsModal = ({
     selection.addRange(range);
   };
 
-  const setComposerContent = (content: string) => {
+  const setComposerContent = (
+    content: string,
+    options?: { forceDomSync?: boolean },
+  ) => {
     const editor = editorRef.current;
     // Only update editor DOM if not currently being edited (avoid interfering with typing)
-    if (editor && document.activeElement !== editor) {
+    if (
+      editor &&
+      (options?.forceDomSync === true || document.activeElement !== editor)
+    ) {
       editor.textContent = content;
     }
     setNewComment(content);
@@ -353,7 +359,7 @@ const TaskDetailsModal = ({
     const updatedComment = `${newComment.slice(0, replacementStart)}${mentionText}${newComment.slice(caretOffset)}`;
     const nextCaretPosition = replacementStart + mentionText.length;
 
-    setComposerContent(updatedComment);
+    setComposerContent(updatedComment, { forceDomSync: true });
 
     setIsMentionMenuOpen(false);
     setMentionQuery('');
