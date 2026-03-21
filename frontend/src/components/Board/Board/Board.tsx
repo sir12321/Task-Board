@@ -274,9 +274,7 @@ const Board = ({
                   : null;
               const isStory = column.id === StoryColumnId;
               const canMoveLeft =
-                !isStory &&
-                index > 0 &&
-                leftNeighbor?.id !== StoryColumnId;
+                !isStory && index > 0 && leftNeighbor?.id !== StoryColumnId;
               const canMoveRight =
                 !isStory &&
                 index < sortedColumns.length - 1 &&

@@ -214,7 +214,8 @@ export default function BoardPage() {
         const hasTaskFieldChanges =
           !existingTask ||
           existingTask.title !== payload.title ||
-          (existingTask.description ?? null) !== (payload.description ?? null) ||
+          (existingTask.description ?? null) !==
+            (payload.description ?? null) ||
           existingTask.type !== payload.type ||
           existingTask.priority !== payload.priority ||
           (existingTask.dueDate ?? null) !== (payload.dueDate ?? null) ||
@@ -245,16 +246,22 @@ export default function BoardPage() {
                           columnName: column?.name ?? task.columnName,
                           resolvedAt:
                             movedTask && 'resolvedAt' in movedTask
-                              ? (movedTask.resolvedAt as string | null | undefined)
+                              ? (movedTask.resolvedAt as
+                                  | string
+                                  | null
+                                  | undefined)
                               : task.resolvedAt,
                           closedAt:
                             movedTask && 'closedAt' in movedTask
-                              ? (movedTask.closedAt as string | null | undefined)
+                              ? (movedTask.closedAt as
+                                  | string
+                                  | null
+                                  | undefined)
                               : task.closedAt,
                           updatedAt:
                             movedTask && 'updatedAt' in movedTask
-                              ? (movedTask.updatedAt as string | undefined) ??
-                                task.updatedAt
+                              ? ((movedTask.updatedAt as string | undefined) ??
+                                task.updatedAt)
                               : task.updatedAt,
                         }
                       : task,
