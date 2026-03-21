@@ -78,6 +78,9 @@ const findNext = (value: string, token: string, start: number) => {
   return index >= 0 ? index : -1;
 };
 
+const hasValidInlineWrapperContent = (value: string) =>
+  /^\S(?:[\s\S]*\S)?$/.test(value);
+
 // Parse inline markdown markers: **bold**, *italic*, __underline__, ~~strike~~, `code`, [links]
 // Strategy: check for multi-char markers first (**,__,~~) to avoid conflicts,
 // then single-char markers (*,`,[), then escape plain text.
@@ -93,9 +96,12 @@ const parseInlineMarkdown = (value: string): string => {
 
       if (closeIndex > index + 2) {
         const innerValue = value.slice(index + 2, closeIndex);
-        output += `<strong>${parseInlineMarkdown(innerValue)}</strong>`;
-        index = closeIndex + 2;
-        continue;
+
+        if (hasValidInlineWrapperContent(innerValue)) {
+          output += `<strong>${parseInlineMarkdown(innerValue)}</strong>`;
+          index = closeIndex + 2;
+          continue;
+        }
       }
     }
 
@@ -105,9 +111,12 @@ const parseInlineMarkdown = (value: string): string => {
 
       if (closeIndex > index + 2) {
         const innerValue = value.slice(index + 2, closeIndex);
-        output += `<u>${parseInlineMarkdown(innerValue)}</u>`;
-        index = closeIndex + 2;
-        continue;
+
+        if (hasValidInlineWrapperContent(innerValue)) {
+          output += `<u>${parseInlineMarkdown(innerValue)}</u>`;
+          index = closeIndex + 2;
+          continue;
+        }
       }
     }
 
@@ -117,9 +126,12 @@ const parseInlineMarkdown = (value: string): string => {
 
       if (closeIndex > index + 2) {
         const innerValue = value.slice(index + 2, closeIndex);
-        output += `<s>${parseInlineMarkdown(innerValue)}</s>`;
-        index = closeIndex + 2;
-        continue;
+
+        if (hasValidInlineWrapperContent(innerValue)) {
+          output += `<s>${parseInlineMarkdown(innerValue)}</s>`;
+          index = closeIndex + 2;
+          continue;
+        }
       }
     }
 
@@ -141,9 +153,12 @@ const parseInlineMarkdown = (value: string): string => {
 
       if (closeIndex > index + 1) {
         const innerValue = value.slice(index + 1, closeIndex);
-        output += `<em>${parseInlineMarkdown(innerValue)}</em>`;
-        index = closeIndex + 1;
-        continue;
+
+        if (hasValidInlineWrapperContent(innerValue)) {
+          output += `<em>${parseInlineMarkdown(innerValue)}</em>`;
+          index = closeIndex + 1;
+          continue;
+        }
       }
     }
 
