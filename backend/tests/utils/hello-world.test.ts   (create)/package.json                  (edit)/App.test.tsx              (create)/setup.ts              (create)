@@ -1,0 +1,33 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^27.0.0",
+    "supertest": "^6.0.0"
+  }
+}
+
+const { sum } = require('../../utils');
+
+test('hello world utility function', () => {
+  expect(sum(1, 2)).toBe(3);
+});
+
+import { render, screen } from '@testing-library/react';
+import App from './App';
+
+test('renders learn react link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/learn react/i);
+  expect(linkElement).toBeInTheDocument();
+});
+
+import '@testing-library/jest-dom/extend-expect';
+
+beforeEach(() => {
+  // Setup code here
+});

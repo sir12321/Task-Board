@@ -87,7 +87,7 @@ export const deleteColumn = async (
 ): Promise<void> => {
   const column = await prisma.column.findUnique({
     where: { id: columnId },
-    select: { boardId: true },
+    select: { boardId: true, order: true },
   });
 
   if (!column) {
@@ -96,9 +96,20 @@ export const deleteColumn = async (
 
   await verifyAdmin(userId, column.boardId, globalRole);
 
-  await prisma.column.delete({
-    where: { id: columnId },
-  });
+  await prisma.$transaction([
+    prisma.column.delete({
+      where: { id: columnId },
+    }),
+    prisma.column.updateMany({
+      where: {
+        boardId: column.boardId,
+        order: { gt: column.order },
+      },
+      data: {
+        order: { decrement: 1 },
+      },
+    }),
+  ]);
 };
 
 export const reorderColumn = async (

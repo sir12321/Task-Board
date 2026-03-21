@@ -4,26 +4,26 @@ import { getRichTextPlainText } from './richText.util';
 const mentionMinLength = 2;
 const mentionMaxLength = 50;
 
-const isAsciiLetter = (character: string) => {
+const isAsciiLetter = (character: string): boolean => {
   const charCode = character.charCodeAt(0);
   return (
     (charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122)
   );
 };
 
-const isDigit = (character: string) => {
+const isDigit = (character: string): boolean => {
   const charCode = character.charCodeAt(0);
   return charCode >= 48 && charCode <= 57;
 };
 
-const isMentionCharacter = (character: string) =>
+const isMentionCharacter = (character: string): boolean =>
   isAsciiLetter(character) ||
   isDigit(character) ||
   character === '.' ||
   character === '_' ||
   character === '-';
 
-const isBoundaryCharacter = (leftNeighborCharacter: string | undefined) => {
+const isBoundaryCharacter = (leftNeighborCharacter: string | undefined): boolean => {
   if (!leftNeighborCharacter) {
     return true;
   }
@@ -36,7 +36,7 @@ const isBoundaryCharacter = (leftNeighborCharacter: string | undefined) => {
 const collapseWhitespaceToSeparator = (
   sourceText: string,
   separator: string,
-) => {
+): string => {
   let collapsedText = '';
   let lastCharacterWasWhitespace = false;
 
@@ -68,7 +68,7 @@ const collapseWhitespaceToSeparator = (
   return collapsedText;
 };
 
-const stripDiacritics = (rawText: string) => {
+const stripDiacritics = (rawText: string): string => {
   let cleanedText = '';
 
   for (const character of rawText.normalize('NFKD')) {
