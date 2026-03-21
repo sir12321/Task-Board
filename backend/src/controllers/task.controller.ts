@@ -11,6 +11,7 @@ import { logAct } from '../services/audit.service';
 import prisma from '../utils/prisma';
 
 const notifyStatusChange = async (
+  taskId: string,
   task: {
     title: string;
     assigneeId: string | null;
@@ -36,11 +37,27 @@ const notifyStatusChange = async (
     return;
   }
 
+  const boardContext = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: {
+      board: {
+        select: {
+          name: true,
+          project: { select: { name: true } },
+        },
+      },
+    },
+  });
+
+  const scope = boardContext
+    ? ` [Project: ${boardContext.board.project.name} | Board: ${boardContext.board.name} | Column: ${toStatus}]`
+    : '';
+
   await Promise.all(
     Array.from(recipientIds).map((userId) =>
       createNotification(
         userId,
-        `Status changed on task "${task.title}": ${fromStatus} -> ${toStatus}`,
+        `Status changed on task "${task.title}": ${fromStatus} -> ${toStatus}${scope}`,
       ),
     ),
   );
@@ -141,6 +158,7 @@ export const updateTaskStatus = async (
       const { closeTask } = await import('../services/task.service');
       const task = await closeTask(id, userId, globalRole);
       await notifyStatusChange(
+        id,
         {
           title: beforeTask.title,
           assigneeId: beforeTask.assigneeId,
@@ -189,6 +207,7 @@ export const updateTaskStatus = async (
 
       const task = await moveTask(id, targetColumnId, userId, globalRole);
       await notifyStatusChange(
+        id,
         {
           title: beforeTask.title,
           assigneeId: beforeTask.assigneeId,

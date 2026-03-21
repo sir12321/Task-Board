@@ -33,13 +33,24 @@ export const makeComment = async (data: {
       assigneeId: true,
       reporterId: true,
       title: true,
+      column: {
+        select: { name: true },
+      },
       board: {
-        select: { projectId: true },
+        select: {
+          projectId: true,
+          name: true,
+          project: {
+            select: { name: true },
+          },
+        },
       },
     },
   });
 
   if (task) {
+    const scope = ` [Project: ${task.board.project.name} | Board: ${task.board.name} | Column: ${task.column.name}]`;
+
     const recipients = new Set<string>([
       ...(task.assigneeId ? [task.assigneeId] : []),
       task.reporterId,
@@ -58,7 +69,7 @@ export const makeComment = async (data: {
         .map((recipientId) =>
           createNotification(
             recipientId,
-            `You were mentioned in a comment on task "${task.title}": ${getRichTextNotificationSnippet(sanitizedContent)}`,
+            `You were mentioned in a comment on task "${task.title}": ${getRichTextNotificationSnippet(sanitizedContent)}${scope}`,
           ),
         ),
     );
@@ -67,7 +78,7 @@ export const makeComment = async (data: {
       Array.from(recipients).map((recipientId) =>
         createNotification(
           recipientId,
-          `New comment on task "${task.title}": ${getRichTextNotificationSnippet(sanitizedContent)}`,
+          `New comment on task "${task.title}": ${getRichTextNotificationSnippet(sanitizedContent)}${scope}`,
         ),
       ),
     );

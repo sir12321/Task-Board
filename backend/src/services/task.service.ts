@@ -133,6 +133,23 @@ export const makeTask = async (
   });
 
   if (data.assigneeId) {
+    const taskContext = await prisma.task.findUnique({
+      where: { id: task.id },
+      select: {
+        column: { select: { name: true } },
+        board: {
+          select: {
+            name: true,
+            project: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    const scope = taskContext
+      ? ` [Project: ${taskContext.board.project.name} | Board: ${taskContext.board.name} | Column: ${taskContext.column.name}]`
+      : '';
+
     const reporter = await prisma.user.findUnique({
       where: { id: data.reporterId },
       select: { name: true },
@@ -141,7 +158,7 @@ export const makeTask = async (
 
     await createNotification(
       data.assigneeId,
-      `You have been assigned to task "${data.title}" by ${reporterName}`,
+      `You have been assigned to task "${data.title}" by ${reporterName}${scope}`,
     );
   }
 
@@ -362,9 +379,26 @@ export const updateTask = async (
     data.assigneeId !== task.assigneeId &&
     data.assigneeId !== userId
   ) {
+    const taskContext = await prisma.task.findUnique({
+      where: { id },
+      select: {
+        column: { select: { name: true } },
+        board: {
+          select: {
+            name: true,
+            project: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    const scope = taskContext
+      ? ` [Project: ${taskContext.board.project.name} | Board: ${taskContext.board.name} | Column: ${taskContext.column.name}]`
+      : '';
+
     await createNotification(
       data.assigneeId,
-      `Your assigned task has been updated: ${updatedTask.title}`,
+      `Your assigned task has been updated: ${updatedTask.title}${scope}`,
     );
   }
 
