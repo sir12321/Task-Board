@@ -13,34 +13,12 @@ import { getInitials } from '../../../../utils/getInitials';
 import {
   getRichTextPlainText,
   renderRichText,
-  correctRichText,
 } from '../../../../utils/richText';
 import {
   getCanonicalMentionHandle,
   getMentionSuggestions,
 } from '../../../../utils/mentions';
 import { apiClient } from '../../../../utils/api';
-
-const toolbarButtons = [
-  { label: 'B', title: 'Bold', command: 'bold' },
-  { label: 'I', title: 'Italic', command: 'italic' },
-  { label: 'U', title: 'Underline', command: 'underline' },
-  { label: 'S', title: 'Strikethrough', command: 'strikeThrough' },
-  { label: '•', title: 'Bulleted list', command: 'insertUnorderedList' },
-  { label: '1.', title: 'Numbered list', command: 'insertOrderedList' },
-] as const;
-
-const defaultToolbarState = {
-  bold: false,
-  italic: false,
-  underline: false,
-  strikeThrough: false,
-  insertUnorderedList: false,
-  insertOrderedList: false,
-  blockquote: false,
-  pre: false,
-  link: false,
-};
 
 const isMentionCharacter = (character: string) => {
   const code = character.charCodeAt(0);
@@ -59,8 +37,13 @@ const isMentionCharacter = (character: string) => {
   );
 };
 
-const isWhitespace = (character: string) =>
-  character === ' ' || character === '\n' || character === '\t';
+const isMentionBoundaryCharacter = (character: string | undefined) => {
+  if (!character) {
+    return true;
+  }
+
+  return !isMentionCharacter(character) && character !== '@';
+};
 
 const parseMentionQueryAtCaret = (textBeforeCaret: string) => {
   let index = textBeforeCaret.length - 1;
@@ -75,11 +58,7 @@ const parseMentionQueryAtCaret = (textBeforeCaret: string) => {
 
   const boundaryCharacter = index > 0 ? textBeforeCaret[index - 1] : '';
 
-  if (
-    boundaryCharacter &&
-    !isWhitespace(boundaryCharacter) &&
-    boundaryCharacter !== '('
-  ) {
+  if (!isMentionBoundaryCharacter(boundaryCharacter || undefined)) {
     return null;
   }
 
@@ -94,6 +73,11 @@ const parseMentionQueryAtCaret = (textBeforeCaret: string) => {
     mentionStartOffset: index,
   };
 };
+
+// Basic parser for composer input: normalize browser-specific whitespace
+// into a stable plain text representation used for markdown submission.
+const parseComposerText = (rawText: string): string =>
+  rawText.replace(/\u00a0/g, ' ').replaceAll('\r\n', '\n').replaceAll('\r', '\n');
 
 const getAuditActionLabel = (action: string): string => {
   if (action === 'STATUS_CHANGED') return 'changed status';
@@ -173,8 +157,6 @@ const TaskDetailsModal = ({
   const [mentionQuery, setMentionQuery] = useState('');
   const [isMentionMenuOpen, setIsMentionMenuOpen] = useState(false);
   const [activeMentionIndex, setActiveMentionIndex] = useState(0);
-  const [activeToolbarState, setActiveToolbarState] =
-    useState(defaultToolbarState);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'In progress';
@@ -199,8 +181,10 @@ const TaskDetailsModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const commentDeleteWindowMs = 2 * 24 * 60 * 60 * 1000;
   const commentEditWindowMs = 2 * 24 * 60 * 60 * 1000 * 3;
-  const isCommentEmpty = getRichTextPlainText(newComment) === '';
   const mentionSourceMembers = mentionableMembers ?? projectMembers;
+  const isCommentEmpty =
+    getRichTextPlainText(renderRichText(newComment, mentionSourceMembers)) ===
+    '';
   const mentionSuggestions = useMemo(
     () => getMentionSuggestions(mentionQuery, mentionSourceMembers),
     [mentionQuery, mentionSourceMembers],
@@ -250,204 +234,135 @@ const TaskDetailsModal = ({
     return [...comments, ...logs].sort((a, b) => a.timestampMs - b.timestampMs);
   }, [task.comments, auditLogs]);
 
-  const getMentionContext = () => {
+  const getCaretOffsetInEditor = () => {
+    const editor = editorRef.current;
     const selection = window.getSelection();
 
-    if (!selection || selection.rangeCount === 0) {
+    if (!editor || !selection || selection.rangeCount === 0) {
       return null;
     }
 
-    const anchorNode = selection.anchorNode;
+    const range = selection.getRangeAt(0);
 
-    if (!anchorNode || !editorRef.current?.contains(anchorNode)) {
+    if (!editor.contains(range.startContainer)) {
       return null;
     }
 
-    if (anchorNode.nodeType !== Node.TEXT_NODE) {
-      return null;
-    }
+    const beforeCaretRange = range.cloneRange();
+    beforeCaretRange.selectNodeContents(editor);
+    beforeCaretRange.setEnd(range.startContainer, range.startOffset);
 
-    const textNode = anchorNode as Text;
-    const offset = selection.anchorOffset;
-    const textBeforeCaret = textNode.data.slice(0, offset);
-    const mentionMatch = parseMentionQueryAtCaret(textBeforeCaret);
-
-    if (!mentionMatch) {
-      return null;
-    }
-
-    const query = mentionMatch.query;
-    const mentionStartOffset = mentionMatch.mentionStartOffset;
-
-    const mentionRange = document.createRange();
-    mentionRange.setStart(textNode, mentionStartOffset);
-    mentionRange.setEnd(textNode, offset);
-
-    return {
-      query,
-      range: mentionRange,
-    };
+    return parseComposerText(beforeCaretRange.toString()).length;
   };
 
-  const focusEditor = () => {
-    editorRef.current?.focus();
-  };
-
-  const isSelectionInsideEditor = () => {
-    const selection = window.getSelection();
+  const setCaretOffsetInEditor = (targetOffset: number) => {
     const editor = editorRef.current;
 
-    if (!selection || !editor) {
-      return false;
-    }
-
-    const anchorNode = selection.anchorNode;
-    const focusNode = selection.focusNode;
-
-    return Boolean(
-      anchorNode &&
-      focusNode &&
-      editor.contains(anchorNode) &&
-      editor.contains(focusNode),
-    );
-  };
-
-  const hasAncestorTag = (tagName: string) => {
-    const selection = window.getSelection();
-    const editor = editorRef.current;
-
-    if (!selection || !editor || !isSelectionInsideEditor()) {
-      return false;
-    }
-
-    let currentNode: Node | null = selection.anchorNode;
-
-    while (currentNode && currentNode !== editor) {
-      if (
-        currentNode.nodeType === Node.ELEMENT_NODE &&
-        (currentNode as HTMLElement).tagName === tagName
-      ) {
-        return true;
-      }
-
-      currentNode = currentNode.parentNode;
-    }
-
-    return false;
-  };
-
-  const getCommandState = (command: string) => {
-    if (!isSelectionInsideEditor()) {
-      return false;
-    }
-
-    try {
-      return document.queryCommandState(command);
-    } catch {
-      return false;
-    }
-  };
-
-  const refreshToolbarState = () => {
-    if (!isSelectionInsideEditor()) {
-      setActiveToolbarState(defaultToolbarState);
+    if (!editor) {
       return;
     }
 
-    setActiveToolbarState({
-      bold: getCommandState('bold'),
-      italic: getCommandState('italic'),
-      underline: getCommandState('underline'),
-      strikeThrough: getCommandState('strikeThrough'),
-      insertUnorderedList: getCommandState('insertUnorderedList'),
-      insertOrderedList: getCommandState('insertOrderedList'),
-      blockquote: hasAncestorTag('BLOCKQUOTE'),
-      pre: hasAncestorTag('PRE'),
-      link: hasAncestorTag('A'),
-    });
+    const selection = window.getSelection();
+
+    if (!selection) {
+      return;
+    }
+
+    const range = document.createRange();
+    let remainingOffset = targetOffset;
+    let positioned = false;
+
+    const textWalker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+    let currentNode = textWalker.nextNode();
+
+    while (currentNode) {
+      const textNode = currentNode as Text;
+      const textLength = textNode.data.length;
+
+      if (remainingOffset <= textLength) {
+        range.setStart(textNode, remainingOffset);
+        positioned = true;
+        break;
+      }
+
+      remainingOffset -= textLength;
+      currentNode = textWalker.nextNode();
+    }
+
+    if (!positioned) {
+      range.selectNodeContents(editor);
+      range.collapse(false);
+    } else {
+      range.collapse(true);
+    }
+
+    selection.removeAllRanges();
+    selection.addRange(range);
   };
 
-  const syncEditorState = () => {
-    setNewComment(correctRichText(editorRef.current?.innerHTML ?? ''));
-    refreshToolbarState();
+  const setComposerContent = (content: string) => {
+    const editor = editorRef.current;
+    // Only update editor DOM if not currently being edited (avoid interfering with typing)
+    if (editor && document.activeElement !== editor) {
+      editor.textContent = content;
+    }
+    setNewComment(content);
+  };
 
-    const mentionContext = getMentionContext();
+  const syncMentionState = (value: string, caretOffset: number) => {
+    const mentionMatch = parseMentionQueryAtCaret(value.slice(0, caretOffset));
 
-    if (!mentionContext) {
+    if (!mentionMatch) {
       setMentionQuery('');
       setIsMentionMenuOpen(false);
       setActiveMentionIndex(0);
       return;
     }
 
-    setMentionQuery(mentionContext.query);
+    setMentionQuery(mentionMatch.query);
     setIsMentionMenuOpen(true);
     setActiveMentionIndex(0);
   };
 
-  const runEditorCommand = (command: string, value?: string) => {
-    focusEditor();
-    document.execCommand(command, false, value);
-    syncEditorState();
-  };
-
-  useEffect(() => {
-    const handleSelectionChange = () => {
-      refreshToolbarState();
-    };
-
-    document.addEventListener('selectionchange', handleSelectionChange);
-
-    return () => {
-      document.removeEventListener('selectionchange', handleSelectionChange);
-    };
-  }, []);
-
-  const handleCreateLink = () => {
-    const url = window.prompt('Enter a URL');
-
-    if (!url) {
-      return;
-    }
-
-    runEditorCommand('createLink', url);
-  };
-
   const insertMention = (member: ProjectMemberSummary) => {
-    const mentionContext = getMentionContext();
+    const editor = editorRef.current;
 
-    if (!mentionContext) {
+    if (!editor) {
       return;
     }
 
-    const selection = window.getSelection();
-    const mentionNode = document.createTextNode(
-      `@${getCanonicalMentionHandle(member.name)} `,
-    );
+    const caretOffset = getCaretOffsetInEditor();
 
-    mentionContext.range.deleteContents();
-    mentionContext.range.insertNode(mentionNode);
+    if (caretOffset === null) {
+      return;
+    }
 
-    const caretRange = document.createRange();
-    caretRange.setStartAfter(mentionNode);
-    caretRange.collapse(true);
+    const textBeforeCaret = newComment.slice(0, caretOffset);
+    const mentionMatch = parseMentionQueryAtCaret(textBeforeCaret);
 
-    selection?.removeAllRanges();
-    selection?.addRange(caretRange);
+    if (!mentionMatch) {
+      return;
+    }
+
+    const mentionText = `@${getCanonicalMentionHandle(member.name)} `;
+    const replacementStart = mentionMatch.mentionStartOffset;
+    const updatedComment = `${newComment.slice(0, replacementStart)}${mentionText}${newComment.slice(caretOffset)}`;
+    const nextCaretPosition = replacementStart + mentionText.length;
+
+    setComposerContent(updatedComment);
 
     setIsMentionMenuOpen(false);
     setMentionQuery('');
     setActiveMentionIndex(0);
-    syncEditorState();
-    focusEditor();
+
+    requestAnimationFrame(() => {
+      editor.focus();
+      setCaretOffsetInEditor(nextCaretPosition);
+    });
   };
 
   const resetComposer = (resetEditState = false) => {
-    if (editorRef.current) {
-      editorRef.current.innerHTML = '';
-    }
-
-    setNewComment('');
+    setComposerContent('');
     setIsMentionMenuOpen(false);
     setMentionQuery('');
     setActiveMentionIndex(0);
@@ -459,9 +374,10 @@ const TaskDetailsModal = ({
   };
 
   const handleAddComment = async () => {
-    const content = correctRichText(editorRef.current?.innerHTML ?? newComment);
+    const content = newComment;
 
-    if (getRichTextPlainText(content) === '') return;
+    if (getRichTextPlainText(renderRichText(content, mentionSourceMembers)) === '')
+      return;
 
     if (editComment && editCommentId) {
       if (!onEditComment) {
@@ -501,17 +417,19 @@ const TaskDetailsModal = ({
   };
 
   const handleEditComment = (id: string, content: string) => {
+    const plainTextContent = getRichTextPlainText(content);
+
     setEditComment(true);
     setEditCommentId(id);
-    if (editorRef.current) {
-      editorRef.current.innerHTML = content;
-    }
-    setNewComment(correctRichText(content));
+    setComposerContent(plainTextContent);
     setIsMentionMenuOpen(false);
     setMentionQuery('');
     setActiveMentionIndex(0);
-    focusEditor();
-    refreshToolbarState();
+
+    requestAnimationFrame(() => {
+      editorRef.current?.focus();
+      setCaretOffsetInEditor(plainTextContent.length);
+    });
   };
 
   const handleModalClose = () => {
@@ -666,103 +584,36 @@ const TaskDetailsModal = ({
 
               {userRole !== 'PROJECT_VIEWER' && (
                 <div className={styles.commentComposer}>
-                  <div className={styles.commentToolbar}>
-                    {toolbarButtons.map((button) => (
-                      <button
-                        key={button.command}
-                        type="button"
-                        className={`${styles.toolbarButton} ${
-                          activeToolbarState[
-                            button.command as keyof typeof activeToolbarState
-                          ]
-                            ? styles.toolbarButtonActive
-                            : ''
-                        }`}
-                        title={button.title}
-                        aria-label={button.title}
-                        aria-pressed={
-                          activeToolbarState[
-                            button.command as keyof typeof activeToolbarState
-                          ]
-                        }
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => runEditorCommand(button.command)}
-                      >
-                        {button.label}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      className={`${styles.toolbarButton} ${
-                        activeToolbarState.blockquote
-                          ? styles.toolbarButtonActive
-                          : ''
-                      }`}
-                      title="Quote"
-                      aria-label="Quote"
-                      aria-pressed={activeToolbarState.blockquote}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() =>
-                        runEditorCommand('formatBlock', 'blockquote')
-                      }
-                    >
-                      "
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.toolbarButton} ${
-                        activeToolbarState.pre ? styles.toolbarButtonActive : ''
-                      }`}
-                      title="Code block"
-                      aria-label="Code block"
-                      aria-pressed={activeToolbarState.pre}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => runEditorCommand('formatBlock', 'pre')}
-                    >
-                      {'</>'}
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.toolbarButton} ${
-                        activeToolbarState.link
-                          ? styles.toolbarButtonActive
-                          : ''
-                      }`}
-                      title="Insert link"
-                      aria-label="Insert link"
-                      aria-pressed={activeToolbarState.link}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={handleCreateLink}
-                    >
-                      Link
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.toolbarButton}
-                      title="Clear formatting"
-                      aria-label="Clear formatting"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => runEditorCommand('removeFormat')}
-                    >
-                      Clear
-                    </button>
-                  </div>
                   <div
                     ref={editorRef}
                     className={styles.commentInput}
-                    contentEditable
+                    contentEditable="plaintext-only"
                     role="textbox"
-                    aria-label="Write a rich text comment"
                     aria-multiline="true"
-                    data-placeholder="Write a comment..."
+                    aria-label="Write a markdown comment"
+                    data-placeholder="Write a comment in Markdown..."
                     suppressContentEditableWarning
-                    onInput={syncEditorState}
-                    onPaste={(event) => {
-                      event.preventDefault();
-                      const pastedText =
-                        event.clipboardData.getData('text/plain');
-                      document.execCommand('insertText', false, pastedText);
-                      syncEditorState();
+                    onInput={(event) => {
+                      const value = parseComposerText(
+                        event.currentTarget.innerText,
+                      );
+                      const caretOffset = getCaretOffsetInEditor() ?? value.length;
+                      setComposerContent(value);
+                      syncMentionState(value, caretOffset);
+                    }}
+                    onClick={(event) =>
+                      syncMentionState(
+                        parseComposerText(event.currentTarget.innerText),
+                        getCaretOffsetInEditor() ??
+                          parseComposerText(event.currentTarget.innerText)
+                            .length,
+                      )
+                    }
+                    onKeyUp={() => {
+                      const value = parseComposerText(
+                        editorRef.current?.innerText ?? '',
+                      );
+                      syncMentionState(value, getCaretOffsetInEditor() ?? value.length);
                     }}
                     onKeyDown={(event) => {
                       if (
@@ -843,8 +694,9 @@ const TaskDetailsModal = ({
                     </div>
                   )}
                   <div className={styles.commentHint}>
-                    Type @ to mention a project collaborator (admins/members
-                    only). Suggestions show email while selecting.
+                    Use Markdown: **bold**, *italic*, __underline__, ~~strike~~,
+                    `inline code`, [links](https://example.com), and
+                    lists. Type @ to mention collaborators.
                   </div>
                   <div className={styles.commentActions}>
                     <button

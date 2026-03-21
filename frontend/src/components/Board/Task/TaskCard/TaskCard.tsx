@@ -33,7 +33,9 @@ const TaskCard = ({
       timeZone: 'UTC',
     });
   };
-
+  if (task.type === 'STORY') {
+    isDraggable = false;
+  }
   const assignee = task.assigneeName || null;
 
   // Normalize task type to use as a CSS class.

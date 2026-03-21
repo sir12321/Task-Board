@@ -2,24 +2,7 @@ import DOMPurify from 'dompurify';
 import type { ProjectMemberSummary } from '../types/Types';
 import { getMentionMatch } from './mentions';
 
-const ALLOWED_TAGS = [
-  'a',
-  'b',
-  'blockquote',
-  'br',
-  'code',
-  'div',
-  'em',
-  'i',
-  'li',
-  'ol',
-  'p',
-  'pre',
-  's',
-  'strong',
-  'u',
-  'ul',
-];
+const ALLOWED_TAGS = ['a', 'b', 'br', 'code', 'em', 'i', 'li', 's', 'strong', 'u', 'ul'];
 
 const ALLOWED_ATTR = ['href', 'target', 'rel'];
 
@@ -29,7 +12,7 @@ export const correctRichText = (content: string): string =>
     ALLOWED_ATTR,
   }).trim();
 
-const mentionExcludedTags = new Set(['A', 'CODE', 'PRE']);
+const mentionExcludedTags = new Set(['A', 'CODE']);
 
 const mentionMinLength = 2;
 const mentionMaxLength = 50;
@@ -82,11 +65,16 @@ const findNext = (value: string, token: string, start: number) => {
   return index >= 0 ? index : -1;
 };
 
+// Parse inline markdown markers: **bold**, *italic*, __underline__, ~~strike~~, `code`, [links]
+// Strategy: check for multi-char markers first (**,__,~~) to avoid conflicts,
+// then single-char markers (*,`,[), then escape plain text.
+// Recursively parses inner content to support nesting (e.g., ***bold italic***).
 const parseInlineMarkdown = (value: string): string => {
   let index = 0;
   let output = '';
 
   while (index < value.length) {
+    // ** = bold/strong (highest priority, 2-char marker)
     if (value.startsWith('**', index)) {
       const closeIndex = findNext(value, '**', index + 2);
 
@@ -98,6 +86,7 @@ const parseInlineMarkdown = (value: string): string => {
       }
     }
 
+    // __ = underline (2-char marker)
     if (value.startsWith('__', index)) {
       const closeIndex = findNext(value, '__', index + 2);
 
@@ -109,6 +98,7 @@ const parseInlineMarkdown = (value: string): string => {
       }
     }
 
+    // ~~ = strikethrough (2-char marker)
     if (value.startsWith('~~', index)) {
       const closeIndex = findNext(value, '~~', index + 2);
 
@@ -120,6 +110,7 @@ const parseInlineMarkdown = (value: string): string => {
       }
     }
 
+    // ` = inline code (single char, no recursive parsing of inner content)
     if (value[index] === '`') {
       const closeIndex = findNext(value, '`', index + 1);
 
@@ -176,136 +167,46 @@ const parseInlineMarkdown = (value: string): string => {
   return output;
 };
 
-const getOrderedListMarkerLength = (line: string): number => {
-  let index = 0;
 
-  while (index < line.length && isDigit(line[index])) {
-    index += 1;
-  }
-
-  if (index === 0 || line[index] !== '.' || line[index + 1] !== ' ') {
-    return 0;
-  }
-
-  return index + 2;
-};
 
 const parseMarkdownLikeText = (content: string): string => {
   const lines = normalizeLineBreaks(content).split('\n');
-  const blocks: string[] = [];
+  const output: string[] = [];
   let index = 0;
 
   while (index < lines.length) {
-    const rawLine = lines[index];
-    const line = rawLine.trimEnd();
+    const line = lines[index].trimEnd();
 
     if (!line.trim()) {
       index += 1;
       continue;
     }
 
-    if (line.startsWith('```')) {
-      const codeLines: string[] = [];
-      index += 1;
-
-      while (
-        index < lines.length &&
-        !lines[index].trimStart().startsWith('```')
-      ) {
-        codeLines.push(lines[index]);
-        index += 1;
-      }
-
-      if (index < lines.length) {
-        index += 1;
-      }
-
-      blocks.push(
-        `<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`,
-      );
-      continue;
-    }
-
+    // Unordered list: - or *
     if (line.startsWith('- ') || line.startsWith('* ')) {
       const items: string[] = [];
 
       while (index < lines.length) {
-        const listLine = lines[index].trim();
-
-        if (!(listLine.startsWith('- ') || listLine.startsWith('* '))) {
+        const nextLine = lines[index].trim();
+        if (!(nextLine.startsWith('- ') || nextLine.startsWith('* '))) {
           break;
         }
-
-        items.push(`<li>${parseInlineMarkdown(listLine.slice(2).trim())}</li>`);
-        index += 1;
-      }
-
-      blocks.push(`<ul>${items.join('')}</ul>`);
-      continue;
-    }
-
-    const orderedMarkerLength = getOrderedListMarkerLength(line);
-
-    if (orderedMarkerLength > 0) {
-      const items: string[] = [];
-
-      while (index < lines.length) {
-        const orderedLine = lines[index].trim();
-        const markerLength = getOrderedListMarkerLength(orderedLine);
-
-        if (markerLength === 0) {
-          break;
-        }
-
         items.push(
-          `<li>${parseInlineMarkdown(orderedLine.slice(markerLength).trim())}</li>`,
+          `<li>${parseInlineMarkdown(nextLine.slice(2).trim())}</li>`,
         );
         index += 1;
       }
 
-      blocks.push(`<ol>${items.join('')}</ol>`);
+      output.push(`<ul>${items.join('')}</ul>`);
       continue;
     }
 
-    if (line.startsWith('> ')) {
-      const quoteLines: string[] = [];
-
-      while (index < lines.length && lines[index].trim().startsWith('> ')) {
-        quoteLines.push(parseInlineMarkdown(lines[index].trim().slice(2)));
-        index += 1;
-      }
-
-      blocks.push(`<blockquote>${quoteLines.join('<br />')}</blockquote>`);
-      continue;
-    }
-
-    const paragraphLines: string[] = [];
-
-    while (index < lines.length) {
-      const paragraphLine = lines[index].trimEnd();
-
-      if (!paragraphLine.trim()) {
-        break;
-      }
-
-      if (
-        paragraphLine.trimStart().startsWith('```') ||
-        paragraphLine.trimStart().startsWith('- ') ||
-        paragraphLine.trimStart().startsWith('* ') ||
-        paragraphLine.trimStart().startsWith('> ') ||
-        getOrderedListMarkerLength(paragraphLine.trimStart()) > 0
-      ) {
-        break;
-      }
-
-      paragraphLines.push(parseInlineMarkdown(paragraphLine));
-      index += 1;
-    }
-
-    blocks.push(`<p>${paragraphLines.join('<br />')}</p>`);
+    // Regular line with inline formatting
+    output.push(parseInlineMarkdown(line));
+    index += 1;
   }
 
-  return blocks.join('');
+  return output.join('\n');
 };
 
 const hasHtmlTags = (content: string): boolean => {
