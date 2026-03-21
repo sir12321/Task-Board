@@ -10,7 +10,7 @@ export const authenticateToken = (
   const token = req.cookies.accessToken;
 
   if (!token) {
-    res.status(401).json({ error: 'Access token missing' });
+    res.status(401).json({ error: 'Please refresh your page' });
     return;
   }
 
