@@ -20,12 +20,12 @@ export const getBoards = async (
       tasks: {
         include: {
           column: { select: { name: true, order: true } },
-          assignee: { select: { name: true } },
-          reporter: { select: { name: true } },
+          assignee: { select: { name: true, avatarUrl: true } },
+          reporter: { select: { name: true, avatarUrl: true } },
           parent: { select: { title: true } },
           comments: {
             include: {
-              author: { select: { id: true, name: true, email: true } },
+              author: { select: { id: true, name: true, email: true, avatarUrl: true } },
             },
             orderBy: { createdAt: 'asc' },
           },
@@ -63,7 +63,9 @@ export const getBoards = async (
         ...rest,
         columnName: column.name,
         assigneeName: assignee?.name || null,
+        assigneeAvatarUrl: assignee?.avatarUrl || null,
         reporterName: reporter?.name || 'Unknown',
+        reporterAvatarUrl: reporter?.avatarUrl || null,
         parentName: parent?.title || null,
         status: rest.type === 'STORY' ? storyStatus : column.name,
         comments: comments.map((comment) => {
@@ -71,6 +73,7 @@ export const getBoards = async (
           return {
             ...commentRest,
             authorName: author.name,
+            authorAvatarUrl: author.avatarUrl || null,
           };
         }),
       };
