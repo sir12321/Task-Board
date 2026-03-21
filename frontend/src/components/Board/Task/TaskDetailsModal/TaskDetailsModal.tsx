@@ -596,7 +596,7 @@ const TaskDetailsModal = ({
                     role="textbox"
                     aria-multiline="true"
                     aria-label="Write a markdown comment"
-                    data-placeholder="Write a comment in Markdown..."
+                    data-placeholder="Write a comment"
                     suppressContentEditableWarning
                     onInput={(event) => {
                       const value = parseComposerText(

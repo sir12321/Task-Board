@@ -189,6 +189,7 @@ export const resolveMentionedUserIds = async (
   });
 
   const aliasToUserIdMap = new Map<string, string | null>();
+  const ambiguousAliases = new Set<string>();
 
   for (const memberRecord of projectMembers) {
     for (const aliasText of getMentionAliases(memberRecord.user.name)) {
@@ -201,18 +202,41 @@ export const resolveMentionedUserIds = async (
 
       if (existingUserId !== memberRecord.user.id) {
         aliasToUserIdMap.set(aliasText, null);
+        ambiguousAliases.add(aliasText);
       }
     }
   }
 
+  // Log ambiguous aliases for debugging
+  if (ambiguousAliases.size > 0) {
+    console.warn(
+      `Ambiguous mention aliases found in project ${projectId}: ${Array.from(
+        ambiguousAliases,
+      ).join(', ')}. Mentions using these aliases will not be resolved.`,
+    );
+  }
+
   const resolvedMentionedUserIds = new Set<string>();
+  const unresolvedHandles = new Set<string>();
 
   for (const handleText of extractedMentionHandles) {
     const userId = aliasToUserIdMap.get(handleText);
 
     if (userId) {
       resolvedMentionedUserIds.add(userId);
+    } else if (aliasToUserIdMap.has(handleText)) {
+      // Handle is in map but resolves to null (ambiguous)
+      unresolvedHandles.add(handleText);
     }
+  }
+
+  // Log unresolved mentions
+  if (unresolvedHandles.size > 0) {
+    console.warn(
+      `Mention(s) could not be resolved due to ambiguity: ${Array.from(
+        unresolvedHandles,
+      ).join(', ')}`,
+    );
   }
 
   return Array.from(resolvedMentionedUserIds);

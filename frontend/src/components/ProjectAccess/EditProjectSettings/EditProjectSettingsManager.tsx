@@ -30,6 +30,10 @@ interface Props {
     memberId: string;
     role: ProjectRole;
   }) => Promise<void>;
+  onRemoveProjectMember: (input: {
+    projectId: string;
+    memberId: string;
+  }) => Promise<void>;
 }
 
 const EditProjectSettingsManager = ({
@@ -40,6 +44,7 @@ const EditProjectSettingsManager = ({
   onDeleteProject,
   onAddProjectMember,
   onUpdateProjectMemberRole,
+  onRemoveProjectMember,
 }: Props) => {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [projectQuery, setProjectQuery] = useState('');
@@ -293,6 +298,41 @@ const EditProjectSettingsManager = ({
     }
   };
 
+  const handleRemoveMember = async (memberId: string): Promise<void> => {
+    if (!selectedProject) {
+      return;
+    }
+
+    const memberToRemove = selectedProject.members.find(
+      (member) => member.id === memberId,
+    );
+    if (!memberToRemove) {
+      return;
+    }
+
+    const shouldRemove = window.confirm(
+      `Remove ${memberToRemove.name} from "${selectedProject.name}"?`,
+    );
+    if (!shouldRemove) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await onRemoveProjectMember({
+        projectId: selectedProject.id,
+        memberId,
+      });
+      setStatusMessage(`Removed ${memberToRemove.name} from the project.`);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to remove member.';
+      setStatusMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className={styles.pageContainer}>
       <div className={styles.settingsLayout}>
@@ -537,23 +577,33 @@ const EditProjectSettingsManager = ({
                         </div>
                       </div>
                       {user.globalRole === 'GLOBAL_ADMIN' && (
-                        <div className={styles.memberRoleSelectWrap}>
-                          <select
-                            value={member.role}
+                        <div className={styles.memberActions}>
+                          <div className={styles.memberRoleSelectWrap}>
+                            <select
+                              value={member.role}
+                              disabled={isSubmitting}
+                              onChange={(event) =>
+                                handleUpdateMemberRole(
+                                  member.id,
+                                  event.target.value as ProjectRole,
+                                )
+                              }
+                            >
+                              {PROJECT_ROLE_OPTIONS.map((role) => (
+                                <option key={role.value} value={role.value}>
+                                  {role.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.deleteActionButton}
                             disabled={isSubmitting}
-                            onChange={(event) =>
-                              handleUpdateMemberRole(
-                                member.id,
-                                event.target.value as ProjectRole,
-                              )
-                            }
+                            onClick={() => handleRemoveMember(member.id)}
                           >
-                            {PROJECT_ROLE_OPTIONS.map((role) => (
-                              <option key={role.value} value={role.value}>
-                                {role.label}
-                              </option>
-                            ))}
-                          </select>
+                            Remove
+                          </button>
                         </div>
                       )}
                       {user.globalRole !== 'GLOBAL_ADMIN' && (

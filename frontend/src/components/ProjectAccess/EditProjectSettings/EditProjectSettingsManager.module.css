@@ -253,6 +253,12 @@
   border-color: #0052cc;
 }
 
+.memberActions {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
 .projectForm {
   display: grid;
   gap: 16px;
