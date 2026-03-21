@@ -1,7 +1,12 @@
 import { Response } from 'express';
 import prisma from '../utils/prisma';
 import { AuthRequest } from './auth.controller';
-import { updateName, updatePassword } from '../services/user.service';
+import {
+  updateName,
+  updatePassword,
+  updateGlobalRole,
+} from '../services/user.service';
+import { GlobalRole } from '@prisma/client';
 
 export const listUsers = async (
   req: AuthRequest,
@@ -110,5 +115,59 @@ export const changePassword = async (
   } catch (error) {
     console.error('Error updating password:', error);
     res.status(500).json({ error: 'Failed to update password' });
+  }
+};
+
+export const changeGlobalRole = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const requesterRole = req.user?.globalRole;
+    const targetUserId = req.params.id;
+    const { globalRole } = req.body as { globalRole?: GlobalRole };
+
+    if (!req.user?.id) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (requesterRole !== 'GLOBAL_ADMIN') {
+      res
+        .status(403)
+        .json({ error: 'Forbidden: Global admin access required' });
+      return;
+    }
+
+    if (!targetUserId || typeof targetUserId !== 'string') {
+      res.status(400).json({ error: 'User ID is required' });
+      return;
+    }
+
+    if (globalRole !== 'GLOBAL_ADMIN' && globalRole !== 'USER') {
+      res.status(400).json({ error: 'Invalid global role' });
+      return;
+    }
+
+    const updatedUser = await updateGlobalRole(targetUserId, globalRole);
+
+    res.status(200).json({
+      message: 'Global role updated successfully',
+      user: updatedUser,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes('At least one global admin')) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+
+      if (error.message.includes('User not found')) {
+        res.status(404).json({ error: error.message });
+        return;
+      }
+    }
+
+    res.status(500).json({ error: 'Failed to update global role' });
   }
 };

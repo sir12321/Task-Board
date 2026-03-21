@@ -1,6 +1,7 @@
 import type {
   AuthUser,
   ProjectRole,
+  GlobalRole,
   DirectoryUser,
   ManagedProject,
   ProjectMemberSummary,
@@ -32,6 +33,16 @@ export const getProjectDirectoryUsers = async (): Promise<DirectoryUser[]> => {
     globalRole: user.globalRole,
     avatarUrl: user.avatarUrl,
   }));
+};
+
+export const updateDirectoryUserGlobalRole = async (
+  userId: string,
+  globalRole: GlobalRole,
+): Promise<void> => {
+  await apiClient(`/users/${userId}/global-role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ globalRole }),
+  });
 };
 
 export const getGlobalAdminEmails = (

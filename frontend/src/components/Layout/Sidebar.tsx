@@ -75,6 +75,22 @@ const Sidebar = ({ collapsed, toggle }: Props) => {
           </NavLink>
         )}
 
+        {user.globalRole === 'GLOBAL_ADMIN' && (
+          <NavLink
+            to="/global-role-management"
+            className={({ isActive }) =>
+              `${styles.navItem} ${styles.navLink} ${styles.projectCreateItem} ${
+                isActive ? styles.active : ''
+              }`
+            }
+          >
+            <span className={styles.navIcon}>♛</span>
+            {!collapsed && (
+              <span className={styles.label}>Global Role Access</span>
+            )}
+          </NavLink>
+        )}
+
         {user.globalRole !== 'GLOBAL_ADMIN' && (
           <NavLink
             to="/assign-users"

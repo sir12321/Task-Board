@@ -1,0 +1,147 @@
+.pageContainer {
+  padding: 36px 40px 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.contentColumn {
+  display: block;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #dfe1e6;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 12px 28px -24px rgba(9, 30, 66, 0.45);
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.panelHeader h2 {
+  margin: 0 0 6px;
+  color: #172b4d;
+}
+
+.panelHeader p {
+  margin: 0;
+  color: #6b778c;
+  line-height: 1.45;
+}
+
+.membersList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.memberCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #dfe1e6;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #f8fafc;
+}
+
+.userIdentity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.userAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1e3a8a;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.userAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.userName {
+  font-weight: 700;
+  color: #172b4d;
+}
+
+.userEmail {
+  color: #6b778c;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.userRoleField {
+  min-width: 0;
+}
+
+.userRoleField select {
+  width: 100%;
+  border: 1px solid #c7d1db;
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-height: 38px;
+  font-size: 15px;
+  font-family: inherit;
+  color: #172b4d;
+  background: #fff;
+  cursor: pointer;
+}
+
+.userRoleField select:focus {
+  outline: 2px solid rgba(0, 82, 204, 0.18);
+  border-color: #0052cc;
+}
+
+.userRoleMeta {
+  color: #6b778c;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.emptyMessage {
+  border: 1px dashed #c7d1db;
+  border-radius: 10px;
+  padding: 20px;
+  color: #6b778c;
+  background: #f8fafc;
+}
+
+.Message {
+  margin-top: 16px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #eff8ff;
+  color: #175cd3;
+  border: 1px solid #b2ddff;
+}
+
+@media (max-width: 640px) {
+  .pageContainer {
+    padding: 24px 18px 36px;
+  }
+
+  .memberCard {
+    grid-template-columns: 1fr;
+  }
+}
