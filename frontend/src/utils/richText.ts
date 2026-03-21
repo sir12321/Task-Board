@@ -2,7 +2,19 @@ import DOMPurify from 'dompurify';
 import type { ProjectMemberSummary } from '../types/Types';
 import { getMentionMatch } from './mentions';
 
-const ALLOWED_TAGS = ['a', 'b', 'br', 'code', 'em', 'i', 'li', 's', 'strong', 'u', 'ul'];
+const ALLOWED_TAGS = [
+  'a',
+  'b',
+  'br',
+  'code',
+  'em',
+  'i',
+  'li',
+  's',
+  'strong',
+  'u',
+  'ul',
+];
 
 const ALLOWED_ATTR = ['href', 'target', 'rel'];
 
@@ -167,8 +179,6 @@ const parseInlineMarkdown = (value: string): string => {
   return output;
 };
 
-
-
 const parseMarkdownLikeText = (content: string): string => {
   const lines = normalizeLineBreaks(content).split('\n');
   const output: string[] = [];
@@ -191,9 +201,7 @@ const parseMarkdownLikeText = (content: string): string => {
         if (!(nextLine.startsWith('- ') || nextLine.startsWith('* '))) {
           break;
         }
-        items.push(
-          `<li>${parseInlineMarkdown(nextLine.slice(2).trim())}</li>`,
-        );
+        items.push(`<li>${parseInlineMarkdown(nextLine.slice(2).trim())}</li>`);
         index += 1;
       }
 

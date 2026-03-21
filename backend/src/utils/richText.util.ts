@@ -23,15 +23,15 @@ const allowedAttributes: correctHtml.IOptions['allowedAttributes'] = {
 // If content has HTML, sanitizes to allowed tags only.
 export const correctRichTextComment = (content: string): string => {
   const trimmed = content.trim();
-  
+
   // Check if content contains HTML tags
   const hasHtmlTags = /<[a-z][a-z0-9]*>/i.test(trimmed);
-  
+
   if (!hasHtmlTags) {
     // Plain markdown text: return as-is, it's safe
     return trimmed;
   }
-  
+
   // HTML content: sanitize to allowed tags
   return correctHtml(trimmed, {
     allowedTags,
@@ -51,10 +51,10 @@ export const correctRichTextComment = (content: string): string => {
 // For HTML: strips tags and extracts text.
 export const getRichTextPlainText = (content: string): string => {
   const trimmed = content.trim();
-  
+
   // Check if content contains HTML tags
   const hasHtmlTags = /<[a-z][a-z0-9]*>/i.test(trimmed);
-  
+
   if (!hasHtmlTags) {
     // Plain markdown text: normalize whitespace and trim
     return trimmed
@@ -62,7 +62,7 @@ export const getRichTextPlainText = (content: string): string => {
       .replace(/\s+/g, ' ')
       .trim();
   }
-  
+
   // HTML content: strip tags first, then normalize whitespace
   return correctHtml(trimmed, {
     allowedTags: [],

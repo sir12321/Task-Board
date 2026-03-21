@@ -77,7 +77,10 @@ const parseMentionQueryAtCaret = (textBeforeCaret: string) => {
 // Basic parser for composer input: normalize browser-specific whitespace
 // into a stable plain text representation used for markdown submission.
 const parseComposerText = (rawText: string): string =>
-  rawText.replace(/\u00a0/g, ' ').replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+  rawText
+    .replace(/\u00a0/g, ' ')
+    .replaceAll('\r\n', '\n')
+    .replaceAll('\r', '\n');
 
 const getAuditActionLabel = (action: string): string => {
   if (action === 'STATUS_CHANGED') return 'changed status';
@@ -376,7 +379,9 @@ const TaskDetailsModal = ({
   const handleAddComment = async () => {
     const content = newComment;
 
-    if (getRichTextPlainText(renderRichText(content, mentionSourceMembers)) === '')
+    if (
+      getRichTextPlainText(renderRichText(content, mentionSourceMembers)) === ''
+    )
       return;
 
     if (editComment && editCommentId) {
@@ -597,7 +602,8 @@ const TaskDetailsModal = ({
                       const value = parseComposerText(
                         event.currentTarget.innerText,
                       );
-                      const caretOffset = getCaretOffsetInEditor() ?? value.length;
+                      const caretOffset =
+                        getCaretOffsetInEditor() ?? value.length;
                       setComposerContent(value);
                       syncMentionState(value, caretOffset);
                     }}
@@ -613,7 +619,10 @@ const TaskDetailsModal = ({
                       const value = parseComposerText(
                         editorRef.current?.innerText ?? '',
                       );
-                      syncMentionState(value, getCaretOffsetInEditor() ?? value.length);
+                      syncMentionState(
+                        value,
+                        getCaretOffsetInEditor() ?? value.length,
+                      );
                     }}
                     onKeyDown={(event) => {
                       if (
@@ -695,8 +704,8 @@ const TaskDetailsModal = ({
                   )}
                   <div className={styles.commentHint}>
                     Use Markdown: **bold**, *italic*, __underline__, ~~strike~~,
-                    `inline code`, [links](https://example.com), and
-                    lists. Type @ to mention collaborators.
+                    `inline code`, [links](https://example.com), and lists. Type
+                    @ to mention collaborators.
                   </div>
                   <div className={styles.commentActions}>
                     <button
