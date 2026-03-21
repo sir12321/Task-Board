@@ -1,6 +1,13 @@
 import prisma from '../utils/prisma';
 import { TaskType, Priority, Task } from '@prisma/client';
 import { createNotification } from './notification.service';
+import {
+  getFallbackWorkflowColumnIds,
+  getWorkflowStep,
+  isClosedColumn,
+  isResolvedColumn,
+  parseWorkflowColumnIds,
+} from '../utils/workflow.util';
 
 const verifyTaskPermissions = async (
   userId: string,
@@ -46,6 +53,19 @@ const checkWipLimit = async (columnId: string): Promise<void> => {
   }
 };
 
+const getBoardWorkflow = async (boardId: string) =>
+  prisma.board.findUnique({
+    where: { id: boardId },
+    select: {
+      storyColumnId: true,
+      workflowColumnIds: true,
+      todoColumnId: true,
+      inProgressColumnId: true,
+      resolvedColumnId: true,
+      closedColumnId: true,
+    },
+  });
+
 const checkStoryChildren = async (taskId: string): Promise<void> => {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
@@ -62,6 +82,19 @@ const checkStoryChildren = async (taskId: string): Promise<void> => {
       );
     }
   }
+};
+
+const isTaskLockedInClosedColumn = async (
+  boardId: string,
+  columnId: string,
+): Promise<boolean> => {
+  const workflow = await getBoardWorkflow(boardId);
+
+  if (!workflow) {
+    throw new Error('Board not found');
+  }
+
+  return workflow.closedColumnId === columnId;
 };
 
 export const makeTask = async (
@@ -105,15 +138,29 @@ export const makeTask = async (
   }
 
   await checkWipLimit(data.columnId);
+  const workflow = await getBoardWorkflow(data.boardId);
+  if (!workflow) {
+    throw new Error('Board not found');
+  }
 
-  const targetCol = await prisma.column.findUnique({
-    where: { id: data.columnId },
-    select: { name: true },
-  });
+  const normalizedWorkflow = {
+    ...workflow,
+    workflowColumnIds: getFallbackWorkflowColumnIds({
+      workflowColumnIds: parseWorkflowColumnIds(workflow.workflowColumnIds),
+      todoColumnId: workflow.todoColumnId,
+      inProgressColumnId: workflow.inProgressColumnId,
+      resolvedColumnId: workflow.resolvedColumnId,
+      closedColumnId: workflow.closedColumnId,
+    }),
+  };
 
-  const columnName = targetCol?.name.toLowerCase() || '';
-  const isReview = columnName.includes('review');
-  const isDone = columnName.includes('done');
+  if (data.type === 'STORY' && normalizedWorkflow.storyColumnId !== data.columnId) {
+    throw new Error('STORY tasks can only be created in the Stories column');
+  }
+
+  if (data.type !== 'STORY' && normalizedWorkflow.storyColumnId === data.columnId) {
+    throw new Error('Only STORY tasks can be created in the Stories column');
+  }
 
   const task = await prisma.task.create({
     data: {
@@ -127,8 +174,8 @@ export const makeTask = async (
       reporterId: data.reporterId,
       assigneeId: data.assigneeId,
       parentId: data.parentId,
-      resolvedAt: isReview || isDone ? new Date() : null,
-      closedAt: isDone ? new Date() : null,
+      resolvedAt: isResolvedColumn(normalizedWorkflow, data.columnId) ? new Date() : null,
+      closedAt: isClosedColumn(normalizedWorkflow, data.columnId) ? new Date() : null,
     },
   });
 
@@ -173,14 +220,27 @@ export const moveTask = async (
 ): Promise<Task> => {
   const task = await prisma.task.findUnique({
     where: { id },
-    include: { column: true, board: true },
+    include: {
+      column: true,
+      board: {
+        select: {
+          id: true,
+          storyColumnId: true,
+          workflowColumnIds: true,
+          todoColumnId: true,
+          inProgressColumnId: true,
+          resolvedColumnId: true,
+          closedColumnId: true,
+        },
+      },
+    },
   });
 
   if (!task) {
     throw new Error('Task not found');
   }
 
-  if (task.closedAt) {
+  if (await isTaskLockedInClosedColumn(task.boardId, task.columnId)) {
     throw new Error(
       'Forbidden: Task is closed and locked from further modifications',
     );
@@ -196,23 +256,39 @@ export const moveTask = async (
     throw new Error('Target column not found');
   }
 
-  if (task.type !== 'STORY') {
-    const currentOrder = task.column.order;
-    const targetOrder = targetCol.order;
+  const workflow = {
+    ...task.board,
+    workflowColumnIds: getFallbackWorkflowColumnIds({
+      workflowColumnIds: parseWorkflowColumnIds(task.board.workflowColumnIds),
+      todoColumnId: task.board.todoColumnId,
+      inProgressColumnId: task.board.inProgressColumnId,
+      resolvedColumnId: task.board.resolvedColumnId,
+      closedColumnId: task.board.closedColumnId,
+    }),
+  };
 
-    if (Math.abs(currentOrder - targetOrder) > 1) {
+  if (task.type === 'STORY') {
+    if (workflow.storyColumnId !== cId) {
+      throw new Error('Stories must remain in the configured Stories column');
+    }
+  } else {
+    if (workflow.storyColumnId === cId) {
+      throw new Error('Only stories can move into the Stories column');
+    }
+
+    const currentStep = getWorkflowStep(workflow, task.columnId);
+    const targetStep = getWorkflowStep(workflow, cId);
+
+    if (currentStep < 0 || targetStep < 0 || targetStep - currentStep !== 1) {
       throw new Error(
-        'Invalid Transition: Tasks can only be moved to adjacent columns',
+        'Invalid Transition: Tasks can only be moved to the next workflow stage',
       );
     }
+
     await checkWipLimit(cId);
   }
 
-  const columnName = targetCol.name.toLowerCase();
-  const isReview = columnName.includes('review');
-  const isDone = columnName.includes('done');
-
-  if (isReview || isDone) {
+  if (isResolvedColumn(workflow, cId)) {
     await checkStoryChildren(id);
   }
 
@@ -220,8 +296,10 @@ export const moveTask = async (
     where: { id },
     data: {
       columnId: cId,
-      resolvedAt: isReview || isDone ? task.resolvedAt || new Date() : null,
-      closedAt: isDone ? new Date() : null,
+      resolvedAt: isResolvedColumn(workflow, cId)
+        ? task.resolvedAt || new Date()
+        : null,
+      closedAt: isClosedColumn(workflow, cId) ? new Date() : null,
     },
   });
 
@@ -235,14 +313,14 @@ export const removeTask = async (
 ): Promise<Task> => {
   const task = await prisma.task.findUnique({
     where: { id },
-    select: { boardId: true, closedAt: true },
+    select: { boardId: true, columnId: true },
   });
 
   if (!task) {
     throw new Error('Task not found');
   }
 
-  if (task.closedAt) {
+  if (await isTaskLockedInClosedColumn(task.boardId, task.columnId)) {
     throw new Error(
       'Forbidden: Task is closed and locked from further modifications',
     );
@@ -312,10 +390,10 @@ export const updateTask = async (
     where: { id },
     select: {
       boardId: true,
+      columnId: true,
       assigneeId: true,
       type: true,
       reporterId: true,
-      closedAt: true,
     },
   });
 
@@ -323,7 +401,7 @@ export const updateTask = async (
     throw new Error('Task not found');
   }
 
-  if (task.closedAt) {
+  if (await isTaskLockedInClosedColumn(task.boardId, task.columnId)) {
     throw new Error(
       'Forbidden: Task is closed and locked from further modifications',
     );

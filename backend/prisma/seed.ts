@@ -387,7 +387,7 @@ async function main(): Promise<void> {
         },
       });
 
-      const [storiesCol, backlogCol, progressCol, reviewCol, doneCol] =
+      const [storiesCol, backlogCol, progressCol, resolvedCol, closedCol] =
         await Promise.all([
           prisma.column.create({
             data: {
@@ -427,6 +427,21 @@ async function main(): Promise<void> {
             },
           }),
         ]);
+
+      await prisma.board.update({
+        where: { id: board.id },
+        data: {
+          storyColumnId: storiesCol.id,
+          workflowColumnIds: JSON.stringify([
+            backlogCol.id,
+            progressCol.id,
+            resolvedCol.id,
+            closedCol.id,
+          ]),
+          resolvedColumnId: resolvedCol.id,
+          closedColumnId: closedCol.id,
+        },
+      });
 
       if (!firstBacklogBoardId) {
         firstBacklogBoardId = board.id;
@@ -514,7 +529,7 @@ async function main(): Promise<void> {
             'Run structured peer verification on assumptions and alert thresholds.',
           type: 'TASK' as const,
           priority: 'MEDIUM' as const,
-          columnId: reviewCol.id,
+          columnId: resolvedCol.id,
           assigneeId: activeMembers[0].id,
           parentId: null,
         },
@@ -524,7 +539,7 @@ async function main(): Promise<void> {
             'Confirm rollback plans before entering high-risk mission windows.',
           type: 'TASK' as const,
           priority: 'HIGH' as const,
-          columnId: reviewCol.id,
+          columnId: resolvedCol.id,
           assigneeId: activeMembers[1].id,
           parentId: null,
         },
@@ -534,7 +549,7 @@ async function main(): Promise<void> {
             'Archive runbooks and transfer on-call ownership for sustained monitoring.',
           type: 'TASK' as const,
           priority: 'LOW' as const,
-          columnId: doneCol.id,
+          columnId: closedCol.id,
           assigneeId: activeMembers[2].id,
           parentId: null,
         },
@@ -544,7 +559,7 @@ async function main(): Promise<void> {
             'Summarize misses and convert findings into backlog-ready actions.',
           type: 'TASK' as const,
           priority: 'LOW' as const,
-          columnId: doneCol.id,
+          columnId: closedCol.id,
           assigneeId: activeMembers[0].id,
           parentId: null,
         },
@@ -576,13 +591,14 @@ async function main(): Promise<void> {
                 ? { connect: { id: payload.parentId } }
                 : undefined,
             resolvedAt:
-              payload.columnId === doneCol.id
+              payload.columnId === resolvedCol.id ||
+              payload.columnId === closedCol.id
                 ? new Date(
                   `2025-12-${String(23 + (payloadIndex % 5)).padStart(2, '0')}T11:00:00.000Z`,
                 )
                 : undefined,
             closedAt:
-              payload.columnId === doneCol.id
+              payload.columnId === closedCol.id
                 ? new Date(
                   `2025-12-${String(23 + (payloadIndex % 5)).padStart(2, '0')}T13:00:00.000Z`,
                 )

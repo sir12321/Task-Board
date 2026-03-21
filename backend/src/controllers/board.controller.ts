@@ -3,7 +3,9 @@ import {
   getBoards,
   createBoard,
   verifyCreationPermission,
+  updateBoardWorkflow,
 } from '../services/board.service';
+import type { BoardWorkflowConfig } from '../utils/workflow.util';
 import { AuthRequest } from './auth.controller';
 
 export const getBoard = async (
@@ -67,5 +69,40 @@ export const addBoard = async (
 
     console.error('Error creating board:', error);
     res.status(500).json({ error: 'Failed to create board' });
+  }
+};
+
+export const editBoardWorkflow = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const boardId = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
+    const userId = req.user?.id;
+    const globalRole = req.user?.globalRole;
+    const workflow = req.body as BoardWorkflowConfig;
+
+    if (!userId || !boardId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const board = await updateBoardWorkflow(userId, boardId, workflow, globalRole);
+    res.status(200).json(board);
+  } catch (error) {
+    if (error instanceof Error) {
+      if (
+        error.message.includes('Forbidden') ||
+        error.message.includes('Workflow')
+      ) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+    }
+
+    console.error('Error updating board workflow:', error);
+    res.status(500).json({ error: 'Failed to update board workflow' });
   }
 };

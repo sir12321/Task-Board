@@ -28,6 +28,8 @@ interface Properties {
   onMoveRight?: (columnId: string) => void;
   onEditWip?: (columnId: string) => void;
   onDeleteColumn?: (columnId: string) => void;
+  canDeleteColumn?: boolean;
+  isClosedWorkflowColumn?: boolean;
 }
 
 const Column = ({
@@ -48,6 +50,8 @@ const Column = ({
   onMoveRight,
   onEditWip,
   onDeleteColumn,
+  canDeleteColumn = true,
+  isClosedWorkflowColumn = false,
 }: Properties) => {
   // UI state for the workflow management dropdown
   const [workflowMenuOpen, setWorkflowMenuOpen] = useState(false);
@@ -161,7 +165,7 @@ const Column = ({
                       Edit WIP
                     </button>
                   )}
-                  {onDeleteColumn && column.order !== 0 && (
+                  {onDeleteColumn && canDeleteColumn && (
                     <button
                       type="button"
                       className={`${styles.workflowMenuButton} ${styles.deleteAction}`}
@@ -224,8 +228,12 @@ const Column = ({
           key={task.id}
           task={task}
           onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
-          onEdit={onTaskEdit ? () => onTaskEdit(task.id) : undefined}
-          isDraggable={Boolean(isDraggable)}
+          onEdit={
+            !isClosedWorkflowColumn && onTaskEdit
+              ? () => onTaskEdit(task.id)
+              : undefined
+          }
+          isDraggable={Boolean(isDraggable) && !isClosedWorkflowColumn}
           projectRole={userRole}
         />
       ))}

@@ -45,12 +45,18 @@ model ProjectMember {
 }
 
 model Board {
-  id        String   @id @default(uuid())
-  name      String
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  columns   Column[]
-  tasks     Task[]
+  id               String   @id @default(uuid())
+  name             String
+  projectId        String
+  storyColumnId    String?
+  workflowColumnIds String   @default("[]")
+  todoColumnId     String?
+  inProgressColumnId String?
+  resolvedColumnId String?
+  closedColumnId   String?
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  columns          Column[]
+  tasks            Task[]
 }
 
 model Column {

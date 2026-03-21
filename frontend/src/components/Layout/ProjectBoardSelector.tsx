@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { ProjectDetails } from '../../types/Types';
+import type { Board, ProjectDetails } from '../../types/Types';
 import { apiClient } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import styles from './ProjectBoardSelector.module.css';
+import WorkflowEditor from '../Board/Board/WorkflowEditor';
 
 const buildBoardPath = (projectId: string, boardId: string) =>
   `/projects/${projectId}/boards/${boardId}`;
@@ -14,6 +15,7 @@ const ProjectBoardSelector = () => {
   const { projectId, boardId } = useParams();
   const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState<ProjectDetails[]>([]);
+  const [workflowBoard, setWorkflowBoard] = useState<Board | null>(null);
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(
     projectId ?? null,
   );
@@ -78,8 +80,10 @@ const ProjectBoardSelector = () => {
           name: boardName,
         }),
       });
+      const createdBoard: Board = await apiClient(`/boards/${newBoard.id}`);
 
       await fetchProjects();
+      setWorkflowBoard(createdBoard);
 
       handleSelectBoard(projectId, newBoard.id);
     } catch (error) {
@@ -188,6 +192,30 @@ const ProjectBoardSelector = () => {
             </button>
           )}
         </div>
+      )}
+
+      {workflowBoard && (
+        <WorkflowEditor
+          title="Set board workflow"
+          description="Choose which columns represent each workflow stage for the new board."
+          columns={workflowBoard.columns}
+          workflow={{
+            storyColumnId: workflowBoard.storyColumnId,
+            workflowColumnIds: workflowBoard.workflowColumnIds,
+            resolvedColumnId: workflowBoard.resolvedColumnId,
+            closedColumnId: workflowBoard.closedColumnId,
+          }}
+          onSubmit={async (workflow) => {
+            await apiClient(`/boards/${workflowBoard.id}/workflow`, {
+              method: 'PUT',
+              body: JSON.stringify(workflow),
+            });
+          }}
+          onCancel={() => setWorkflowBoard(null)}
+          setShortError={(message) => {
+            if (message) alert(message);
+          }}
+        />
       )}
     </div>
   );

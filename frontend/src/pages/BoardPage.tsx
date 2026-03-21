@@ -1,10 +1,21 @@
-import type { Board, NewTaskInput, ProjectDetails, Task } from '../types/Types';
+import type {
+  Board,
+  BoardWorkflow,
+  NewTaskInput,
+  ProjectDetails,
+  Task,
+} from '../types/Types';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
 import BoardView from '../components/Board/Board/Board';
 import { apiClient } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import {
+  getTaskStatus,
+  isClosedColumn,
+  isResolvedColumn,
+} from '../components/Board/Board/workflow';
 
 export default function BoardPage() {
   const { projectId, boardId } = useParams();
@@ -14,6 +25,70 @@ export default function BoardPage() {
   const [board, setBoard] = useState<Board | null>(null);
   const [project, setProject] = useState<ProjectDetails | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const withRecomputedStatuses = useCallback((nextBoard: Board): Board => {
+    return {
+      ...nextBoard,
+      tasks: nextBoard.tasks.map((task) => ({
+        ...task,
+        status: getTaskStatus(nextBoard, task),
+      })),
+    };
+  }, []);
+
+  const updateBoardState = useCallback(
+    (updater: (currentBoard: Board) => Board) => {
+      setBoard((currentBoard) => {
+        if (!currentBoard) {
+          return currentBoard;
+        }
+
+        return withRecomputedStatuses(updater(currentBoard));
+      });
+    },
+    [withRecomputedStatuses],
+  );
+
+  const insertColumnIntoWorkflow = useCallback(
+    (currentBoard: Board, columnId: string): string[] => {
+      const nextWorkflowColumnIds = [...currentBoard.workflowColumnIds];
+      const closedIndex = currentBoard.closedColumnId
+        ? nextWorkflowColumnIds.findIndex(
+            (workflowColumnId) => workflowColumnId === currentBoard.closedColumnId,
+          )
+        : -1;
+
+      if (closedIndex >= 0) {
+        nextWorkflowColumnIds.splice(closedIndex, 0, columnId);
+        return nextWorkflowColumnIds;
+      }
+
+      nextWorkflowColumnIds.push(columnId);
+      return nextWorkflowColumnIds;
+    },
+    [],
+  );
+
+  const removeColumnFromWorkflow = useCallback(
+    (currentBoard: Board, columnId: string): BoardWorkflow => ({
+      storyColumnId:
+        currentBoard.storyColumnId === columnId
+          ? null
+          : currentBoard.storyColumnId,
+      workflowColumnIds: currentBoard.workflowColumnIds.filter(
+        (workflowColumnId) => workflowColumnId !== columnId,
+      ),
+      resolvedColumnId:
+        currentBoard.resolvedColumnId === columnId
+          ? null
+          : currentBoard.resolvedColumnId,
+      closedColumnId:
+        currentBoard.closedColumnId === columnId
+          ? null
+          : currentBoard.closedColumnId,
+    }),
+    [],
+  );
 
   const hydrateBoardAvatars = useCallback(
     (rawBoard: Board, projectDetails: ProjectDetails): Board => {
@@ -171,29 +246,31 @@ export default function BoardPage() {
       const assigneeMember = project.members.find(
         (member) => member.id === payload.assigneeId,
       );
-      setBoard((prev) =>
-        prev
-          ? {
-              ...prev,
-              tasks: [
-                {
-                  ...created,
-                  columnName: column?.name ?? 'Unknown',
-                  reporterName: created.reporterName ?? user.name,
-                  reporterAvatarUrl:
-                    created.reporterAvatarUrl ?? user.avatarUrl ?? null,
-                  assigneeName: created.assigneeName ?? assigneeMember?.name,
-                  assigneeAvatarUrl:
-                    created.assigneeAvatarUrl ?? assigneeMember?.avatarUrl,
-                  comments: [],
-                },
-                ...prev.tasks,
-              ],
-            }
-          : prev,
-      );
+      updateBoardState((currentBoard) => ({
+        ...currentBoard,
+        tasks: [
+          {
+            ...created,
+            columnName: column?.name ?? 'Unknown',
+            reporterName: created.reporterName ?? user.name,
+            reporterAvatarUrl:
+              created.reporterAvatarUrl ?? user.avatarUrl ?? null,
+            assigneeName: created.assigneeName ?? assigneeMember?.name,
+            assigneeAvatarUrl:
+              created.assigneeAvatarUrl ?? assigneeMember?.avatarUrl,
+            comments: [],
+            resolvedAt: isResolvedColumn(currentBoard, payload.columnId)
+              ? (created.resolvedAt ?? new Date().toISOString())
+              : null,
+            closedAt: isClosedColumn(currentBoard, payload.columnId)
+              ? (created.closedAt ?? new Date().toISOString())
+              : null,
+          },
+          ...currentBoard.tasks,
+        ],
+      }));
     },
-    [board, project, user],
+    [board, project, updateBoardState, user],
   );
 
   const updateTask = useCallback(
@@ -235,41 +312,37 @@ export default function BoardPage() {
         if (statusChanged && !hasTaskFieldChanges) {
           const column = board.columns.find((c) => c.id === payload.columnId);
 
-          setBoard((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  tasks: prev.tasks.map((task) =>
-                    task.id === taskId
-                      ? {
-                          ...task,
-                          columnId: payload.columnId,
-                          columnName: column?.name ?? task.columnName,
-                          resolvedAt:
-                            movedTask && 'resolvedAt' in movedTask
-                              ? (movedTask.resolvedAt as
-                                  | string
-                                  | null
-                                  | undefined)
-                              : task.resolvedAt,
-                          closedAt:
-                            movedTask && 'closedAt' in movedTask
-                              ? (movedTask.closedAt as
-                                  | string
-                                  | null
-                                  | undefined)
-                              : task.closedAt,
-                          updatedAt:
-                            movedTask && 'updatedAt' in movedTask
-                              ? ((movedTask.updatedAt as string | undefined) ??
-                                task.updatedAt)
-                              : task.updatedAt,
-                        }
-                      : task,
-                  ),
-                }
-              : prev,
-          );
+          updateBoardState((currentBoard) => ({
+            ...currentBoard,
+            tasks: currentBoard.tasks.map((task) =>
+              task.id === taskId
+                ? {
+                    ...task,
+                    columnId: payload.columnId,
+                    columnName: column?.name ?? task.columnName,
+                    resolvedAt:
+                      movedTask && 'resolvedAt' in movedTask
+                        ? (movedTask.resolvedAt as
+                            | string
+                            | null
+                            | undefined)
+                        : task.resolvedAt,
+                    closedAt:
+                      movedTask && 'closedAt' in movedTask
+                        ? (movedTask.closedAt as
+                            | string
+                            | null
+                            | undefined)
+                        : task.closedAt,
+                    updatedAt:
+                      movedTask && 'updatedAt' in movedTask
+                        ? ((movedTask.updatedAt as string | undefined) ??
+                          task.updatedAt)
+                        : task.updatedAt,
+                  }
+                : task,
+            ),
+          }));
 
           return;
         }
@@ -295,40 +368,33 @@ export default function BoardPage() {
         const parentName =
           board.tasks.find((task) => task.id === payload.parentId)?.title ??
           null;
-        setBoard((prev) =>
-          prev
-            ? {
-                ...prev,
-                tasks: prev.tasks.map((task) =>
-                  task.id === taskId
-                    ? {
-                        ...task,
-                        ...updatedTask,
-                        title: payload.title,
-                        description: payload.description ?? null,
-                        type: payload.type,
-                        priority: payload.priority,
-                        dueDate: payload.dueDate,
-                        assigneeId: payload.assigneeId ?? null,
-                        assigneeName: updatedTask.assigneeName ?? assigneeName,
-                        assigneeAvatarUrl:
-                          updatedTask.assigneeAvatarUrl ??
-                          assigneeMember?.avatarUrl ??
-                          null,
-                        parentId: payload.parentId ?? null,
-                        parentName: updatedTask.parentName ?? parentName,
-                        columnName:
-                          column?.name ??
-                          updatedTask.columnName ??
-                          task.columnName,
-                        updatedAt:
-                          updatedTask.updatedAt ?? new Date().toISOString(),
-                      }
-                    : task,
-                ),
-              }
-            : prev,
-        );
+        updateBoardState((currentBoard) => ({
+          ...currentBoard,
+          tasks: currentBoard.tasks.map((task) =>
+            task.id === taskId
+              ? {
+                  ...task,
+                  ...updatedTask,
+                  title: payload.title,
+                  description: payload.description ?? null,
+                  type: payload.type,
+                  priority: payload.priority,
+                  dueDate: payload.dueDate,
+                  assigneeId: payload.assigneeId ?? null,
+                  assigneeName: updatedTask.assigneeName ?? assigneeName,
+                  assigneeAvatarUrl:
+                    updatedTask.assigneeAvatarUrl ??
+                    assigneeMember?.avatarUrl ??
+                    null,
+                  parentId: payload.parentId ?? null,
+                  parentName: updatedTask.parentName ?? parentName,
+                  columnName:
+                    column?.name ?? updatedTask.columnName ?? task.columnName,
+                  updatedAt: updatedTask.updatedAt ?? new Date().toISOString(),
+                }
+              : task,
+          ),
+        }));
       } catch (err) {
         console.error('Failed to update task:', err);
         throw err;
@@ -525,20 +591,17 @@ export default function BoardPage() {
           }),
         });
 
-        setBoard((prev) =>
-          prev
-            ? {
-                ...prev,
-                columns: [...prev.columns, newColumn],
-              }
-            : prev,
-        );
+        updateBoardState((currentBoard) => ({
+          ...currentBoard,
+          workflowColumnIds: insertColumnIntoWorkflow(currentBoard, newColumn.id),
+          columns: [...currentBoard.columns, newColumn],
+        }));
       } catch (error) {
         console.error('Failed to create column:', error);
         alert('Failed to create column. Check console for details.');
       }
     },
-    [project, board],
+    [project, board, insertColumnIntoWorkflow, updateBoardState],
   );
 
   const renameColumn = useCallback(
@@ -558,19 +621,17 @@ export default function BoardPage() {
           body: JSON.stringify({ name: newName }),
         });
 
-        setBoard((prev) =>
-          prev
-            ? {
-                ...prev,
-                columns: prev.columns.map((c) =>
-                  c.id === columnId ? { ...c, name: newName } : c,
-                ),
-                tasks: prev.tasks.map((t) =>
-                  t.columnId === columnId ? { ...t, columnName: newName } : t,
-                ),
-              }
-            : prev,
-        );
+        updateBoardState((currentBoard) => ({
+          ...currentBoard,
+          columns: currentBoard.columns.map((c) =>
+            c.id === columnId ? { ...c, name: newName } : c,
+          ),
+          tasks: currentBoard.tasks.map((task) =>
+            task.columnId === columnId
+              ? { ...task, columnName: newName }
+              : task,
+          ),
+        }));
       } catch (error) {
         console.error('Failed to rename column:', error);
         alert('Failed to rename column.');
@@ -675,24 +736,19 @@ export default function BoardPage() {
       const column = board.columns.find(
         (currentColumn) => currentColumn.id === columnId,
       );
-      if (column?.order === 0) {
+      if (board.storyColumnId === column?.id) {
         alert('Stories column cannot be deleted.');
         return;
       }
 
-      if (!confirm('Are you sure you want to delete this column?')) return;
-
       try {
         await apiClient(`/columns/${columnId}`, { method: 'DELETE' });
 
-        setBoard((prev) =>
-          prev
-            ? {
-                ...prev,
-                columns: prev.columns.filter((c) => c.id !== columnId),
-              }
-            : prev,
-        );
+        updateBoardState((currentBoard) => ({
+          ...currentBoard,
+          ...removeColumnFromWorkflow(currentBoard, columnId),
+          columns: currentBoard.columns.filter((c) => c.id !== columnId),
+        }));
       } catch (error) {
         console.error('Failed to delete column:', error);
         alert(
@@ -700,7 +756,29 @@ export default function BoardPage() {
         );
       }
     },
-    [project, board, user],
+    [project, board, removeColumnFromWorkflow, updateBoardState, user],
+  );
+
+  const updateWorkflow = useCallback(
+    async (workflow: BoardWorkflow): Promise<void> => {
+      if (!project || !board) return;
+
+      try {
+        await apiClient(`/boards/${board.id}/workflow`, {
+          method: 'PUT',
+          body: JSON.stringify(workflow),
+        });
+
+        updateBoardState((currentBoard) => ({
+          ...currentBoard,
+          ...workflow,
+        }));
+      } catch (error) {
+        console.error('Failed to update workflow:', error);
+        alert('Failed to update workflow.');
+      }
+    },
+    [project, board, updateBoardState],
   );
 
   if (loading && !board) {
@@ -753,6 +831,7 @@ export default function BoardPage() {
           onReorderColumn={reorderColumn}
           onUpdateColumnWip={updateColumnWip}
           onDeleteColumn={deleteColumn}
+          onUpdateWorkflow={updateWorkflow}
         />
       </div>
     </Layout>

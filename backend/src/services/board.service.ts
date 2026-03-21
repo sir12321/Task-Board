@@ -1,11 +1,20 @@
 import p from '../utils/prisma';
 import { Board, Column, Task, Comment } from '@prisma/client';
+import { randomUUID } from 'crypto';
+import {
+  getFallbackWorkflowColumnIds,
+  getWorkflowStep,
+  parseWorkflowColumnIds,
+  type BoardWorkflowConfig,
+  validateWorkflowConfig,
+} from '../utils/workflow.util';
 
 type TaskWithColumnName = Task & { comments: Comment[]; columnName: string };
 
-type BoardResponse = Board & {
+type BoardResponse = Omit<Board, 'workflowColumnIds'> & {
   columns: Column[];
   tasks: TaskWithColumnName[];
+  workflowColumnIds: string[];
 };
 
 export const getBoards = async (
@@ -36,7 +45,20 @@ export const getBoards = async (
 
   if (!board) return null;
 
-  const minChild = new Map<string, { name: string; order: number }>();
+  const workflow: BoardWorkflowConfig = {
+    storyColumnId: board.storyColumnId,
+    workflowColumnIds: getFallbackWorkflowColumnIds({
+      workflowColumnIds: parseWorkflowColumnIds(board.workflowColumnIds),
+      todoColumnId: board.todoColumnId,
+      inProgressColumnId: board.inProgressColumnId,
+      resolvedColumnId: board.resolvedColumnId,
+      closedColumnId: board.closedColumnId,
+    }),
+    resolvedColumnId: board.resolvedColumnId,
+    closedColumnId: board.closedColumnId,
+  };
+
+  const minChild = new Map<string, { name: string; step: number }>();
 
   for (const task of board.tasks) {
     if (!task.parentId) {
@@ -45,19 +67,28 @@ export const getBoards = async (
 
     const existing = minChild.get(task.parentId);
 
-    if (!existing || task.column.order < existing.order) {
+    const step = getWorkflowStep(workflow, task.columnId);
+    const comparableStep = step >= 0 ? step : Number.MAX_SAFE_INTEGER;
+
+    if (!existing || comparableStep < existing.step) {
       minChild.set(task.parentId, {
         name: task.column.name,
-        order: task.column.order,
+        step: comparableStep,
       });
     }
   }
 
   return {
     ...board,
+    workflowColumnIds: workflow.workflowColumnIds,
     tasks: board.tasks.map((task) => {
       const { column, assignee, reporter, parent, comments, ...rest } = task;
-      const storyStatus = minChild.get(task.id)?.name ?? column.name;
+      const todoColumnName =
+        board.columns.find(
+          (candidate) => candidate.id === workflow.workflowColumnIds[0],
+        )
+          ?.name ?? 'To Do';
+      const fallbackStoryStatus = minChild.get(task.id)?.name ?? todoColumnName;
 
       return {
         ...rest,
@@ -67,7 +98,7 @@ export const getBoards = async (
         reporterName: reporter?.name || 'Unknown',
         reporterAvatarUrl: reporter?.avatarUrl || null,
         parentName: parent?.title || null,
-        status: rest.type === 'STORY' ? storyStatus : column.name,
+        status: rest.type === 'STORY' ? fallbackStoryStatus : column.name,
         comments: comments.map((comment) => {
           const { author, ...commentRest } = comment;
           return {
@@ -84,6 +115,7 @@ export const getBoards = async (
 export const createBoard = async (
   projectId: string,
   name: string,
+  workflow?: BoardWorkflowConfig,
 ): Promise<Board> => {
   const DEFAULT_COLUMNS = [
     { name: 'Stories', order: 0, wipLimit: null },
@@ -92,18 +124,110 @@ export const createBoard = async (
     { name: 'Review', order: 3, wipLimit: 3 },
     { name: 'Done', order: 4, wipLimit: null },
   ];
+  const columnIds = DEFAULT_COLUMNS.map(() => randomUUID());
+  const columnsToCreate = DEFAULT_COLUMNS.map((column, index) => ({
+    id: columnIds[index],
+    ...column,
+    boardId: '',
+  }));
 
-  const board = await p.board.create({
-    data: {
-      name,
-      projectId,
-      columns: {
-        create: DEFAULT_COLUMNS,
+  const defaultWorkflow: BoardWorkflowConfig = {
+    storyColumnId: columnIds[0],
+    workflowColumnIds: [columnIds[1], columnIds[2], columnIds[3], columnIds[4]],
+    resolvedColumnId: columnIds[3],
+    closedColumnId: columnIds[4],
+  };
+
+  const nextWorkflow = workflow ?? defaultWorkflow;
+  validateWorkflowConfig(nextWorkflow, columnIds);
+
+  return p.$transaction(async (tx) => {
+    const board = await tx.board.create({
+      data: {
+        name,
+        projectId,
+        storyColumnId: nextWorkflow.storyColumnId,
+        workflowColumnIds: JSON.stringify(nextWorkflow.workflowColumnIds),
+        resolvedColumnId: nextWorkflow.resolvedColumnId,
+        closedColumnId: nextWorkflow.closedColumnId,
       },
-    },
+    });
+
+    await Promise.all(
+      columnsToCreate.map((column) =>
+        tx.column.create({
+          data: {
+            ...column,
+            boardId: board.id,
+          },
+        }),
+      ),
+    );
+
+    return board;
+  });
+};
+
+const verifyBoardAdmin = async (
+  userId: string,
+  boardId: string,
+  globalRole?: string,
+): Promise<void> => {
+  if (globalRole === 'GLOBAL_ADMIN') {
+    return;
+  }
+
+  const board = await p.board.findUnique({
+    where: { id: boardId },
+    select: { projectId: true },
   });
 
-  return board;
+  if (!board) {
+    throw new Error('Board not found');
+  }
+
+  const member = await p.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId,
+        projectId: board.projectId,
+      },
+    },
+    select: { role: true },
+  });
+
+  if (!member || member.role !== 'PROJECT_ADMIN') {
+    throw new Error('Forbidden: Only project admins can edit board workflow');
+  }
+};
+
+export const updateBoardWorkflow = async (
+  userId: string,
+  boardId: string,
+  workflow: BoardWorkflowConfig,
+  globalRole?: string,
+): Promise<Board> => {
+  await verifyBoardAdmin(userId, boardId, globalRole);
+
+  const columns = await p.column.findMany({
+    where: { boardId },
+    select: { id: true },
+  });
+
+  validateWorkflowConfig(
+    workflow,
+    columns.map((column) => column.id),
+  );
+
+  return p.board.update({
+    where: { id: boardId },
+    data: {
+      storyColumnId: workflow.storyColumnId,
+      workflowColumnIds: JSON.stringify(workflow.workflowColumnIds),
+      resolvedColumnId: workflow.resolvedColumnId,
+      closedColumnId: workflow.closedColumnId,
+    },
+  });
 };
 
 export const verifyCreationPermission = async (

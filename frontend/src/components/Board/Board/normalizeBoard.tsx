@@ -1,4 +1,5 @@
 import type { Board as BoardType } from '../../../types/Types';
+import { getStoryColumnId, getTaskStatus } from './workflow';
 
 interface Props {
   StoryColumnId: string;
@@ -11,12 +12,34 @@ const normalizeBoard = ({
   StoryColumnId,
   StoryColumnName,
 }: Props): BoardType => ({
-  ...board, // makes a copy of object with tasks overwritten
-  tasks: board.tasks.map((t) =>
-    t.type === 'STORY'
-      ? { ...t, columnId: StoryColumnId, columnName: StoryColumnName }
-      : t,
-  ),
+  ...board,
+  storyColumnId: board.storyColumnId ?? StoryColumnId,
+  tasks: board.tasks.map((task) => {
+    const normalizedTask =
+      task.type === 'STORY'
+        ? { ...task, columnId: getStoryColumnId({ ...board, storyColumnId: board.storyColumnId ?? StoryColumnId }), columnName: StoryColumnName }
+        : task;
+
+    return {
+      ...normalizedTask,
+      status: getTaskStatus(
+        {
+          ...board,
+          storyColumnId: board.storyColumnId ?? StoryColumnId,
+          tasks: board.tasks.map((candidate) =>
+            candidate.type === 'STORY'
+              ? {
+                  ...candidate,
+                  columnId: board.storyColumnId ?? StoryColumnId,
+                  columnName: StoryColumnName,
+                }
+              : candidate,
+          ),
+        },
+        normalizedTask,
+      ),
+    };
+  }),
 });
 
 export default normalizeBoard;

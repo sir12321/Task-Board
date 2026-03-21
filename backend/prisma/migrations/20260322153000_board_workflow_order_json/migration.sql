@@ -1,0 +1,1 @@
+ALTER TABLE "Board" ADD COLUMN "workflowColumnIds" TEXT NOT NULL DEFAULT '[]';

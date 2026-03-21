@@ -12,6 +12,7 @@ interface Props {
   mode: 'create' | 'edit';
   task?: Task;
   defaultStoryColumnId: string;
+  closedColumnId?: string | null;
   defaultColumnId: string;
   columns: BoardColumn[];
   tasks: Task[];
@@ -36,6 +37,7 @@ const TaskCreateEditModal = ({
   mode,
   task,
   defaultStoryColumnId,
+  closedColumnId,
   defaultColumnId,
   columns,
   tasks,
@@ -44,6 +46,9 @@ const TaskCreateEditModal = ({
   onSave,
   onDelete,
 }: Props) => {
+  const isClosedTask =
+    mode === 'edit' &&
+    Boolean(task?.columnId && closedColumnId && task.columnId === closedColumnId);
   const initialColumnId = task?.columnId ?? defaultColumnId;
   const initialType =
     task?.type ?? (initialColumnId === defaultStoryColumnId ? 'STORY' : 'TASK');
@@ -83,6 +88,11 @@ const TaskCreateEditModal = ({
 
     if (!title.trim()) {
       setError('Title is required.');
+      return;
+    }
+
+    if (isClosedTask) {
+      setError('Closed tasks are read-only.');
       return;
     }
 
@@ -131,6 +141,11 @@ const TaskCreateEditModal = ({
       return;
     }
 
+    if (isClosedTask) {
+      setError('Closed tasks cannot be deleted.');
+      return;
+    }
+
     setError(null);
     setDeleting(true);
     try {
@@ -156,6 +171,9 @@ const TaskCreateEditModal = ({
           {mode === 'create' ? 'Create Task' : 'Edit Task'}
         </h2>
         <p className={styles.subtitle}>Column: {columnName}</p>
+        {isClosedTask && (
+          <p className={styles.subtitle}>This task is closed and read-only.</p>
+        )}
 
         <form className={styles.form} onSubmit={submit}>
           {/*Title*/}
@@ -166,6 +184,7 @@ const TaskCreateEditModal = ({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Task title"
               required
+              disabled={isClosedTask}
             />
           </label>
 
@@ -177,6 +196,7 @@ const TaskCreateEditModal = ({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the task"
               rows={4}
+              disabled={isClosedTask}
             />
           </label>
 
@@ -189,6 +209,7 @@ const TaskCreateEditModal = ({
                 onChange={
                   (e) => setType(e.target.value as NewTaskInput['type']) // to narrow down the possibility of type
                 }
+                disabled={isClosedTask}
               >
                 {defaultStoryColumnId !== initialColumnId && (
                   <option value="TASK">TASK</option>
@@ -210,6 +231,7 @@ const TaskCreateEditModal = ({
                 onChange={(e) =>
                   setPriority(e.target.value as NewTaskInput['priority'])
                 }
+                disabled={isClosedTask}
               >
                 <option value="LOW">LOW</option>
                 <option value="MEDIUM">MEDIUM</option>
@@ -228,6 +250,7 @@ const TaskCreateEditModal = ({
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 min={new Date().toISOString().slice(0, 10)}
+                disabled={isClosedTask}
               />
             </label>
 
@@ -237,6 +260,7 @@ const TaskCreateEditModal = ({
               <select
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
+                disabled={isClosedTask}
               >
                 <option value="">Unassigned</option>
                 {assignableMembers.map((member) => (
@@ -256,6 +280,7 @@ const TaskCreateEditModal = ({
               onChange={(e) => {
                 setParentId(e.target.value);
               }}
+              disabled={isClosedTask}
             >
               <option value="">None</option>
               {candidateParents.map((parentTask) => (
@@ -275,7 +300,7 @@ const TaskCreateEditModal = ({
                 type="button"
                 className={styles.deleteButton}
                 onClick={() => setShowDeleteConfirm(true)}
-                disabled={saving || deleting}
+                disabled={saving || deleting || isClosedTask}
               >
                 Delete task
               </button>
@@ -283,7 +308,7 @@ const TaskCreateEditModal = ({
             <button type="button" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" disabled={saving}>
+            <button type="submit" disabled={saving || isClosedTask}>
               {' '}
               {/* Disable submit while saving to prevent duplicate requests*/}
               {saving

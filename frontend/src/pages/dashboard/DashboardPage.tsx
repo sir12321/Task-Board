@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
 import Layout from '../../components/Layout/Layout';
-import type { ProjectDetails } from '../../types/Types';
+import type { Board, ProjectDetails } from '../../types/Types';
 import { useAuth } from '../../context/AuthContext';
 import styles from './DashboardPage.module.css';
+import WorkflowEditor from '../../components/Board/Board/WorkflowEditor';
 
 const DashboardPage = () => {
   const [projects, setProjects] = useState<ProjectDetails[]>([]);
@@ -14,6 +15,7 @@ const DashboardPage = () => {
 
   const [addingBoardTo, setAddingBoardTo] = useState<string | null>(null);
   const [newBoardName, setNewBoardName] = useState('');
+  const [workflowBoard, setWorkflowBoard] = useState<Board | null>(null);
 
   const [view, setView] = useState<'active' | 'archived'>('active');
 
@@ -63,6 +65,7 @@ const DashboardPage = () => {
           projectId: projectId,
         }),
       });
+      const createdBoard: Board = await apiClient(`/boards/${created.id}`);
       setProjects((prev) =>
         prev.map((proj) =>
           proj.id === projectId
@@ -70,6 +73,7 @@ const DashboardPage = () => {
             : proj,
         ),
       );
+      setWorkflowBoard(createdBoard);
       setAddingBoardTo(null);
       setNewBoardName('');
     } catch (error) {
@@ -212,6 +216,30 @@ const DashboardPage = () => {
               You are not part of any projects yet.
             </p>
           </div>
+        )}
+
+        {workflowBoard && (
+          <WorkflowEditor
+            title="Set board workflow"
+            description="Choose which columns represent each workflow stage for the new board."
+            columns={workflowBoard.columns}
+            workflow={{
+              storyColumnId: workflowBoard.storyColumnId,
+              workflowColumnIds: workflowBoard.workflowColumnIds,
+              resolvedColumnId: workflowBoard.resolvedColumnId,
+              closedColumnId: workflowBoard.closedColumnId,
+            }}
+            onSubmit={async (workflow) => {
+              await apiClient(`/boards/${workflowBoard.id}/workflow`, {
+                method: 'PUT',
+                body: JSON.stringify(workflow),
+              });
+            }}
+            onCancel={() => setWorkflowBoard(null)}
+            setShortError={(message) => {
+              if (message) alert(message);
+            }}
+          />
         )}
       </div>
     </Layout>

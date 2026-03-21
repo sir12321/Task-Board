@@ -1,5 +1,6 @@
 import prisma from '../utils/prisma';
 import { Column } from '@prisma/client';
+import { parseWorkflowColumnIds } from '../utils/workflow.util';
 
 const verifyAdmin = async (
   userId: string,
@@ -44,13 +45,44 @@ export const createColumn = async (
 
   const newOrder = lastColumn ? lastColumn.order + 1 : 0;
 
-  return prisma.column.create({
-    data: {
-      name,
-      wipLimit,
-      order: newOrder,
-      boardId,
+  const board = await prisma.board.findUnique({
+    where: { id: boardId },
+    select: {
+      workflowColumnIds: true,
+      closedColumnId: true,
     },
+  });
+
+  return prisma.$transaction(async (tx) => {
+    const column = await tx.column.create({
+      data: {
+        name,
+        wipLimit,
+        order: newOrder,
+        boardId,
+      },
+    });
+
+    const workflowColumnIds = parseWorkflowColumnIds(board?.workflowColumnIds);
+    const closedIndex = board?.closedColumnId
+      ? workflowColumnIds.findIndex((id) => id === board.closedColumnId)
+      : -1;
+    const nextWorkflowColumnIds = [...workflowColumnIds];
+
+    if (closedIndex >= 0) {
+      nextWorkflowColumnIds.splice(closedIndex, 0, column.id);
+    } else {
+      nextWorkflowColumnIds.push(column.id);
+    }
+
+    await tx.board.update({
+      where: { id: boardId },
+      data: {
+        workflowColumnIds: JSON.stringify(nextWorkflowColumnIds),
+      },
+    });
+
+    return column;
   });
 };
 
@@ -94,9 +126,46 @@ export const deleteColumn = async (
     throw new Error('Column not found');
   }
 
+  const storyBoard = await prisma.board.findUnique({
+    where: { id: column.boardId },
+    select: { storyColumnId: true },
+  });
+
+  if (storyBoard?.storyColumnId === columnId || column.order === 0) {
+    throw new Error('Stories column must stay first');
+  }
+
   await verifyAdmin(userId, column.boardId, globalRole);
 
+  const workflowBoard = await prisma.board.findUnique({
+    where: { id: column.boardId },
+    select: {
+      storyColumnId: true,
+      workflowColumnIds: true,
+      resolvedColumnId: true,
+      closedColumnId: true,
+    },
+  });
+
+  if (workflowBoard?.storyColumnId === columnId) {
+    throw new Error('Stories column cannot be deleted');
+  }
+
   await prisma.$transaction([
+    prisma.board.update({
+      where: { id: column.boardId },
+      data: {
+        workflowColumnIds: JSON.stringify(
+          ((workflowBoard?.workflowColumnIds
+            ? JSON.parse(workflowBoard.workflowColumnIds)
+            : []) as string[]).filter((id) => id !== columnId),
+        ),
+        resolvedColumnId:
+          workflowBoard?.resolvedColumnId === columnId ? null : undefined,
+        closedColumnId:
+          workflowBoard?.closedColumnId === columnId ? null : undefined,
+      },
+    }),
     prisma.column.delete({
       where: { id: columnId },
     }),
@@ -138,6 +207,15 @@ export const reorderColumn = async (
 
   if (!neighbor) {
     throw new Error('No adjacent column to swap with in that direction');
+  }
+
+  const storyBoard = await prisma.board.findUnique({
+    where: { id: column.boardId },
+    select: { storyColumnId: true },
+  });
+
+  if (neighbor.id === storyBoard?.storyColumnId || neighbor.order === 0) {
+    throw new Error('Stories column must stay first');
   }
 
   await prisma.$transaction([

@@ -62,7 +62,14 @@ export interface BoardColumn {
   wipLimit: number | null;
 }
 
-export interface Board {
+export interface BoardWorkflow {
+  storyColumnId: string | null;
+  workflowColumnIds: string[];
+  resolvedColumnId: string | null;
+  closedColumnId: string | null;
+}
+
+export interface Board extends BoardWorkflow {
   id: string;
   name: string;
   projectId: string;

@@ -2,6 +2,7 @@ import { useReducer, useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import type {
   Board as BoardType,
+  BoardWorkflow,
   ProjectDetails,
   Task,
   NewTaskInput,
@@ -15,9 +16,16 @@ import HandleRenameColumn from './RenameColumn';
 import EditWIPColumn from './EditWIPColumn';
 import AddColumn from './AddColumn';
 import DeleteColumn from './DeleteColumn';
+import WorkflowEditor from './WorkflowEditor';
 import TaskDetailsModal from '../Task/TaskDetailsModal/TaskDetailsModal';
 import TaskCreateEditModal from '../Task/TaskCreate/TaskCreateEdit';
 import styles from './Board.module.css';
+import {
+  getStoryColumnId,
+  getTaskStatus,
+  isClosedColumn,
+  isResolvedColumn,
+} from './workflow';
 
 // Props accepted by the Board component. All handler callbacks are optional to allow
 // the board to function in both controlled (parent-managed) and internal state
@@ -45,6 +53,7 @@ interface Props {
     wipLimit: number | null,
   ) => Promise<void> | void;
   onDeleteColumn?: (columnId: string) => Promise<void> | void;
+  onUpdateWorkflow?: (workflow: BoardWorkflow) => Promise<void> | void;
 }
 
 const Board = ({
@@ -61,12 +70,12 @@ const Board = ({
   onReorderColumn,
   onUpdateColumnWip,
   onDeleteColumn,
+  onUpdateWorkflow,
 }: Props) => {
   const { user } = useAuth();
-  const StoryColumnId =
-    board.columns.find((c) => c.order === 0)?.id ?? 'col-story';
+  const StoryColumnId = getStoryColumnId(board);
   const StoryColumnName =
-    board.columns.find((c) => c.order === 0)?.name ?? 'Stories';
+    board.columns.find((c) => c.id === StoryColumnId)?.name ?? 'Stories';
 
   // Reducer state manages the board and project details locally. This enables
   // complex state transitions (task moves, column edits) while still allowing a
@@ -79,7 +88,11 @@ const Board = ({
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [createColumnId, setCreateColumnId] = useState<string | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  const [workflowEditMode, setWorkflowEditMode] = useState(false);
+  const [layoutEditMode, setLayoutEditMode] = useState(false);
+  const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
+  const [pendingWorkflowColumnDelete, setPendingWorkflowColumnDelete] = useState<
+    string | null
+  >(null);
   const [renameColumnDialog, setRenameColumnDialog] = useState<{
     columnId: string;
     currentName: string;
@@ -142,6 +155,23 @@ const Board = ({
     });
   }, [board]);
 
+  useEffect(() => {
+    if (!pendingWorkflowColumnDelete) {
+      return;
+    }
+
+    const deletedColumnIsGone = !state.board.columns.some(
+      (column) => column.id === pendingWorkflowColumnDelete,
+    );
+
+    if (!deletedColumnIsGone) {
+      return;
+    }
+
+    setWorkflowDialogOpen(true);
+    setPendingWorkflowColumnDelete(null);
+  }, [pendingWorkflowColumnDelete, state.board.columns]);
+
   const handleRenameColumn = async (columnId: string, newName: string) => {
     if (onRenameColumn) {
       try {
@@ -175,6 +205,21 @@ const Board = ({
     .slice()
     .sort((a, b) => a.order - b.order);
 
+  const dispatchBoardUpdate = (nextBoard: BoardType) => {
+    dispatch({
+      type: 'SET_BOARD',
+      payload: {
+        board: {
+          ...nextBoard,
+          tasks: nextBoard.tasks.map((task) => ({
+            ...task,
+            status: getTaskStatus(nextBoard, task),
+          })),
+        },
+      },
+    });
+  };
+
   const handleSubmitAddColumn = async (columnName: string) => {
     if (onAddColumn) {
       try {
@@ -191,12 +236,8 @@ const Board = ({
     columnId: string,
     direction: 'left' | 'right',
   ) => {
-    const column = sortedColumns.find((c) => c.id === columnId);
-
     if (columnId === StoryColumnId) {
-      setShortError(
-        `${column?.name} column must stay first because it contains STORY tasks`,
-      );
+      setShortError('Stories column must stay first');
       return;
     }
 
@@ -211,6 +252,7 @@ const Board = ({
     }
 
     if (sortedColumns[targetIndex]?.id === StoryColumnId) {
+      setShortError('Stories column must stay first');
       return;
     }
 
@@ -230,12 +272,28 @@ const Board = ({
     if (onDeleteColumn) {
       try {
         await onDeleteColumn(columnId);
+        setPendingWorkflowColumnDelete(columnId);
       } catch (err) {
         setShortError((err as Error)?.message ?? 'Failed to delete column');
       }
       return;
     }
     dispatch({ type: 'DELETE_COLUMN', payload: { columnId } });
+    setPendingWorkflowColumnDelete(columnId);
+  };
+
+  const handleSubmitWorkflow = async (workflow: BoardWorkflow) => {
+    if (onUpdateWorkflow) {
+      await onUpdateWorkflow(workflow);
+      return;
+    }
+
+    const nextBoard = {
+      ...state.board,
+      ...workflow,
+    };
+
+    dispatchBoardUpdate(nextBoard);
   };
 
   return (
@@ -251,13 +309,22 @@ const Board = ({
         <div className={styles.boardHeader}>
           <h2>{state.board.name}</h2>
           {canManageColumns && (
-            <button
-              type="button"
-              className={styles.workflowModeButton}
-              onClick={() => setWorkflowEditMode((prev) => !prev)}
-            >
-              {workflowEditMode ? 'Done Editing Workflow' : 'Edit Workflow'}
-            </button>
+            <>
+              <button
+                type="button"
+                className={styles.workflowModeButton}
+                onClick={() => setWorkflowDialogOpen(true)}
+              >
+                Edit Workflow
+              </button>
+              <button
+                type="button"
+                className={styles.workflowModeButton}
+                onClick={() => setLayoutEditMode((prev) => !prev)}
+              >
+                {layoutEditMode ? 'Done Editing Layout' : 'Edit Layout'}
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -272,13 +339,18 @@ const Board = ({
                 index < sortedColumns.length - 1
                   ? sortedColumns[index + 1]
                   : null;
-              const isStory = column.id === StoryColumnId;
-              const canMoveLeft =
-                !isStory && index > 0 && leftNeighbor?.id !== StoryColumnId;
+              const canMoveLeft = index > 0 && Boolean(leftNeighbor);
               const canMoveRight =
-                !isStory &&
-                index < sortedColumns.length - 1 &&
+                index < sortedColumns.length - 1 && Boolean(rightNeighbor);
+              const isStoryColumn = column.id === StoryColumnId;
+              const canShiftLeft =
+                !isStoryColumn && canMoveLeft && leftNeighbor?.id !== StoryColumnId;
+              const canShiftRight =
+                !isStoryColumn &&
+                canMoveRight &&
                 rightNeighbor?.id !== StoryColumnId;
+              const isClosedWorkflowColumn =
+                column.id === state.board.closedColumnId;
               return (
                 <Column
                   key={column.id}
@@ -361,18 +433,25 @@ const Board = ({
                   }}
                   onTaskClick={(taskId) => setSelectedTaskId(taskId)}
                   onTaskEdit={(taskId) => {
+                    const task = state.board.tasks.find(
+                      (item) => item.id === taskId,
+                    );
+                    if (task?.columnId === state.board.closedColumnId) {
+                      setShortError('Closed tasks are read-only');
+                      return;
+                    }
                     setEditingTaskId(taskId);
                   }}
                   canManageTasks={canManageTasks}
                   onCreateTask={(columnId) => {
                     setCreateColumnId(columnId);
                   }}
-                  canManageColumns={canManageColumns && workflowEditMode}
+                  canManageColumns={canManageColumns && layoutEditMode}
                   onRenameColumn={(columnId) =>
                     openRenameColumn(columnId, column.name)
                   }
-                  canMoveLeft={canMoveLeft}
-                  canMoveRight={canMoveRight}
+                  canMoveLeft={canShiftLeft}
+                  canMoveRight={canShiftRight}
                   onMoveLeft={(columnId) => handleMoveColumn(columnId, 'left')}
                   onMoveRight={(columnId) =>
                     handleMoveColumn(columnId, 'right')
@@ -389,7 +468,7 @@ const Board = ({
                   }}
                   onDeleteColumn={(columnId) => {
                     const col = sortedColumns.find((c) => c.id === columnId);
-                    if (col?.order === 0) {
+                    if (col?.id === StoryColumnId) {
                       setShortError('Stories column cannot be deleted.');
                       return;
                     }
@@ -399,11 +478,13 @@ const Board = ({
                         columnName: col.name,
                       });
                   }}
+                  canDeleteColumn={column.id !== StoryColumnId}
+                  isClosedWorkflowColumn={isClosedWorkflowColumn}
                 />
               );
             })(),
           )}
-          {canManageColumns && workflowEditMode && (
+          {canManageColumns && layoutEditMode && (
             <button
               type="button"
               className={styles.addColumnButton}
@@ -425,6 +506,23 @@ const Board = ({
         <AddColumn
           onSubmit={handleSubmitAddColumn}
           onCancel={() => setAddColumnOpen(false)}
+          setShortError={setShortError}
+        />
+      )}
+
+      {workflowDialogOpen && (
+        <WorkflowEditor
+          title="Edit board workflow"
+          description="Map workflow headings to columns. Visual column order stays separate from this workflow mapping."
+          columns={sortedColumns}
+          workflow={{
+            storyColumnId: state.board.storyColumnId,
+            workflowColumnIds: state.board.workflowColumnIds,
+            resolvedColumnId: state.board.resolvedColumnId,
+            closedColumnId: state.board.closedColumnId,
+          }}
+          onSubmit={handleSubmitWorkflow}
+          onCancel={() => setWorkflowDialogOpen(false)}
           setShortError={setShortError}
         />
       )}
@@ -457,7 +555,7 @@ const Board = ({
         <HandleRenameColumn
           columnId={renameColumnDialog.columnId}
           currentName={renameColumnDialog.currentName}
-          canManageColumns={canManageColumns && workflowEditMode}
+          canManageColumns={canManageColumns && layoutEditMode}
           onSubmit={handleRenameColumn}
           onCancel={() => setRenameColumnDialog(null)}
           setShortError={setShortError}
@@ -589,10 +687,10 @@ const Board = ({
               (c) => c.id === payload.columnId,
             );
             const now = new Date().toISOString();
-            dispatch({
-              type: 'ADD_TASK',
-              payload: {
-                task: {
+            const draftBoard = {
+              ...state.board,
+              tasks: [
+                {
                   id: `task-${Date.now()}`,
                   title: payload.title,
                   description: payload.description ?? null,
@@ -603,10 +701,7 @@ const Board = ({
                   updatedAt: now,
                   columnId: payload.columnId,
                   columnName: column?.name ?? 'Unknown',
-                  status:
-                    payload.type === 'STORY'
-                      ? 'In-progress'
-                      : (column?.name ?? 'Unknown'),
+                  status: column?.name ?? 'Unknown',
                   reporterId: 'current-user',
                   reporterName: 'Current User',
                   assigneeId: payload.assigneeId ?? null,
@@ -614,9 +709,18 @@ const Board = ({
                     assignableMembers.find((m) => m.id === payload.assigneeId)
                       ?.name ?? null,
                   parentId: payload.parentId ?? null,
+                  resolvedAt: isResolvedColumn(state.board, payload.columnId)
+                    ? now
+                    : null,
+                  closedAt: isClosedColumn(state.board, payload.columnId)
+                    ? now
+                    : null,
                 },
-              },
-            });
+                ...state.board.tasks,
+              ],
+            };
+
+            dispatchBoardUpdate(draftBoard);
           }}
         />
       )}
@@ -627,6 +731,7 @@ const Board = ({
           mode="edit"
           task={state.board.tasks.find((t) => t.id === editingTaskId)}
           defaultStoryColumnId={StoryColumnId}
+          closedColumnId={state.board.closedColumnId}
           defaultColumnId={
             state.board.tasks.find((t) => t.id === editingTaskId)?.columnId ??
             'col-backlog'

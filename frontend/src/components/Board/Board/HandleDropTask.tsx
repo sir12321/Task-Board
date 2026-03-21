@@ -1,6 +1,10 @@
 import type { Board as BoardType } from '../../../types/Types';
 import type { Dispatch } from 'react';
 import type { BoardState, BoardAction } from './BoardReducer';
+import {
+  getStoryColumnId,
+  getWorkflowStep,
+} from './workflow';
 
 export const canMoveTask = (
   board: BoardType,
@@ -34,9 +38,13 @@ export const canMoveTask = (
   // We check this before WIP so the user sees the most relevant error first.
   const sourceColumn = board.columns.find((c) => c.id === task.columnId);
   if (sourceColumn) {
-    const orderDiff = targetColumn.order - sourceColumn.order;
-    if (orderDiff !== 1) {
-      setshortError('Move forbidden: only adjacent forward moves are allowed');
+    const currentStep = getWorkflowStep(board, sourceColumn.id);
+    const targetStep = getWorkflowStep(board, targetColumn.id);
+
+    if (currentStep < 0 || targetStep < 0 || targetStep - currentStep !== 1) {
+      setshortError(
+        'Move forbidden: only the next configured workflow stage is allowed',
+      );
       return false;
     }
   }
@@ -74,9 +82,7 @@ export const handleDrop = (
   setshortError: (message: string | null) => void,
 ) => {
   const resolvedStoryColumnId =
-    state.board.columns.find((column) => column.order === 0)?.id ??
-    state.board.columns[0]?.id ??
-    '';
+    getStoryColumnId(state.board);
 
   if (
     !canMoveTask(

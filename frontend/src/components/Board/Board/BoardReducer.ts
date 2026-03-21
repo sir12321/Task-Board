@@ -4,6 +4,13 @@ import type {
   Task,
   NewTaskInput,
 } from '../../../types/Types';
+import {
+  getStoryColumnId,
+  getTaskStatus,
+  getWorkflowStep,
+  isClosedColumn,
+  isResolvedColumn,
+} from './workflow';
 
 export interface BoardState {
   board: Board;
@@ -81,7 +88,7 @@ export const BoardReducer = (
   state: BoardState,
   action: BoardAction,
 ): BoardState => {
-  const storyColumnId = state.board.columns[0]?.id ?? 'col-story';
+  const storyColumnId = getStoryColumnId(state.board);
   switch (action.type) {
     case 'MOVE_TASK': {
       const { taskId, targetColumnId } = action.payload;
@@ -98,16 +105,16 @@ export const BoardReducer = (
       // WIP Enforcement
       const column = state.board.columns.find((c) => c.id === targetColumnId);
 
-      const sourceColumn = state.board.columns.find(
-        (c) => c.id === task.columnId,
-      );
-
-      const storyColumnId =
-        state.board.columns.find((c) => c.order === 0)?.id || 'col-story';
+      const sourceColumn = state.board.columns.find((c) => c.id === task.columnId);
 
       if (sourceColumn && column) {
-        const orderDiff = column.order - sourceColumn.order;
-        if (orderDiff !== 1) {
+        const currentStep = getWorkflowStep(state.board, sourceColumn.id);
+        const targetStep = getWorkflowStep(state.board, column.id);
+        if (
+          currentStep < 0 ||
+          targetStep < 0 ||
+          targetStep - currentStep !== 1
+        ) {
           return state;
         }
 
@@ -134,14 +141,28 @@ export const BoardReducer = (
               ...t,
               columnId: targetColumnId,
               columnName: column?.name || t.columnName,
+              resolvedAt: isResolvedColumn(state.board, targetColumnId)
+                ? t.resolvedAt ?? new Date().toISOString()
+                : null,
+              closedAt: isClosedColumn(state.board, targetColumnId)
+                ? new Date().toISOString()
+                : null,
             }
           : t,
       );
 
+      const boardWithMovedTasks = {
+        ...state.board,
+        tasks: updatedTasks,
+      };
+
       return {
         board: {
-          ...state.board,
-          tasks: updatedTasks,
+          ...boardWithMovedTasks,
+          tasks: boardWithMovedTasks.tasks.map((candidate) => ({
+            ...candidate,
+            status: getTaskStatus(boardWithMovedTasks, candidate),
+          })),
         },
         projectDetails: state.projectDetails,
       };
@@ -252,21 +273,29 @@ export const BoardReducer = (
         return state;
       }
 
+      const renamedBoard = {
+        ...state.board,
+        columns: state.board.columns.map((column) =>
+          column.id === columnId ? { ...column, name: trimmedName } : column,
+        ),
+        tasks: state.board.tasks.map((task) =>
+          task.columnId === columnId
+            ? {
+                ...task,
+                columnName: trimmedName,
+                updatedAt: new Date().toISOString(),
+              }
+            : task,
+        ),
+      };
+
       return {
         board: {
-          ...state.board,
-          columns: state.board.columns.map((column) =>
-            column.id === columnId ? { ...column, name: trimmedName } : column,
-          ),
-          tasks: state.board.tasks.map((task) =>
-            task.columnId === columnId
-              ? {
-                  ...task,
-                  columnName: trimmedName,
-                  updatedAt: new Date().toISOString(),
-                }
-              : task,
-          ),
+          ...renamedBoard,
+          tasks: renamedBoard.tasks.map((task) => ({
+            ...task,
+            status: getTaskStatus(renamedBoard, task),
+          })),
         },
         projectDetails: state.projectDetails,
       };
@@ -301,7 +330,6 @@ export const BoardReducer = (
       if (ordered[targetIndex]?.id === storyColumnId) {
         return state;
       }
-
       const temp = ordered[currentIndex];
       ordered[currentIndex] = ordered[targetIndex];
       ordered[targetIndex] = temp;
@@ -343,11 +371,10 @@ export const BoardReducer = (
       if (state.projectDetails.userRole !== 'PROJECT_ADMIN') {
         return state;
       }
-      const todoColumnId = state.board.columns[1]?.id;
       const doneColumnId =
         state.board.columns[state.board.columns.length - 1]?.id;
       const { columnId } = action.payload;
-      if ([storyColumnId, todoColumnId, doneColumnId].includes(columnId)) {
+      if ([storyColumnId, doneColumnId].includes(columnId)) {
         return state;
       }
 
@@ -363,11 +390,28 @@ export const BoardReducer = (
         .sort((a, b) => a.order - b.order)
         .map((column, index) => ({ ...column, order: index }));
 
+      const nextBoard = {
+        ...state.board,
+        storyColumnId:
+          state.board.storyColumnId === columnId
+            ? null
+            : state.board.storyColumnId,
+        workflowColumnIds: state.board.workflowColumnIds.filter(
+          (workflowColumnId) => workflowColumnId !== columnId,
+        ),
+        resolvedColumnId:
+          state.board.resolvedColumnId === columnId
+            ? null
+            : state.board.resolvedColumnId,
+        closedColumnId:
+          state.board.closedColumnId === columnId
+            ? null
+            : state.board.closedColumnId,
+        columns: remainingColumns,
+      };
+
       return {
-        board: {
-          ...state.board,
-          columns: remainingColumns,
-        },
+        board: nextBoard,
         projectDetails: state.projectDetails,
       };
     }
