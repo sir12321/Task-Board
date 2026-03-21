@@ -2,40 +2,93 @@
   padding: 20px;
   width: 100%;
   box-sizing: border-box;
+  background: #eef2f6;
+}
+
+.projectSection {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  padding: 20px 22px 18px;
+  margin-bottom: 14px;
+  background: linear-gradient(
+    to bottom left,
+    #b9c9d9 0%,
+    #f5f7fa 42%,
+    #e6ebf0 100%
+  );
+  border: 1px solid rgba(71, 85, 105, 0.15);
+  box-shadow: none;
+}
+
+.projectSection::before {
+  content: none;
 }
 
 .boardHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.boardHeader h2 {
+  margin: 0;
+  color: #0d1b44;
+  font-size: 28px;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-family: 'Space Grotesk', 'Manrope', 'Segoe UI', sans-serif;
+  position: relative;
+  padding-bottom: 8px;
+  text-wrap: balance;
+}
+
+.boardHeader h2::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 72px;
+  height: 4px;
+  border-radius: 999px;
+  background: #94a3b8;
 }
 
 .workflowModeButton {
-  border: 1px solid rgba(15, 23, 42, 0.2);
-  background: #f8fafc;
-  color: #0f172a;
-  border-radius: 8px;
-  padding: 8px 12px;
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  background: #eef2f6;
+  color: #334155;
+  border-radius: 10px;
+  padding: 9px 14px;
   cursor: pointer;
   font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: none;
+  transition: background 0.16s ease;
 }
 
 .workflowModeButton:hover {
-  background: #f2f6fa;
+  background: #e5eaf0;
 }
 
 .boardViewport {
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-bottom: 8px;
+  padding: 14px 14px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: #f1f4f8;
+  box-shadow: none;
 }
 
 .board {
   display: flex;
   gap: 24px;
   align-items: flex-start;
-  padding-bottom: 20px;
+  padding: 4px 2px 18px;
   width: max-content;
   min-width: 100%;
   flex-wrap: nowrap;
@@ -43,18 +96,19 @@
 }
 
 .addColumnButton {
-  border: 1px dashed rgba(29, 78, 216, 0.45);
-  background: #eff6ff;
-  color: #1d4ed8;
+  border: 1px dashed rgba(71, 85, 105, 0.45);
+  background: #eef2f6;
+  color: #334155;
   border-radius: 10px;
-  padding: 10px 14px;
+  padding: 11px 15px;
   cursor: pointer;
   min-width: 180px;
   font-weight: 600;
+  min-height: 48px;
 }
 
 .addColumnButton:hover {
-  background: #dbeafe;
+  background: #e4e9f0;
 }
 
 /* Bottom-right toast for brief error messages */
@@ -73,26 +127,56 @@
 }
 
 .project-name {
-  font-size: 40px;
-  color: #1e293b;
-  margin-bottom: 4px;
+  font-size: clamp(28px, 2.8vw, 38px);
+  color: #14213f;
+  margin-bottom: 6px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-family: 'Space Grotesk', 'Manrope', 'Segoe UI', sans-serif;
+  font-weight: 700;
+  text-wrap: balance;
 }
 
 .project-description {
-  font-size: 25px;
-  color: #475569;
-  margin-bottom: 12px;
+  font-size: clamp(14px, 1.05vw, 17px);
+  color: #3d4f6e;
+  margin-bottom: 14px;
+  max-width: 920px;
+  line-height: 1.38;
+  font-family: 'Manrope', 'Segoe UI', sans-serif;
 }
 
 .projectRoleChip {
   display: inline-flex;
   align-items: center;
   margin-bottom: 12px;
-  padding: 9px 16px;
+  padding: 8px 15px;
   border-radius: 999px;
-  border: 1px solid rgba(30, 41, 59, 0.16);
-  background: #f8fafc;
-  color: #0f172a;
-  font-size: 16px;
+  border: 1px solid rgba(71, 85, 105, 0.24);
+  background: #edf1f5;
+  color: #334155;
+  font-size: 13px;
   font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .projectSection {
+    padding: 16px;
+  }
+
+  .boardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .boardHeader h2 {
+    font-size: 24px;
+  }
+
+  .boardViewport {
+    padding: 10px;
+    border-radius: 16px;
+  }
 }
