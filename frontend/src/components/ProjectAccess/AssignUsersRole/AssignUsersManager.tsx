@@ -126,9 +126,6 @@ const AssignUsersManager = ({
                         <div>
                           <div className={styles.userName}>{member.name}</div>
                           <div className={styles.userEmail}>{member.email}</div>
-                          <div className={styles.userAvatarUrl}>
-                            {member.avatarUrl ?? 'No avatar URL'}
-                          </div>
                         </div>
                       </div>
                       <div className={styles.memberRoleField}>
