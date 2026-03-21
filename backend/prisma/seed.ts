@@ -446,7 +446,7 @@ async function main(): Promise<void> {
           reporter: { connect: { id: activeMembers[0].id } },
           assignee: { connect: { id: activeMembers[0].id } },
           dueDate: new Date(
-            `2026-04-${String(6 + boardIndex).padStart(2, '0')}T18:00:00.000Z`,
+            `2025-12-${String(23 + boardIndex).padStart(2, '0')}T18:00:00.000Z`,
           ),
         },
       });
@@ -569,7 +569,7 @@ async function main(): Promise<void> {
             reporter: { connect: { id: reporterId } },
             assignee: { connect: { id: payload.assigneeId } },
             dueDate: new Date(
-              `2026-04-${String(9 + boardIndex + (payloadIndex % 3)).padStart(2, '0')}T16:00:00.000Z`,
+              `2025-12-${String(23 + boardIndex + (payloadIndex % 3)).padStart(2, '0')}T16:00:00.000Z`,
             ),
             parent:
               payload.parentId !== null
@@ -578,13 +578,13 @@ async function main(): Promise<void> {
             resolvedAt:
               payload.columnId === doneCol.id
                 ? new Date(
-                  `2026-03-${String(20 + (payloadIndex % 5)).padStart(2, '0')}T11:00:00.000Z`,
+                  `2025-12-${String(23 + (payloadIndex % 5)).padStart(2, '0')}T11:00:00.000Z`,
                 )
                 : undefined,
             closedAt:
               payload.columnId === doneCol.id
                 ? new Date(
-                  `2026-03-${String(20 + (payloadIndex % 5)).padStart(2, '0')}T13:00:00.000Z`,
+                  `2025-12-${String(23 + (payloadIndex % 5)).padStart(2, '0')}T13:00:00.000Z`,
                 )
                 : undefined,
           },
@@ -625,7 +625,7 @@ async function main(): Promise<void> {
             connect: { id: contributors[(i + 1) % contributors.length].id },
           },
           dueDate: new Date(
-            `2026-04-${String(20 + (i % 8)).padStart(2, '0')}T12:00:00.000Z`,
+            `2025-12-${String(23 + (i % 8)).padStart(2, '0')}T12:00:00.000Z`,
           ),
         },
       });
@@ -684,7 +684,7 @@ async function main(): Promise<void> {
           : 'A mission task assigned to you has moved to debrief.',
       isRead: idx % 3 === 0,
       createdAt: new Date(
-        `2026-03-${String(10 + idx).padStart(2, '0')}T10:30:00.000Z`,
+        `2025-12-${String(23 + (idx % 8)).padStart(2, '0')}T10:30:00.000Z`,
       ),
     })),
   });
