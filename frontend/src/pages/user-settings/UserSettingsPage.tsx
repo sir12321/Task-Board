@@ -15,7 +15,16 @@ const UserSettingsPage = () => {
       method: 'POST',
       body: JSON.stringify({ name: nextName }),
     });
-    setUser(response.user);
+    setUser((prev) =>
+      prev
+        ? {
+            ...prev,
+            name: response?.user?.name ?? nextName,
+            avatarUrl: response?.user?.avatarUrl ?? prev.avatarUrl,
+            email: response?.user?.email ?? prev.email,
+          }
+        : prev,
+    );
   };
 
   const handleChangePassword = async (input: {
