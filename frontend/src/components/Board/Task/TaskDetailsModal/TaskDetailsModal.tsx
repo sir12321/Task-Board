@@ -11,6 +11,7 @@ import type {
 import styles from './TaskDetailsModal.module.css';
 import { getInitials } from '../../../../utils/getInitials';
 import {
+  getRichTextEditableText,
   getRichTextPlainText,
   renderRichText,
 } from '../../../../utils/richText';
@@ -422,7 +423,7 @@ const TaskDetailsModal = ({
   };
 
   const handleEditComment = (id: string, content: string) => {
-    const plainTextContent = getRichTextPlainText(content);
+    const plainTextContent = getRichTextEditableText(content);
 
     setEditComment(true);
     setEditCommentId(id);
