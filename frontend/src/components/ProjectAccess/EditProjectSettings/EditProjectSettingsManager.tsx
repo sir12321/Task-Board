@@ -3,6 +3,7 @@ import type {
   AuthUser,
   DirectoryUser,
   ProjectDetails,
+  ProjectMemberSummary,
   ProjectRole,
 } from '../../../types/Types';
 import styles from './EditProjectSettingsManager.module.css';
@@ -18,22 +19,9 @@ interface Props {
     name: string;
     description: string;
     isArchived: boolean;
+    members: ProjectMemberSummary[];
   }) => Promise<void>;
   onDeleteProject: (input: { projectId: string }) => Promise<void>;
-  onAddProjectMember: (input: {
-    projectId: string;
-    memberEmail: string;
-    role: ProjectRole;
-  }) => Promise<void>;
-  onUpdateProjectMemberRole: (input: {
-    projectId: string;
-    memberId: string;
-    role: ProjectRole;
-  }) => Promise<void>;
-  onRemoveProjectMember: (input: {
-    projectId: string;
-    memberId: string;
-  }) => Promise<void>;
 }
 
 const EditProjectSettingsManager = ({
@@ -42,9 +30,6 @@ const EditProjectSettingsManager = ({
   directoryUsers,
   onSaveProjectSettings,
   onDeleteProject,
-  onAddProjectMember,
-  onUpdateProjectMemberRole,
-  onRemoveProjectMember,
 }: Props) => {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [projectQuery, setProjectQuery] = useState('');
@@ -56,6 +41,7 @@ const EditProjectSettingsManager = ({
   const [draftName, setDraftName] = useState('');
   const [draftDescription, setDraftDescription] = useState('');
   const [draftArchived, setDraftArchived] = useState(false);
+  const [draftMembers, setDraftMembers] = useState<ProjectMemberSummary[]>([]);
   const [statusMessage, setStatusMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,9 +82,7 @@ const EditProjectSettingsManager = ({
     }
 
     const query = userQuery.trim().toLowerCase();
-    const assignedEmails = new Set(
-      selectedProject.members.map((member) => member.email),
-    );
+    const assignedEmails = new Set(draftMembers.map((member) => member.email));
 
     return directoryUsers.filter((person) => {
       if (person.globalRole === 'GLOBAL_ADMIN') {
@@ -118,7 +102,7 @@ const EditProjectSettingsManager = ({
         person.email.toLowerCase().includes(query)
       );
     });
-  }, [directoryUsers, selectedProject, userQuery]);
+  }, [directoryUsers, draftMembers, selectedProject, userQuery]);
 
   const filteredMembers = useMemo(() => {
     if (!selectedProject) {
@@ -127,27 +111,29 @@ const EditProjectSettingsManager = ({
 
     const query = memberQuery.trim().toLowerCase();
     if (!query) {
-      return selectedProject.members;
+      return draftMembers;
     }
 
-    return selectedProject.members.filter(
+    return draftMembers.filter(
       (member) =>
         member.name.toLowerCase().includes(query) ||
         member.email.toLowerCase().includes(query),
     );
-  }, [memberQuery, selectedProject]);
+  }, [draftMembers, memberQuery]);
 
   useEffect(() => {
     if (!selectedProject) {
       setDraftName('');
       setDraftDescription('');
       setDraftArchived(false);
+      setDraftMembers([]);
       return;
     }
 
     setDraftName(selectedProject.name);
     setDraftDescription(selectedProject.description ?? '');
     setDraftArchived(Boolean(selectedProject.isArchived));
+    setDraftMembers(selectedProject.members);
   }, [selectedProject]);
 
   const handleReset = (): void => {
@@ -158,6 +144,7 @@ const EditProjectSettingsManager = ({
     setDraftName(selectedProject.name);
     setDraftDescription(selectedProject.description ?? '');
     setDraftArchived(Boolean(selectedProject.isArchived));
+    setDraftMembers(selectedProject.members);
     setStatusMessage('');
   };
 
@@ -178,6 +165,7 @@ const EditProjectSettingsManager = ({
         name: draftName,
         description: draftDescription,
         isArchived: draftArchived,
+        members: draftMembers,
       });
       setStatusMessage(`Saved settings for "${draftName.trim()}".`);
     } catch (error) {
@@ -242,24 +230,20 @@ const EditProjectSettingsManager = ({
 
     const role = directoryRoles[directoryUser.email] ?? 'PROJECT_MEMBER';
 
-    try {
-      setIsSubmitting(true);
-      await onAddProjectMember({
-        projectId: selectedProject.id,
-        memberEmail: directoryUser.email,
+    setDraftMembers((prev) => [
+      ...prev,
+      {
+        id: directoryUser.id,
+        name: directoryUser.name,
+        email: directoryUser.email,
         role,
-      });
-      setStatusMessage(
-        `Added ${directoryUser.name} to "${selectedProject.name}".`,
-      );
-      setUserQuery('');
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to add member.';
-      setStatusMessage(message);
-    } finally {
-      setIsSubmitting(false);
-    }
+        avatarUrl: directoryUser.avatarUrl,
+      },
+    ]);
+    setStatusMessage(
+      `Added ${directoryUser.name} to the draft. Save settings to persist it.`,
+    );
+    setUserQuery('');
   };
 
   const handleUpdateMemberRole = async (
@@ -270,7 +254,7 @@ const EditProjectSettingsManager = ({
       return;
     }
 
-    const nextMembers = selectedProject.members.map((member) =>
+    const nextMembers = draftMembers.map((member) =>
       member.id === memberId ? { ...member, role: nextRole } : member,
     );
 
@@ -279,23 +263,10 @@ const EditProjectSettingsManager = ({
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      await onUpdateProjectMemberRole({
-        projectId: selectedProject.id,
-        memberId,
-        role: nextRole,
-      });
-      setStatusMessage(`Updated member roles in "${selectedProject.name}".`);
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Failed to update member role.';
-      setStatusMessage(message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    setDraftMembers(nextMembers);
+    setStatusMessage(
+      'Updated the draft member role. Save settings to persist it.',
+    );
   };
 
   const handleRemoveMember = async (memberId: string): Promise<void> => {
@@ -303,34 +274,27 @@ const EditProjectSettingsManager = ({
       return;
     }
 
-    const memberToRemove = selectedProject.members.find(
+    const memberToRemove = draftMembers.find(
       (member) => member.id === memberId,
     );
     if (!memberToRemove) {
       return;
     }
 
-    const shouldRemove = window.confirm(
-      `Remove ${memberToRemove.name} from "${selectedProject.name}"?`,
-    );
-    if (!shouldRemove) {
+    if (
+      memberToRemove.role === 'PROJECT_ADMIN' &&
+      !draftMembers.some(
+        (member) => member.id !== memberId && member.role === 'PROJECT_ADMIN',
+      )
+    ) {
+      setStatusMessage('Each project must keep at least one admin.');
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      await onRemoveProjectMember({
-        projectId: selectedProject.id,
-        memberId,
-      });
-      setStatusMessage(`Removed ${memberToRemove.name} from the project.`);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to remove member.';
-      setStatusMessage(message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    setDraftMembers((prev) => prev.filter((member) => member.id !== memberId));
+    setStatusMessage(
+      `Removed ${memberToRemove.name} from the draft. Save settings to persist it.`,
+    );
   };
 
   return (
@@ -434,7 +398,7 @@ const EditProjectSettingsManager = ({
                 <div className={styles.projectStatCard}>
                   <div className={styles.projectStatLabel}>Members</div>
                   <div className={styles.projectStatValue}>
-                    {selectedProject.members.length}
+                    {draftMembers.length}
                   </div>
                 </div>
                 <div className={styles.projectStatCard}>

@@ -4,13 +4,10 @@ import EditProjectSettingsManager from '../../components/ProjectAccess/EditProje
 import {
   getGlobalAdminEmails,
   getProjectDirectoryUsers,
+  saveManagedProjectSettings,
 } from './projectAccess';
 import { useAuth } from '../../context/AuthContext';
-import type {
-  DirectoryUser,
-  ProjectDetails,
-  ProjectRole,
-} from '../../types/Types';
+import type { DirectoryUser, ProjectDetails } from '../../types/Types';
 import { apiClient } from '../../utils/api';
 
 const removeGlobalAdminsFromProjects = (
@@ -110,57 +107,31 @@ const EditProjectSettingsPage = () => {
       name,
       description,
       isArchived,
+      members,
     }: {
       projectId: string;
       name: string;
       description: string;
       isArchived: boolean;
+      members: ProjectDetails['members'];
     }) => {
-      await apiClient(`/projects/${projectId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          isArchived,
-          name: name.trim(),
-          description: description.trim() || null,
-        }),
-      });
-
-      setAdminProjects((prev) =>
-        prev.map((project) =>
-          project.id === projectId
-            ? {
-                ...project,
-                name: name.trim(),
-                description: description.trim() || null,
-                isArchived,
-              }
-            : project,
-        ),
+      const currentProject = adminProjects.find(
+        (project) => project.id === projectId,
       );
-    },
-    [],
-  );
+      if (!currentProject) {
+        throw new Error('Project not found');
+      }
 
-  const handleAddProjectMember = useCallback(
-    async ({
-      projectId,
-      memberEmail,
-      role,
-    }: {
-      projectId: string;
-      memberEmail: string;
-      role: ProjectRole;
-    }) => {
-      await apiClient(`/projects/${projectId}/members`, {
-        method: 'POST',
-        body: JSON.stringify({
-          email: memberEmail,
-          role,
-        }),
+      await saveManagedProjectSettings({
+        project: currentProject,
+        name,
+        description,
+        isArchived,
+        members,
       });
       await loadProjects();
     },
-    [loadProjects],
+    [adminProjects, loadProjects],
   );
 
   const handleDeleteProject = useCallback(
@@ -174,25 +145,6 @@ const EditProjectSettingsPage = () => {
       );
     },
     [],
-  );
-
-  const handleUpdateProjectMemberRole = useCallback(
-    async ({
-      projectId,
-      memberId,
-      role,
-    }: {
-      projectId: string;
-      memberId: string;
-      role: ProjectRole;
-    }) => {
-      await apiClient(`/projects/${projectId}/members/${memberId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ role }),
-      });
-      await loadProjects();
-    },
-    [loadProjects],
   );
 
   if (!user) {
@@ -223,8 +175,6 @@ const EditProjectSettingsPage = () => {
         directoryUsers={directoryUsers}
         onSaveProjectSettings={handleSaveProjectSettings}
         onDeleteProject={handleDeleteProject}
-        onAddProjectMember={handleAddProjectMember}
-        onUpdateProjectMemberRole={handleUpdateProjectMemberRole}
       />
     </Layout>
   );

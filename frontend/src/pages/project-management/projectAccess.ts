@@ -70,6 +70,7 @@ interface SaveManagedProjectSettingsInput {
   name: string;
   description: string;
   isArchived: boolean;
+  members: ProjectMemberSummary[];
 }
 
 interface AddManagedProjectMemberInput {
@@ -165,6 +166,7 @@ export const saveManagedProjectSettings = async ({
   name,
   description,
   isArchived,
+  members,
 }: SaveManagedProjectSettingsInput): Promise<ManagedProject> => {
   const trimmedName = name.trim();
   if (!trimmedName) {
@@ -180,11 +182,84 @@ export const saveManagedProjectSettings = async ({
     }),
   });
 
+  const currentMembersById = new Map(
+    project.members.map((member) => [member.id, member]),
+  );
+  const nextMembersById = new Map(members.map((member) => [member.id, member]));
+
+  const removedMembers = project.members.filter(
+    (member) => !nextMembersById.has(member.id),
+  );
+  const addedMembers = members.filter(
+    (member) => !currentMembersById.has(member.id),
+  );
+  const updatedMembers = members.filter((member) => {
+    const currentMember = currentMembersById.get(member.id);
+    return Boolean(currentMember && currentMember.role !== member.role);
+  });
+
+  await Promise.all(
+    addedMembers.map((member) =>
+      apiClient(`/projects/${project.id}/members`, {
+        method: 'POST',
+        body: JSON.stringify({
+          email: member.email,
+          role: member.role,
+        }),
+      }),
+    ),
+  );
+
+  await Promise.all(
+    updatedMembers.map((member) =>
+      apiClient(`/projects/${project.id}/members/${member.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ role: member.role }),
+      }),
+    ),
+  );
+
+  await Promise.all(
+    removedMembers.map((member) =>
+      apiClient(`/projects/${project.id}/members/${member.id}`, {
+        method: 'DELETE',
+      }),
+    ),
+  );
+
+  const refreshedProject = await fetchManagedProjectById(project.id);
+  if (refreshedProject) {
+    return refreshedProject;
+  }
+
   return {
     ...project,
     name: trimmedName,
     description: description.trim() || null,
     isArchived,
+    members,
+  };
+};
+
+export const removeManagedProjectMember = async ({
+  project,
+  memberId,
+}: {
+  project: ManagedProject;
+  memberId: string;
+}): Promise<ManagedProject> => {
+  await apiClient(`/projects/${project.id}/members/${memberId}`, {
+    method: 'DELETE',
+  });
+
+  const refreshedProject = await fetchManagedProjectById(project.id);
+  if (refreshedProject) {
+    return refreshedProject;
+  }
+
+  return {
+    ...project,
+    members: project.members.filter((member) => member.id !== memberId),
   };
 };
 
