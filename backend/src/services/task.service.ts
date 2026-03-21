@@ -106,6 +106,15 @@ export const makeTask = async (
 
   await checkWipLimit(data.columnId);
 
+  const targetCol = await prisma.column.findUnique({
+    where: { id: data.columnId },
+    select: { name: true },
+  });
+
+  const columnName = targetCol?.name.toLowerCase() || '';
+  const isReview = columnName.includes('review');
+  const isDone = columnName.includes('done');
+
   const task = await prisma.task.create({
     data: {
       title: data.title,
@@ -118,6 +127,8 @@ export const makeTask = async (
       reporterId: data.reporterId,
       assigneeId: data.assigneeId,
       parentId: data.parentId,
+      resolvedAt: isReview || isDone ? new Date() : null,
+      closedAt: isDone ? new Date() : null,
     },
   });
 
@@ -152,6 +163,12 @@ export const moveTask = async (
     throw new Error('Task not found');
   }
 
+  if (task.closedAt) {
+    throw new Error(
+      'Forbidden: Task is closed and locked from further modifications',
+    );
+  }
+
   await verifyTaskPermissions(userId, task.boardId, globalRole);
 
   const targetCol = await prisma.column.findUnique({
@@ -175,10 +192,10 @@ export const moveTask = async (
   }
 
   const columnName = targetCol.name.toLowerCase();
-  const isResolved =
-    columnName.includes('done') || columnName.includes('resolved');
+  const isReview = columnName.includes('review');
+  const isDone = columnName.includes('done');
 
-  if (isResolved) {
+  if (isReview || isDone) {
     await checkStoryChildren(id);
   }
 
@@ -186,7 +203,8 @@ export const moveTask = async (
     where: { id },
     data: {
       columnId: cId,
-      resolvedAt: isResolved ? new Date() : null,
+      resolvedAt: isReview || isDone ? task.resolvedAt || new Date() : null,
+      closedAt: isDone ? new Date() : null,
     },
   });
 
@@ -200,11 +218,17 @@ export const removeTask = async (
 ): Promise<Task> => {
   const task = await prisma.task.findUnique({
     where: { id },
-    select: { boardId: true },
+    select: { boardId: true, closedAt: true },
   });
 
   if (!task) {
     throw new Error('Task not found');
+  }
+
+  if (task.closedAt) {
+    throw new Error(
+      'Forbidden: Task is closed and locked from further modifications',
+    );
   }
 
   await verifyTaskPermissions(userId, task.boardId, globalRole);
@@ -269,11 +293,23 @@ export const updateTask = async (
 ): Promise<Task> => {
   const task = await prisma.task.findUnique({
     where: { id },
-    select: { boardId: true, assigneeId: true, type: true, reporterId: true },
+    select: {
+      boardId: true,
+      assigneeId: true,
+      type: true,
+      reporterId: true,
+      closedAt: true,
+    },
   });
 
   if (!task) {
     throw new Error('Task not found');
+  }
+
+  if (task.closedAt) {
+    throw new Error(
+      'Forbidden: Task is closed and locked from further modifications',
+    );
   }
 
   await verifyTaskPermissions(userId, task.boardId, globalRole);
