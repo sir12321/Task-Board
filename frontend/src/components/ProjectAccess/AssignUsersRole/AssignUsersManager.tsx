@@ -151,9 +151,6 @@ const AssignUsersManager = ({
                           ))}
                         </select>
                       </div>
-                      <div className={styles.projectDetails}>
-                        Current: {roleLabel(member.role)}
-                      </div>
                     </div>
                   ))}
                 </div>
