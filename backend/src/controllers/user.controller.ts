@@ -114,6 +114,19 @@ export const changePassword = async (
     res.status(200).json({ message: 'Password updated successfully' });
   } catch (error) {
     console.error('Error updating password:', error);
+
+    if (error instanceof Error) {
+      if (error.message.includes('Current password is incorrect')) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+
+      if (error.message.includes('User not found')) {
+        res.status(404).json({ error: error.message });
+        return;
+      }
+    }
+
     res.status(500).json({ error: 'Failed to update password' });
   }
 };
