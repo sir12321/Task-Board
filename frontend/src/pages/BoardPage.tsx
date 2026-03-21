@@ -208,11 +208,62 @@ export default function BoardPage() {
 
       try {
         const existingTask = board.tasks.find((t) => t.id === taskId);
-        if (existingTask && existingTask.columnId !== payload.columnId) {
-          await apiClient(`/tasks/${taskId}/status`, {
+        const statusChanged =
+          Boolean(existingTask) && existingTask.columnId !== payload.columnId;
+
+        const hasTaskFieldChanges =
+          !existingTask ||
+          existingTask.title !== payload.title ||
+          (existingTask.description ?? null) !== (payload.description ?? null) ||
+          existingTask.type !== payload.type ||
+          existingTask.priority !== payload.priority ||
+          (existingTask.dueDate ?? null) !== (payload.dueDate ?? null) ||
+          (existingTask.assigneeId ?? null) !== (payload.assigneeId ?? null) ||
+          (existingTask.parentId ?? null) !== (payload.parentId ?? null);
+
+        let movedTask: Partial<Task> | null = null;
+
+        if (statusChanged) {
+          movedTask = await apiClient(`/tasks/${taskId}/status`, {
             method: 'PATCH',
             body: JSON.stringify({ targetColumnId: payload.columnId }),
           });
+        }
+
+        if (statusChanged && !hasTaskFieldChanges) {
+          const column = board.columns.find((c) => c.id === payload.columnId);
+
+          setBoard((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  tasks: prev.tasks.map((task) =>
+                    task.id === taskId
+                      ? {
+                          ...task,
+                          columnId: payload.columnId,
+                          columnName: column?.name ?? task.columnName,
+                          resolvedAt:
+                            movedTask && 'resolvedAt' in movedTask
+                              ? (movedTask.resolvedAt as string | null | undefined)
+                              : task.resolvedAt,
+                          closedAt:
+                            movedTask && 'closedAt' in movedTask
+                              ? (movedTask.closedAt as string | null | undefined)
+                              : task.closedAt,
+                          updatedAt:
+                            movedTask && 'updatedAt' in movedTask
+                              ? (movedTask.updatedAt as string | undefined) ??
+                                task.updatedAt
+                              : task.updatedAt,
+                        }
+                      : task,
+                  ),
+                }
+              : prev,
+          );
+
+          return;
         }
 
         const updatedTask = await apiClient(`/tasks/${taskId}`, {
@@ -272,7 +323,7 @@ export default function BoardPage() {
         );
       } catch (err) {
         console.error('Failed to update task:', err);
-        alert('Action failed. Transition may be invalid or WIP limit reached.');
+        throw err;
       }
     },
     [board, project, user],
@@ -610,6 +661,14 @@ export default function BoardPage() {
         user?.globalRole !== 'GLOBAL_ADMIN'
       ) {
         alert('Only Project Admins or Global Admins can delete columns.');
+        return;
+      }
+
+      const column = board.columns.find(
+        (currentColumn) => currentColumn.id === columnId,
+      );
+      if (column?.order === 0) {
+        alert('Stories column cannot be deleted.');
         return;
       }
 

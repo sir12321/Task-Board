@@ -29,23 +29,31 @@ export const canMoveTask = (
     return false;
   }
 
-  // WIP enforcement
-  const tasksInColumn = board.tasks.filter(
-    (t) => t.columnId === targetColumnId,
-  );
-
-  if (targetColumn.wipLimit && tasksInColumn.length >= targetColumn.wipLimit) {
-    setshortError('Move forbidden: WIP limit reached');
-    return false;
-  }
-
   // Column-order enforcement: only allow moves to the adjacent next column
   // (i.e., move forward by exactly 1). Disallow backward moves or jumps.
+  // We check this before WIP so the user sees the most relevant error first.
   const sourceColumn = board.columns.find((c) => c.id === task.columnId);
   if (sourceColumn) {
     const orderDiff = targetColumn.order - sourceColumn.order;
     if (orderDiff !== 1) {
       setshortError('Move forbidden: only adjacent forward moves are allowed');
+      return false;
+    }
+  }
+
+  // Strict WIP enforcement with safe parsing.
+  const wipLimit =
+    targetColumn.wipLimit !== null && targetColumn.wipLimit !== undefined
+      ? Number(targetColumn.wipLimit)
+      : 0;
+
+  if (wipLimit > 0) {
+    const tasksInColumn = board.tasks.filter(
+      (t) => t.columnId === targetColumnId && t.id !== taskId,
+    );
+
+    if (tasksInColumn.length >= wipLimit) {
+      setshortError(`Move forbidden: WIP limit (${wipLimit}) reached`);
       return false;
     }
   }
@@ -65,12 +73,17 @@ export const handleDrop = (
   targetColumnId: string,
   setshortError: (message: string | null) => void,
 ) => {
+  const resolvedStoryColumnId =
+    state.board.columns.find((column) => column.order === 0)?.id ??
+    state.board.columns[0]?.id ??
+    '';
+
   if (
     !canMoveTask(
       state.board,
       taskId,
       targetColumnId,
-      state.board.columns[0]?.id,
+      resolvedStoryColumnId,
       setshortError,
     )
   )

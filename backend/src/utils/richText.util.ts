@@ -8,6 +8,7 @@ const allowedTags = [
   'em',
   'i',
   'li',
+  'ol',
   's',
   'strong',
   'u',

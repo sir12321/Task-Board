@@ -12,6 +12,51 @@
   overflow-y: auto;
 }
 
+.storyColumn {
+  background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.22);
+}
+
+.storyColumn .columnTitle {
+  color: #f8fafc;
+}
+
+.storyColumn .manageButton {
+  border-color: rgba(226, 232, 240, 0.4);
+  background: rgba(51, 65, 85, 0.45);
+  color: #e2e8f0;
+}
+
+.storyColumn .manageButton:hover {
+  background: rgba(51, 65, 85, 0.66);
+}
+
+.storyColumn .wipProgressTrack {
+  background: #94a3b8;
+}
+
+.storyColumn .wipProgressTrackFull {
+  background: #aeb8c5;
+}
+
+.storyColumn .wipCount {
+  color: #e2e8f0;
+}
+
+.storyColumn .wipCountFull {
+  color: #fdba74;
+}
+
+.storyColumn .createButton {
+  border-color: rgba(226, 232, 240, 0.42);
+  background: rgba(51, 65, 85, 0.42);
+  color: #f1f5f9;
+}
+
+.storyColumn .createButton:hover {
+  background: rgba(51, 65, 85, 0.64);
+}
+
 .columnHeader {
   margin: 0 0 12px 0;
 }

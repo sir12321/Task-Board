@@ -86,7 +86,7 @@ const Column = ({
 
   return (
     <div
-      className={styles.column}
+      className={`${styles.column} ${column.name === 'Stories' ? styles.storyColumn : ''}`}
       // In the HTML drag‑and‑drop API the browser’s default behaviour for a dragged item over an element is “not a valid drop target”.
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
@@ -161,7 +161,7 @@ const Column = ({
                       Edit WIP
                     </button>
                   )}
-                  {onDeleteColumn && (
+                  {onDeleteColumn && column.order !== 0 && (
                     <button
                       type="button"
                       className={`${styles.workflowMenuButton} ${styles.deleteAction}`}

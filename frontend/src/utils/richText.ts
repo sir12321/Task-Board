@@ -10,6 +10,7 @@ const ALLOWED_TAGS = [
   'em',
   'i',
   'li',
+  'ol',
   's',
   'strong',
   'u',
@@ -184,6 +185,11 @@ const parseMarkdownLikeText = (content: string): string => {
   const output: string[] = [];
   let index = 0;
 
+  const isUnorderedListLine = (line: string) =>
+    line.startsWith('- ') || line.startsWith('* ');
+
+  const isOrderedListLine = (line: string) => /^\d+\.\s+/.test(line);
+
   while (index < lines.length) {
     const line = lines[index].trimEnd();
 
@@ -193,12 +199,12 @@ const parseMarkdownLikeText = (content: string): string => {
     }
 
     // Unordered list: - or *
-    if (line.startsWith('- ') || line.startsWith('* ')) {
+    if (isUnorderedListLine(line.trim())) {
       const items: string[] = [];
 
       while (index < lines.length) {
         const nextLine = lines[index].trim();
-        if (!(nextLine.startsWith('- ') || nextLine.startsWith('* '))) {
+        if (!isUnorderedListLine(nextLine)) {
           break;
         }
         items.push(`<li>${parseInlineMarkdown(nextLine.slice(2).trim())}</li>`);
@@ -206,6 +212,29 @@ const parseMarkdownLikeText = (content: string): string => {
       }
 
       output.push(`<ul>${items.join('')}</ul>`);
+      continue;
+    }
+
+    // Ordered list: 1. item, 2. item, ...
+    if (isOrderedListLine(line.trim())) {
+      const items: string[] = [];
+
+      while (index < lines.length) {
+        const nextLine = lines[index].trim();
+        if (!isOrderedListLine(nextLine)) {
+          break;
+        }
+
+        const markerMatch = nextLine.match(/^\d+\.\s+/);
+        const itemText = markerMatch
+          ? nextLine.slice(markerMatch[0].length).trim()
+          : nextLine;
+
+        items.push(`<li>${parseInlineMarkdown(itemText)}</li>`);
+        index += 1;
+      }
+
+      output.push(`<ol>${items.join('')}</ol>`);
       continue;
     }
 

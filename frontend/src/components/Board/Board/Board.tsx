@@ -210,6 +210,10 @@ const Board = ({
       return;
     }
 
+    if (sortedColumns[targetIndex]?.id === StoryColumnId) {
+      return;
+    }
+
     if (onReorderColumn) {
       try {
         await onReorderColumn(columnId, direction);
@@ -270,7 +274,9 @@ const Board = ({
                   : null;
               const isStory = column.id === StoryColumnId;
               const canMoveLeft =
-                !isStory && index > 0 && leftNeighbor?.id !== StoryColumnId;
+                !isStory &&
+                index > 0 &&
+                leftNeighbor?.id !== StoryColumnId;
               const canMoveRight =
                 !isStory &&
                 index < sortedColumns.length - 1 &&
@@ -385,6 +391,10 @@ const Board = ({
                   }}
                   onDeleteColumn={(columnId) => {
                     const col = sortedColumns.find((c) => c.id === columnId);
+                    if (col?.order === 0) {
+                      setShortError('Stories column cannot be deleted.');
+                      return;
+                    }
                     if (col)
                       setDeleteColumnDialog({
                         columnId,
