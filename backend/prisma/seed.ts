@@ -200,7 +200,7 @@ async function main(): Promise<void> {
       name: 'Shuri',
       globalRole: 'USER',
       avatarUrl:
-        'https://static.wikia.nocookie.net/marveldatabase/images/9/98/Wakanda_Vol_1_1_Textless.jpg/revision/latest?cb=20220729225619',
+        'https://static.wikia.nocookie.net/neoencyclopedia/images/8/8b/ShuriBlackPanther.jpg/revision/latest?cb=20121218080849',
     },
     {
       email: 'peter.parker@midtown.edu',
