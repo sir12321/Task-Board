@@ -10,7 +10,7 @@ import {
 } from './projectAccess';
 
 const ManageGlobalRolesPage = () => {
-  const { user } = useAuth();
+  const { user, fetchUser } = useAuth();
   const [directoryUsers, setDirectoryUsers] = useState<DirectoryUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingError, setLoadingError] = useState('');
@@ -64,9 +64,14 @@ const ManageGlobalRolesPage = () => {
   const handleUpdateGlobalRole = useCallback(
     async (targetUserId: string, nextRole: GlobalRole) => {
       await updateDirectoryUserGlobalRole(targetUserId, nextRole);
+
+      // Keep auth state in sync immediately after role changes so
+      // role-gated routes/sidebar update without requiring a reload.
+      await fetchUser();
+
       await loadDirectoryUsers();
     },
-    [loadDirectoryUsers],
+    [fetchUser, loadDirectoryUsers],
   );
 
   if (!user) {
