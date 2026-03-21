@@ -55,10 +55,19 @@ export const makeComment = async (data: {
       ...(task.assigneeId ? [task.assigneeId] : []),
       task.reporterId,
     ]);
-    const mentionedUserIds = await resolveMentionedUserIds(
-      sanitizedContent,
-      task.board.projectId,
-    );
+
+    let mentionedUserIds: string[] = [];
+    try {
+      mentionedUserIds = await resolveMentionedUserIds(
+        sanitizedContent,
+        task.board.projectId,
+      );
+    } catch (error) {
+      console.error(
+        `Failed to resolve mentions for comment ${comment.id}:`,
+        error,
+      );
+    }
 
     recipients.delete(data.authorId);
     mentionedUserIds.forEach((userId) => recipients.delete(userId));

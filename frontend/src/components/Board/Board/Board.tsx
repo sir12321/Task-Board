@@ -119,7 +119,8 @@ const Board = ({
     (member) =>
       member.role === 'PROJECT_ADMIN' || member.role === 'PROJECT_MEMBER',
   );
-  const mentionableProjectMembers = assignableMembers.filter(
+  // Allow mentioning any project member (including viewers), except the current user
+  const mentionableProjectMembers = state.projectDetails.members.filter(
     (member) => member.id !== user?.id,
   );
 
