@@ -1,6 +1,6 @@
 .column {
   position: relative;
-  background: linear-gradient(180deg, #e8ebed 0%, #f1f3f4 100%);
+  background: linear-gradient(180deg, #ededf0 0%, #e5e7eb 100%);
   border-radius: 12px;
   padding: 16px;
   width: 260px;
@@ -13,48 +13,48 @@
 }
 
 .storyColumn {
-  background: linear-gradient(180deg, #64748b 0%, #475569 100%);
-  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.22);
+  background: linear-gradient(180deg, #d9cce3 0%, #e4d9f0 100%);
+  box-shadow: inset 0 0 0 1px rgba(155, 135, 195, 0.25);
 }
 
 .storyColumn .columnTitle {
-  color: #f8fafc;
+  color: #5a1a80;
 }
 
 .storyColumn .manageButton {
-  border-color: rgba(226, 232, 240, 0.4);
-  background: rgba(51, 65, 85, 0.45);
-  color: #e2e8f0;
+  border-color: rgba(155, 135, 195, 0.35);
+  background: rgba(90, 26, 128, 0.1);
+  color: #5a1a80;
 }
 
 .storyColumn .manageButton:hover {
-  background: rgba(51, 65, 85, 0.66);
+  background: rgba(90, 26, 128, 0.18);
 }
 
 .storyColumn .wipProgressTrack {
-  background: #94a3b8;
+  background: #d9cce3;
 }
 
 .storyColumn .wipProgressTrackFull {
-  background: #aeb8c5;
+  background: #a882b5;
 }
 
 .storyColumn .wipCount {
-  color: #e2e8f0;
+  color: #6b4f7a;
 }
 
 .storyColumn .wipCountFull {
-  color: #fdba74;
+  color: #6b4f7a;
 }
 
 .storyColumn .createButton {
-  border-color: rgba(226, 232, 240, 0.42);
-  background: rgba(51, 65, 85, 0.42);
-  color: #f1f5f9;
+  border-color: rgba(155, 135, 195, 0.4);
+  background: rgba(90, 26, 128, 0.08);
+  color: #5a1a80;
 }
 
 .storyColumn .createButton:hover {
-  background: rgba(51, 65, 85, 0.64);
+  background: rgba(90, 26, 128, 0.16);
 }
 
 .columnHeader {

@@ -25,14 +25,14 @@
 }
 
 .taskCard.story {
-  border-color: rgba(139, 92, 246, 0.45);
-  background-color: rgb(245, 245, 245) !important;
+  border-color: rgba(155, 135, 195, 0.4);
+  background-color: rgb(242, 237, 247) !important;
   background: linear-gradient(
     180deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.03) 100%
+    rgba(217, 204, 227, 0.35) 0%,
+    rgba(228, 217, 240, 0.2) 100%
   );
-  border-left: 4px solid #8b5cf6;
+  border-left: 4px solid #9b87c3;
 }
 
 .taskCard.bug {
@@ -56,11 +56,11 @@
 }
 
 .taskCard.story:hover {
-  border-color: rgba(139, 92, 246, 0.65);
+  border-color: rgba(155, 135, 195, 0.6);
   background: linear-gradient(
     180deg,
-    rgba(139, 92, 246, 0.18) 0%,
-    rgba(139, 92, 246, 0.06) 100%
+    rgba(217, 204, 227, 0.45) 0%,
+    rgba(228, 217, 240, 0.3) 100%
   );
 }
 
