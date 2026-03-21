@@ -200,7 +200,7 @@ async function main(): Promise<void> {
       name: 'Shuri',
       globalRole: 'USER',
       avatarUrl:
-        'https://static.wikia.nocookie.net/neoencyclopedia/images/8/8b/ShuriBlackPanther.jpg/revision/latest?cb=20121218080849',
+        'https://m.media-amazon.com/images/I/91kNoVziYVL._AC_UF1000,1000_QL80_.jpg',
     },
     {
       email: 'peter.parker@midtown.edu',
@@ -578,14 +578,14 @@ async function main(): Promise<void> {
             resolvedAt:
               payload.columnId === doneCol.id
                 ? new Date(
-                    `2026-03-${String(20 + (payloadIndex % 5)).padStart(2, '0')}T11:00:00.000Z`,
-                  )
+                  `2026-03-${String(20 + (payloadIndex % 5)).padStart(2, '0')}T11:00:00.000Z`,
+                )
                 : undefined,
             closedAt:
               payload.columnId === doneCol.id
                 ? new Date(
-                    `2026-03-${String(20 + (payloadIndex % 5)).padStart(2, '0')}T13:00:00.000Z`,
-                  )
+                  `2026-03-${String(20 + (payloadIndex % 5)).padStart(2, '0')}T13:00:00.000Z`,
+                )
                 : undefined,
           },
         });
