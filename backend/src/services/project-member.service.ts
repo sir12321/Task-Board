@@ -65,6 +65,23 @@ export const removeMember = async (
 ): Promise<void> => {
   await verifyAccess(requesterId, projectId, globalRole);
 
+  const board = await prisma.board.findMany({
+    where: { projectId },
+    select: { id: true },
+  });
+
+  const boardIds = board.map((b) => b.id);
+
+  if (boardIds.length > 0) {
+    await prisma.task.updateMany({
+      where: {
+        boardId: { in: boardIds },
+        assigneeId: targetUserId,
+      },
+      data: { assigneeId: null },
+    });
+  }
+
   await prisma.projectMember.delete({
     where: { userId_projectId: { userId: targetUserId, projectId } },
   });
