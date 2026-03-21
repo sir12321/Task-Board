@@ -58,6 +58,18 @@
   margin-top: 20px;
 }
 
+.workflowOrderRow {
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 0;
+  padding-right: 8px;
+}
+
+.workflowOrderValue {
+  flex: 1;
+  min-width: 0;
+}
+
 .button {
   border: 0;
   border-radius: 10px;

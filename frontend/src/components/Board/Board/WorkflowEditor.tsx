@@ -155,8 +155,10 @@ const WorkflowEditor = ({
           <div className={styles.field}>
             <span className={styles.label}>Workflow Order</span>
             {workflowColumns.map((column, index) => (
-              <div key={column.id} className={styles.buttonRow}>
-                <div className={styles.select}>{column.name}</div>
+              <div key={column.id} className={`${styles.buttonRow} ${styles.workflowOrderRow}`}>
+                <div className={`${styles.select} ${styles.workflowOrderValue}`}>
+                  {column.name}
+                </div>
                 <button
                   type="button"
                   className={styles.button}

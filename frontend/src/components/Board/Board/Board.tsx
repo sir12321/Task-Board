@@ -309,7 +309,7 @@ const Board = ({
         <div className={styles.boardHeader}>
           <h2>{state.board.name}</h2>
           {canManageColumns && (
-            <>
+            <div className={styles.headerActions}>
               <button
                 type="button"
                 className={styles.workflowModeButton}
@@ -324,7 +324,7 @@ const Board = ({
               >
                 {layoutEditMode ? 'Done Editing Layout' : 'Edit Layout'}
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>
