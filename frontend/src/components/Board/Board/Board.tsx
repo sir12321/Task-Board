@@ -90,9 +90,8 @@ const Board = ({
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [layoutEditMode, setLayoutEditMode] = useState(false);
   const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
-  const [pendingWorkflowColumnDelete, setPendingWorkflowColumnDelete] = useState<
-    string | null
-  >(null);
+  const [pendingWorkflowColumnDelete, setPendingWorkflowColumnDelete] =
+    useState<string | null>(null);
   const [renameColumnDialog, setRenameColumnDialog] = useState<{
     columnId: string;
     currentName: string;
@@ -344,7 +343,9 @@ const Board = ({
                 index < sortedColumns.length - 1 && Boolean(rightNeighbor);
               const isStoryColumn = column.id === StoryColumnId;
               const canShiftLeft =
-                !isStoryColumn && canMoveLeft && leftNeighbor?.id !== StoryColumnId;
+                !isStoryColumn &&
+                canMoveLeft &&
+                leftNeighbor?.id !== StoryColumnId;
               const canShiftRight =
                 !isStoryColumn &&
                 canMoveRight &&

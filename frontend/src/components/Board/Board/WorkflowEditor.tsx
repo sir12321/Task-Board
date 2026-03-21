@@ -24,15 +24,16 @@ const WorkflowEditor = ({
   const storyColumn = useMemo(
     () =>
       columns.find(
-        (column) =>
-          column.id === workflow.storyColumnId || column.order === 0,
+        (column) => column.id === workflow.storyColumnId || column.order === 0,
       ) ?? null,
     [columns, workflow.storyColumnId],
   );
 
   const nonStoryColumns = useMemo(
     () =>
-      columns.filter((column) => column.id !== storyColumn?.id).sort((a, b) => a.order - b.order),
+      columns
+        .filter((column) => column.id !== storyColumn?.id)
+        .sort((a, b) => a.order - b.order),
     [columns, storyColumn?.id],
   );
 
@@ -56,7 +57,9 @@ const WorkflowEditor = ({
   const workflowColumns = useMemo(
     () =>
       value.workflowColumnIds
-        .map((columnId) => nonStoryColumns.find((column) => column.id === columnId))
+        .map((columnId) =>
+          nonStoryColumns.find((column) => column.id === columnId),
+        )
         .filter((column): column is BoardColumn => Boolean(column)),
     [nonStoryColumns, value.workflowColumnIds],
   );
@@ -149,14 +152,21 @@ const WorkflowEditor = ({
         <div className={styles.grid}>
           <div className={styles.field}>
             <span className={styles.label}>Stories Column</span>
-            <div className={styles.select}>{storyColumn?.name ?? 'Stories'}</div>
+            <div className={styles.select}>
+              {storyColumn?.name ?? 'Stories'}
+            </div>
           </div>
 
           <div className={styles.field}>
             <span className={styles.label}>Workflow Order</span>
             {workflowColumns.map((column, index) => (
-              <div key={column.id} className={`${styles.buttonRow} ${styles.workflowOrderRow}`}>
-                <div className={`${styles.select} ${styles.workflowOrderValue}`}>
+              <div
+                key={column.id}
+                className={`${styles.buttonRow} ${styles.workflowOrderRow}`}
+              >
+                <div
+                  className={`${styles.select} ${styles.workflowOrderValue}`}
+                >
                   {column.name}
                 </div>
                 <button
