@@ -64,12 +64,6 @@
   color: #3048a4;
 }
 
-.userEmail {
-  margin: 0;
-  font-size: 15px;
-  color: #334155;
-}
-
 .imageHint {
   margin: 2px 0 0;
   color: #475569;
@@ -83,13 +77,6 @@
   border: 1px solid #d2d9e6;
   border-radius: 12px;
   padding: 20px;
-}
-
-.sectionTitle {
-  margin: 0 0 16px;
-  font-size: 28px;
-  color: #3048a4;
-  text-align: center;
 }
 
 .actions {

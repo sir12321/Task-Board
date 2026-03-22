@@ -79,7 +79,16 @@ const TaskDetailsModal = ({
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(task.auditLogs || []);
 
   useEffect(() => {
+    setAuditLogs(task.auditLogs || []);
+  }, [task.id, task.auditLogs]);
+
+  useEffect(() => {
+    if (task.auditLogs !== undefined) {
+      return;
+    }
+
     let isMounted = true;
+
     const fetchTaskDetails = async () => {
       try {
         const data = await apiClient(`/tasks/${task.id}`);
@@ -87,7 +96,8 @@ const TaskDetailsModal = ({
           setAuditLogs(data.auditLogs);
         }
       } catch {
-        showMessage('Failed to load task activity.');
+        // The modal can still render comments and any locally available
+        // activity data, so a fetch miss here should fail silently.
       }
     };
 
@@ -96,7 +106,7 @@ const TaskDetailsModal = ({
     return () => {
       isMounted = false;
     };
-  }, [showMessage, task.id, task.updatedAt, task.comments?.length]);
+  }, [task.auditLogs, task.id, task.updatedAt, task.comments?.length]);
 
   const timelineItems = useMemo<TimeLineItem[]>(() => {
     const comments: TimeLineComment[] = (task.comments || []).map(

@@ -111,16 +111,6 @@
   object-fit: cover;
 }
 
-.userAvatarUrl {
-  color: #6b778c;
-  font-size: 11px;
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 240px;
-}
-
 .memberCard {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 150px auto;

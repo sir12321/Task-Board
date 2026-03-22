@@ -274,20 +274,6 @@
   cursor: help;
 }
 
-.commentDeleteButton {
-  margin-left: 12px;
-  color: #ef4444;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.commentDeleteButton:hover {
-  color: #dc2626;
-}
-
 .sidebarCard {
   background: #fff;
   border: 1px solid #eef2f7;

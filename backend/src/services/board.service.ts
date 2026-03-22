@@ -33,6 +33,12 @@ export const getBoards = async (
           assignee: { select: { name: true, avatarUrl: true } },
           reporter: { select: { name: true, avatarUrl: true } },
           parent: { select: { title: true } },
+          auditLogs: {
+            orderBy: { timestamp: 'desc' },
+            include: {
+              user: { select: { name: true, avatarUrl: true } },
+            },
+          },
           comments: {
             include: {
               author: { select: { id: true, name: true, email: true, avatarUrl: true } },
@@ -85,7 +91,7 @@ export const getBoards = async (
     ...board,
     workflowColumnIds: workflow.workflowColumnIds,
     tasks: board.tasks.map((task) => {
-      const { column, assignee, reporter, parent, comments, ...rest } = task;
+      const { column, assignee, reporter, parent, comments, auditLogs, ...rest } = task;
       const todoColumnName =
         board.columns.find(
           (candidate) => candidate.id === workflow.workflowColumnIds[0],
@@ -102,6 +108,15 @@ export const getBoards = async (
         reporterAvatarUrl: reporter?.avatarUrl || null,
         parentName: parent?.title || null,
         status: rest.type === 'STORY' ? fallbackStoryStatus : column.name,
+        auditLogs: auditLogs.map((log) => ({
+          ...log,
+          user: log.user
+            ? {
+                name: log.user.name,
+                avatarUrl: log.user.avatarUrl || null,
+              }
+            : undefined,
+        })),
         comments: comments.map((comment) => {
           const { author, ...commentRest } = comment;
           return {

@@ -70,24 +70,6 @@
   background: #e2e8f0;
 }
 
-.pbsProjectSettings {
-  margin-top: 4px;
-  margin-left: 6px;
-  padding: 4px 6px;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  border-radius: 4px;
-  background: #f8fafc;
-  color: #334155;
-  cursor: pointer;
-  font-size: 12px;
-  width: calc(100% - 6px);
-  text-align: left;
-}
-
-.pbsProjectSettings:hover {
-  background: #e2e8f0;
-}
-
 .pbsBoards {
   margin-left: 6px;
   margin-top: 6px;
@@ -118,22 +100,6 @@
   background: #edebeb;
   color: #334155;
   font-weight: 600;
-}
-
-.pbsCreateBoard {
-  padding: 6px;
-  cursor: pointer;
-  border-radius: 4px;
-  border: 1px dashed #bac7e3;
-  width: 100%;
-  text-align: left;
-  background: #f2f2f2;
-  color: #303847;
-  font-weight: 600;
-}
-
-.pbsCreateBoard:hover {
-  background: #cbcfd5;
 }
 
 .pbsCreateBoardBtn {
@@ -171,16 +137,4 @@
 
 .pbsCreateProjectBtn:hover {
   background: #e2e8f0;
-}
-
-.selected {
-}
-
-.expanded {
-}
-
-.collapsed {
-}
-
-.pbsPlaceholder {
 }
