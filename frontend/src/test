@@ -1,7 +1,0 @@
-const { describe, it, expect } = require('@jest/globals');
-
-describe('Hello World Test Suite', () => {
-    it('should return true when called', () => {
-        expect(true).toBe(true);
-    });
-});
