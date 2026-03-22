@@ -58,6 +58,8 @@ export const getBoards = async (
     closedColumnId: board.closedColumnId,
   };
 
+  // We need to figure out the lowest workflow step among all children of a Story
+  // so the Story's own status can automatically reflect the progress of its tasks.
   const minChild = new Map<string, { name: string; step: number }>();
 
   for (const task of board.tasks) {

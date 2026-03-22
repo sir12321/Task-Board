@@ -78,6 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         dispatch({ type: 'SET_USER', payload: data.user });
       }
     } catch {
+      // If the refresh token is missing or expired, we just silently log them out locally
       dispatch({ type: 'SET_USER', payload: null });
     } finally {
       setLoading(false);

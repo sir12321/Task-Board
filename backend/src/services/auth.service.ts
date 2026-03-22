@@ -46,6 +46,7 @@ export const registerUser = async (data: RegisterInput): Promise<User> => {
 
   const hashedPassword = await hashPassword(data.password);
 
+  // The very first user to register gets full global admin rights automatically
   const userCount = await prisma.user.count();
   const isFirstUser = userCount === 0;
 

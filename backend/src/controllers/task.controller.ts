@@ -30,6 +30,7 @@ const notifyStatusChange = async (
   }
 
   if (actorUserId) {
+    // Don't notify the person who actually made the change
     recipientIds.delete(actorUserId);
   }
 

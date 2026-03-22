@@ -121,6 +121,7 @@ export const validateWorkflowConfig = (
   }
 
   const sequence = getWorkflowSequence(workflow);
+  // Sanity check to make sure user doesn't move 'Closed' to the middle of the board
   if (sequence.length === 0 || sequence[sequence.length - 1] !== workflow.closedColumnId) {
     throw new Error('Closed column must be the last workflow stage');
   }
