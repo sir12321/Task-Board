@@ -52,7 +52,7 @@ const EditProjectSettingsPage = () => {
     let cancelled = false;
 
     const run = async () => {
-      if (!user) {
+      if (!user?.id) {
         setLoading(false);
         return;
       }
@@ -95,11 +95,11 @@ const EditProjectSettingsPage = () => {
       }
     };
 
-    run();
+    void run();
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user?.id, user?.globalRole]);
 
   const handleSaveProjectSettings = useCallback(
     async ({

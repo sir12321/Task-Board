@@ -38,7 +38,7 @@ const UserSettingsManager = ({
 
   useEffect(() => {
     setName(user.name || '');
-  }, [user]);
+  }, [user.name]);
 
   useEffect(() => {
     if (!nameError) {

@@ -46,7 +46,7 @@ const AssignUsersPage = () => {
     let cancelled = false;
 
     const run = async () => {
-      if (!user || user.globalRole === 'GLOBAL_ADMIN') {
+      if (!user?.id || user.globalRole === 'GLOBAL_ADMIN') {
         setLoading(false);
         return;
       }
@@ -84,11 +84,11 @@ const AssignUsersPage = () => {
       }
     };
 
-    run();
+    void run();
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user?.id, user?.globalRole]);
 
   const handleUpdateAssignedRole = useCallback(
     async (projectId: string, memberId: string, role: ProjectRole) => {

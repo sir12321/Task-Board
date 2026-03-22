@@ -24,7 +24,7 @@ const ManageGlobalRolesPage = () => {
     let cancelled = false;
 
     const run = async () => {
-      if (!user) {
+      if (!user?.id) {
         setLoading(false);
         return;
       }
@@ -54,12 +54,12 @@ const ManageGlobalRolesPage = () => {
       }
     };
 
-    run();
+    void run();
 
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user?.id, user?.globalRole]);
 
   const handleUpdateGlobalRole = useCallback(
     async (targetUserId: string, nextRole: GlobalRole) => {
