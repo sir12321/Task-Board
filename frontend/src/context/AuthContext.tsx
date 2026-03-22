@@ -8,7 +8,9 @@ import {
 } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { apiClient } from '../utils/api';
-import type { AuthUser } from '../types/Types';
+import type { AuthUser, Notification } from '../types/Types';
+
+const notificationPollIntervalMs = 5000;
 
 type AuthAction =
   | { type: 'SET_USER'; payload: AuthUser | null }
@@ -85,6 +87,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  const pollNotifications = useCallback(async () => {
+    try {
+      const notifications: Notification[] = await apiClient('/notifications');
+      dispatch({
+        type: 'SET_USER_FN',
+        payload: (prev) => (prev ? { ...prev, notifications } : prev),
+      });
+    } catch {
+      // Ignore transient polling errors; next interval will retry.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
+
+    void pollNotifications();
+
+    const pollIntervalId = setInterval(() => {
+      void pollNotifications();
+    }, notificationPollIntervalMs);
+
+    return () => {
+      clearInterval(pollIntervalId);
+    };
+  }, [pollNotifications, user?.id]);
 
   if (loading) {
     return (

@@ -10,7 +10,7 @@ const formatter = new Intl.DateTimeFormat(undefined, {
 });
 
 const NotificationsView = () => {
-  const { setUser } = useAuth();
+  const { user, setUser } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -30,39 +30,29 @@ const NotificationsView = () => {
     [setUser],
   );
 
-  const loadNotifications = useCallback(
-    async (isBackground = false) => {
-      try {
-        if (!isBackground) {
-          setLoading(true);
-        }
-        if (!isBackground) {
-          setError(null);
-        }
-        const data = await apiClient('/notifications');
-        setNotifications(data);
-        syncNotificationsInUser(data);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Failed to load notifications.',
-        );
-      } finally {
-        if (!isBackground) {
-          setLoading(false);
-        }
-      }
-    },
-    [syncNotificationsInUser],
-  );
+  const loadNotifications = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await apiClient('/notifications');
+      setNotifications(data);
+      syncNotificationsInUser(data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to load notifications.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [syncNotificationsInUser]);
 
   useEffect(() => {
-    loadNotifications(false);
+    setNotifications(user?.notifications ?? []);
+    setLoading(false);
+  }, [user?.notifications]);
 
-    const pollInterval = setInterval(() => {
-      loadNotifications(true);
-    }, 10000);
-
-    return () => clearInterval(pollInterval);
+  useEffect(() => {
+    void loadNotifications();
   }, [loadNotifications]);
 
   const markAsRead = async (notificationId: string) => {
@@ -71,13 +61,15 @@ const NotificationsView = () => {
       await apiClient(`/notifications/${notificationId}/read`, {
         method: 'PATCH',
       });
-      const nextNotifications = notifications.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, isRead: true }
-          : notification,
-      );
-      setNotifications(nextNotifications);
-      syncNotificationsInUser(nextNotifications);
+      setNotifications((currentNotifications) => {
+        const nextNotifications = currentNotifications.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, isRead: true }
+            : notification,
+        );
+        syncNotificationsInUser(nextNotifications);
+        return nextNotifications;
+      });
     } catch (err) {
       alert(
         err instanceof Error
@@ -90,26 +82,29 @@ const NotificationsView = () => {
   };
 
   const markAllAsRead = async () => {
-    const unreadNotifications = notifications.filter(
-      (notification) => !notification.isRead,
-    );
-    if (unreadNotifications.length === 0) return;
+    if (!notifications.some((notification) => !notification.isRead)) return;
 
     try {
       setUpdatingId('all');
+      const unreadNotificationIds = notifications
+        .filter((notification) => !notification.isRead)
+        .map((notification) => notification.id);
+
       await Promise.all(
-        unreadNotifications.map((notification) =>
-          apiClient(`/notifications/${notification.id}/read`, {
+        unreadNotificationIds.map((notificationId) =>
+          apiClient(`/notifications/${notificationId}/read`, {
             method: 'PATCH',
           }),
         ),
       );
-      const nextNotifications = notifications.map((notification) => ({
-        ...notification,
-        isRead: true,
-      }));
-      setNotifications(nextNotifications);
-      syncNotificationsInUser(nextNotifications);
+      setNotifications((currentNotifications) => {
+        const nextNotifications = currentNotifications.map((notification) => ({
+          ...notification,
+          isRead: true,
+        }));
+        syncNotificationsInUser(nextNotifications);
+        return nextNotifications;
+      });
     } catch (err) {
       alert(
         err instanceof Error
