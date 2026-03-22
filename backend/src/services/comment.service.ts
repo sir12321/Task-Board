@@ -3,7 +3,6 @@ import { Comment } from '@prisma/client';
 import { createNotification } from './notification.service';
 import { touchProject, touchProjectByBoardId } from '../utils/touchProject.util';
 import {
-  getRichTextNotificationSnippet,
   getRichTextPlainText,
   correctRichTextComment,
 } from '../utils/richText.util';
@@ -79,7 +78,7 @@ export const makeComment = async (data: {
         .map((recipientId) =>
           createNotification(
             recipientId,
-            `You were mentioned in a comment on task "${task.title}": ${getRichTextNotificationSnippet(sanitizedContent)}${scope}`,
+            `You were mentioned in a comment on task "${task.title}":\n${sanitizedContent}\n${scope}`,
           ),
         ),
     );
@@ -88,7 +87,7 @@ export const makeComment = async (data: {
       Array.from(recipients).map((recipientId) =>
         createNotification(
           recipientId,
-          `New comment on task "${task.title}": ${getRichTextNotificationSnippet(sanitizedContent)}${scope}`,
+          `New comment on task "${task.title}":\n${sanitizedContent}\n${scope}`,
         ),
       ),
     );

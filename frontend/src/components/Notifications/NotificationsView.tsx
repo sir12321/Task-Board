@@ -3,11 +3,17 @@ import { apiClient } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import type { Notification } from '../../types/Types';
 import styles from './NotificationsView.module.css';
+import { getRichTextPlainText, renderRichText } from '../../utils/richText';
 
 const formatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',
   timeStyle: 'short',
 });
+
+const getNotificationHtml = (content: string) => renderRichText(content);
+
+const getNotificationText = (content: string) =>
+  getRichTextPlainText(getNotificationHtml(content)).replace(/\s+/g, ' ').trim();
 
 const NotificationsView = () => {
   const { user, setUser } = useAuth();
@@ -164,7 +170,12 @@ const NotificationsView = () => {
               }`}
             >
               <div className={styles.contentSection}>
-                <p className={styles.content}>{notification.content}</p>
+                <div
+                  className={styles.content}
+                  dangerouslySetInnerHTML={{
+                    __html: getNotificationHtml(notification.content),
+                  }}
+                />
                 <time className={styles.time}>
                   {formatter.format(new Date(notification.createdAt))}
                 </time>
@@ -177,7 +188,7 @@ const NotificationsView = () => {
                 aria-label={
                   notification.isRead
                     ? 'Notification already read'
-                    : `Mark notification as read: ${notification.content}`
+                    : `Mark notification as read: ${getNotificationText(notification.content)}`
                 }
               >
                 {notification.isRead

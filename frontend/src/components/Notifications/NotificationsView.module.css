@@ -91,6 +91,18 @@
   font-size: 15px;
 }
 
+.content :where(div, p, ul, ol) {
+  margin: 0;
+}
+
+.content :where(ul, ol) {
+  padding-left: 20px;
+}
+
+.content a {
+  color: #0052cc;
+}
+
 .time {
   margin-top: 6px;
   display: inline-block;
