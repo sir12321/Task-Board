@@ -92,6 +92,8 @@ export const getBoards = async (
     workflowColumnIds: workflow.workflowColumnIds,
     tasks: board.tasks.map((task) => {
       const { column, assignee, reporter, parent, comments, auditLogs, ...rest } = task;
+      const taskComments = comments ?? [];
+      const taskAuditLogs = auditLogs ?? [];
       const todoColumnName =
         board.columns.find(
           (candidate) => candidate.id === workflow.workflowColumnIds[0],
@@ -108,7 +110,7 @@ export const getBoards = async (
         reporterAvatarUrl: reporter?.avatarUrl || null,
         parentName: parent?.title || null,
         status: rest.type === 'STORY' ? fallbackStoryStatus : column.name,
-        auditLogs: auditLogs.map((log) => ({
+        auditLogs: taskAuditLogs.map((log) => ({
           ...log,
           user: log.user
             ? {
@@ -117,7 +119,7 @@ export const getBoards = async (
               }
             : undefined,
         })),
-        comments: comments.map((comment) => {
+        comments: taskComments.map((comment) => {
           const { author, ...commentRest } = comment;
           return {
             ...commentRest,
