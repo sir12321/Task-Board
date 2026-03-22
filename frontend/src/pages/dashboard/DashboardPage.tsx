@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
+import { notifyProjectsUpdated } from '../../utils/projectsEvents';
 import Layout from '../../components/Layout/Layout';
 import type { Board, ProjectDetails } from '../../types/Types';
 import { useAuth } from '../../context/AuthContext';
@@ -44,6 +45,7 @@ const DashboardPage = () => {
           proj.id === projectId ? { ...proj, isArchived: !archived } : proj,
         ),
       );
+      notifyProjectsUpdated();
     } catch (error) {
       alert('Failed to update project. Please try again.');
       console.error('Archive toggle error:', error);
@@ -73,6 +75,7 @@ const DashboardPage = () => {
             : proj,
         ),
       );
+      notifyProjectsUpdated();
       setWorkflowBoard(createdBoard);
       setAddingBoardTo(null);
       setNewBoardName('');

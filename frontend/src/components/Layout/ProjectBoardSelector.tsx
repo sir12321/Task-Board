@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Board, ProjectDetails } from '../../types/Types';
 import { apiClient } from '../../utils/api';
+import {
+  notifyProjectsUpdated,
+  subscribeToProjectsUpdated,
+} from '../../utils/projectsEvents';
 import { useAuth } from '../../context/AuthContext';
 import styles from './ProjectBoardSelector.module.css';
 import WorkflowEditor from '../Board/Board/WorkflowEditor';
@@ -35,6 +39,12 @@ const ProjectBoardSelector = () => {
 
   useEffect(() => {
     fetchProjects();
+  }, [fetchProjects]);
+
+  useEffect(() => {
+    return subscribeToProjectsUpdated(() => {
+      fetchProjects();
+    });
   }, [fetchProjects]);
 
   const selected = useMemo(() => {
@@ -83,6 +93,7 @@ const ProjectBoardSelector = () => {
       const createdBoard: Board = await apiClient(`/boards/${newBoard.id}`);
 
       await fetchProjects();
+      notifyProjectsUpdated();
       setWorkflowBoard(createdBoard);
 
       handleSelectBoard(projectId, newBoard.id);
