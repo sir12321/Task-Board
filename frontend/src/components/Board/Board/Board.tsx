@@ -200,7 +200,7 @@ const Board = ({
             <div className={styles.projectTimestamps}>
               {state.projectDetails.createdAt && (
                 <div className={styles.timestampItem}>
-                  <span className={styles.timestampLabel}>Created</span>
+                  <span className={styles.timestampLabel}>Created at</span>
                   <span className={styles.timestampValue}>
                     {new Date(
                       state.projectDetails.createdAt,
@@ -214,7 +214,7 @@ const Board = ({
               )}
               {state.projectDetails.updatedAt && (
                 <div className={styles.timestampItem}>
-                  <span className={styles.timestampLabel}>Updated</span>
+                  <span className={styles.timestampLabel}>Last Updated at</span>
                   <span className={styles.timestampValue}>
                     {new Date(
                       state.projectDetails.updatedAt,

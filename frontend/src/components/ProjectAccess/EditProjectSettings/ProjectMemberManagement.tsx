@@ -78,7 +78,6 @@ export const ProjectMemberManagement = ({
                 </div>
                 <div className={styles.availableUserActions}>
                   <div className={styles.roleSelector}>
-                    <label htmlFor={`settings-role-${person.id}`}>Role</label>
                     <select
                       id={`settings-role-${person.id}`}
                       value={directoryRoles[person.email] ?? 'PROJECT_MEMBER'}

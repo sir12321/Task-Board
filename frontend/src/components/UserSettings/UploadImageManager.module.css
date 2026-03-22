@@ -8,8 +8,8 @@
 
 .card {
   width: min(520px, 100%);
-  background: #ffffff;
-  border: 1px solid #d2d9e6;
+  background: #dfe4ee;
+  border: 1px solid rgba(45, 65, 130, 0.15);
   border-radius: 12px;
   padding: 20px;
   text-align: center;

@@ -218,7 +218,6 @@ const CreateProjectManager = ({
                 </div>
                 <div className={styles.availableUserActions}>
                   <div className={styles.roleSelector}>
-                    <label htmlFor={`role-${person.id}`}>Role</label>
                     <select
                       id={`role-${person.id}`}
                       value={directoryRoles[person.email] ?? 'PROJECT_MEMBER'}
@@ -299,7 +298,7 @@ const CreateProjectManager = ({
                   </div>
                   <button
                     type="button"
-                    className={styles.ghostActionButton}
+                    className={styles.removeActionButton}
                     onClick={() => removeDraftMember(member.id)}
                   >
                     Remove
