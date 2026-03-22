@@ -11,9 +11,8 @@ interface Props {
 }
 
 /**
- * Modal dialog for editing the WIP limit of a column.
- * Mirrors the pattern of RenameColumn — validation lives here,
- * the parent just provides onSubmit and onCancel callbacks.
+ * Modal dialog for editing a column WIP limit.
+ * The parent passes data in, but validation stays local to this form.
  */
 const EditWIPColumn = ({
   columnId,

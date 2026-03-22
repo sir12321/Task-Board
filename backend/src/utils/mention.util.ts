@@ -206,8 +206,7 @@ export const resolveMentionedUserIds = async (
       }
     }
   }
-
-  // Log ambiguous aliases for debugging
+  // Log ambiguous aliases for debugging.
   if (ambiguousAliases.size > 0) {
     console.warn(
       `Ambiguous mention aliases found in project ${projectId}: ${Array.from(
@@ -225,12 +224,11 @@ export const resolveMentionedUserIds = async (
     if (userId) {
       resolvedMentionedUserIds.add(userId);
     } else if (aliasToUserIdMap.has(handleText)) {
-      // Handle is in map but resolves to null (ambiguous)
+      // The handle exists in the alias map but resolves to null because it is ambiguous.
       unresolvedHandles.add(handleText);
     }
   }
-
-  // Log unresolved mentions
+  // Log unresolved mentions so ambiguous handles can be fixed.
   if (unresolvedHandles.size > 0) {
     console.warn(
       `Mention(s) could not be resolved due to ambiguity: ${Array.from(

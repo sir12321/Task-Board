@@ -141,7 +141,6 @@
   align-items: center;
 }
 
-/* when delete button is present we push other actions to the right */
 .actions .deleteButton {
   margin-right: auto;
 }
@@ -160,7 +159,6 @@
   color: #fff;
 }
 
-/* delete button reused by both create/edit modals */
 .deleteButton {
   background: #ef4444;
   color: #fff;

@@ -64,21 +64,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await apiClient('/auth/logout', { method: 'POST' });
     } catch {
-      // ignore — clear local state regardless
+      // Clear local auth state even if the logout request fails.
     }
     dispatch({ type: 'SET_USER', payload: null });
   }, []);
 
   const fetchUser = useCallback(async () => {
     try {
-      // Try refreshing the session; the backend sets cookies so a subsequent
-      // request will be authenticated.
+      // Refresh first so cookie-based sessions can restore user state on page load.
       const data = await apiClient('/auth/refresh', { method: 'POST' });
       if (data?.user) {
         dispatch({ type: 'SET_USER', payload: data.user });
       }
     } catch {
-      // If the refresh token is missing or expired, we just silently log them out locally
+      // Missing or expired refresh credentials should just leave the user logged out locally.
       dispatch({ type: 'SET_USER', payload: null });
     } finally {
       setLoading(false);
@@ -97,7 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         payload: (prev) => (prev ? { ...prev, notifications } : prev),
       });
     } catch {
-      // Ignore transient polling errors; next interval will retry.
+      // Polling is best-effort; transient failures should not disrupt the session.
     }
   }, []);
 

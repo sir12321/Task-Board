@@ -24,7 +24,7 @@ export const parseWorkflowColumnIds = (
   }
 };
 
-// This function is used to support legacy workflows that may not have the `workflowColumnIds` field.
+// Support older boards that still rely on resolved/closed column ids.
 export const getFallbackWorkflowColumnIds = (workflow: {
   workflowColumnIds?: string[];
   resolvedColumnId?: string | null;
@@ -123,7 +123,7 @@ export const validateWorkflowConfig = (
   }
 
   const sequence = getWorkflowSequence(workflow);
-  // Sanity check to make sure user doesn't move 'Closed' to the middle of the board
+  // Keep Closed as the terminal workflow stage.
   if (
     sequence.length === 0 ||
     sequence[sequence.length - 1] !== workflow.closedColumnId

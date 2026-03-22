@@ -117,7 +117,6 @@
   background: #e4e9f0;
 }
 
-/* Bottom-right toast for brief error messages */
 .shortError-bottom-right {
   position: fixed;
   right: 20px;

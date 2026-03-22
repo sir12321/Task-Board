@@ -26,7 +26,6 @@ export const markNotificationAsRead = async (
   notificationId: string,
   userId: string,
 ): Promise<Notification> => {
-  // Verify ownership
   const notification = await prisma.notification.findUnique({
     where: { id: notificationId },
   });

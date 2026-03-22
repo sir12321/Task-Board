@@ -8,8 +8,8 @@ interface Props {
 }
 
 /**
- * Modal dialog for adding a new workflow column.
- * Mirrors the pattern of RenameColumn / EditWIPColumn.
+ * Modal dialog for adding a workflow column.
+ * Validation lives here so the board component stays focused on orchestration.
  */
 const AddColumn = ({ onSubmit, onCancel, setShortError }: Props) => {
   const titleId = 'add-column-title';

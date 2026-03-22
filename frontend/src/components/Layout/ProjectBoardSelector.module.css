@@ -63,6 +63,11 @@
   cursor: pointer;
   padding: 4px 6px;
   border-radius: 4px;
+  border: 0;
+  background: transparent;
+  color: #0f172a;
+  text-align: left;
+  font: inherit;
 }
 
 .pbsProjectName.selected {

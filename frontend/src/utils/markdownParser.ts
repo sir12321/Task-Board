@@ -24,16 +24,12 @@ const findNext = (value: string, token: string, start: number) => {
 const hasValidInlineWrapperContent = (value: string) =>
   /^\S(?:[\s\S]*\S)?$/.test(value);
 
-// Parse inline markdown markers: **bold**, *italic*, __underline__, ~~strike~~, `code`, [links]
-// Strategy: check for multi-char markers first (**,__,~~) to avoid conflicts,
-// then single-char markers (*,`,[), then escape plain text.
-// Recursively parses inner content to support nesting (e.g., ***bold italic***).
 export const parseInlineMarkdown = (value: string): string => {
+  // Check longer wrappers first so **bold** is not consumed as two separate * markers.
   let index = 0;
   let output = '';
 
   while (index < value.length) {
-    // ** = bold/strong (highest priority, 2-char marker)
     if (value.startsWith('**', index)) {
       const closeIndex = findNext(value, '**', index + 2);
 
@@ -47,8 +43,6 @@ export const parseInlineMarkdown = (value: string): string => {
         }
       }
     }
-
-    // __ = underline (2-char marker)
     if (value.startsWith('__', index)) {
       const closeIndex = findNext(value, '__', index + 2);
 
@@ -62,8 +56,6 @@ export const parseInlineMarkdown = (value: string): string => {
         }
       }
     }
-
-    // ~~ = strikethrough (2-char marker)
     if (value.startsWith('~~', index)) {
       const closeIndex = findNext(value, '~~', index + 2);
 
@@ -77,8 +69,6 @@ export const parseInlineMarkdown = (value: string): string => {
         }
       }
     }
-
-    // ` = inline code (single char, no recursive parsing of inner content)
     if (value[index] === '`') {
       const closeIndex = findNext(value, '`', index + 1);
 
@@ -106,6 +96,7 @@ export const parseInlineMarkdown = (value: string): string => {
     }
 
     if (value[index] === '[') {
+      // Only allow explicit safe protocols because parsed markdown becomes live HTML.
       const labelCloseIndex = findNext(value, ']', index + 1);
 
       if (labelCloseIndex > index + 1 && value[labelCloseIndex + 1] === '(') {
@@ -155,8 +146,6 @@ export const parseMarkdownLikeText = (content: string): string => {
       index += 1;
       continue;
     }
-
-    // Unordered list: - or *
     if (isUnorderedListLine(line.trim())) {
       const items: string[] = [];
 
@@ -172,8 +161,6 @@ export const parseMarkdownLikeText = (content: string): string => {
       output.push(`<ul>${items.join('')}</ul>`);
       continue;
     }
-
-    // Ordered list: 1. item, 2. item, ...
     if (isOrderedListLine(line.trim())) {
       const items: string[] = [];
 

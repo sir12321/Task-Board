@@ -92,6 +92,7 @@ export const getBoards = async (
     workflowColumnIds: workflow.workflowColumnIds,
     tasks: board.tasks.map((task) => {
       const { column, assignee, reporter, parent, comments, auditLogs, ...rest } = task;
+      // Tests and older fixtures may omit nested arrays, so keep response shaping null-safe.
       const taskComments = comments ?? [];
       const taskAuditLogs = auditLogs ?? [];
       const todoColumnName =

@@ -71,8 +71,7 @@ const parseMentionQueryAtCaret = (textBeforeCaret: string) => {
   };
 };
 
-// Basic parser for composer input: normalize browser-specific whitespace
-// into a stable plain text representation used for markdown submission.
+// Normalize browser-specific whitespace before storing markdown-like comment text.
 const parseComposerText = (rawText: string): string =>
   rawText
     .replace(/\u00a0/g, ' ')
@@ -104,9 +103,7 @@ export const TaskCommentComposer = forwardRef<
   const [mentionQuery, setMentionQuery] = useState('');
   const [isMentionMenuOpen, setIsMentionMenuOpen] = useState(false);
   const [activeMentionIndex, setActiveMentionIndex] = useState(0);
-
-  // Local state used for composing a new comment. This keeps the UI
-  // responsive even when a parent-provided `onAddComment` is async.
+  // Keep composer text local so typing stays responsive even if submit handlers are async.
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -194,7 +191,7 @@ export const TaskCommentComposer = forwardRef<
     options?: { forceDomSync?: boolean },
   ) => {
     const editor = editorRef.current;
-    // Only update editor DOM if not currently being edited (avoid interfering with typing)
+    // Avoid clobbering live edits unless we are intentionally forcing the DOM to resync.
     if (
       editor &&
       (options?.forceDomSync === true || document.activeElement !== editor)

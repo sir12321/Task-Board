@@ -21,21 +21,14 @@ const allowedAttributes: correctHtml.IOptions['allowedAttributes'] = {
   a: ['href', 'target', 'rel'],
 };
 
-// Sanitize comment content. Accepts both HTML and plain markdown text.
-// If content is plain text (no HTML tags), returns as-is.
-// If content has HTML, sanitizes to allowed tags only.
+// Accept both markdown-like plain text and sanitized HTML comments.
 export const correctRichTextComment = (content: string): string => {
   const trimmed = content.trim();
-
-  // Check if content contains HTML tags
   const hasHtmlTags = htmlTagPattern.test(trimmed);
 
   if (!hasHtmlTags) {
-    // Plain markdown text: return as-is, it's safe
     return trimmed;
   }
-
-  // HTML content: sanitize to allowed tags
   return correctHtml(trimmed, {
     allowedTags,
     allowedAttributes,
@@ -48,25 +41,17 @@ export const correctRichTextComment = (content: string): string => {
     },
   }).trim();
 };
-
-// Extract plain text from markdown or HTML content.
-// For markdown: returns text as-is with normalized whitespace.
-// For HTML: strips tags and extracts text.
+// Extract a normalized plain-text version for search, previews, and validation.
 export const getRichTextPlainText = (content: string): string => {
   const trimmed = content.trim();
-
-  // Check if content contains HTML tags
   const hasHtmlTags = htmlTagPattern.test(trimmed);
 
   if (!hasHtmlTags) {
-    // Plain markdown text: normalize whitespace and trim
     return trimmed
       .replace(/\u00a0/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
   }
-
-  // HTML content: strip tags first, then normalize whitespace
   return correctHtml(trimmed, {
     allowedTags: [],
     allowedAttributes: {},

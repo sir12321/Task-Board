@@ -64,9 +64,7 @@ const ManageGlobalRolesPage = () => {
   const handleUpdateGlobalRole = useCallback(
     async (targetUserId: string, nextRole: GlobalRole) => {
       await updateDirectoryUserGlobalRole(targetUserId, nextRole);
-
-      // Keep auth state in sync immediately after role changes so
-      // role-gated routes/sidebar update without requiring a reload.
+      // Refresh auth state so role-gated UI updates immediately for the active user.
       await fetchUser();
 
       await loadDirectoryUsers();

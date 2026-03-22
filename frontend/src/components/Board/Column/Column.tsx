@@ -7,9 +7,6 @@ import type {
 import TaskCard from '../Task/TaskCard/TaskCard';
 import styles from './Column.module.css';
 
-// Props for the Column component. This acts as a versatile UI piece used by
-// the Board to display a workflow column. Many callbacks are optional as the
-// board may operate in read-only or limited-permission modes.
 interface Properties {
   userRole: ProjectRole;
   column: BoardColumn;
@@ -55,11 +52,8 @@ const Column = ({
   isClosedWorkflowColumn = false,
   closedWorkflowColumnName = null,
 }: Properties) => {
-  // UI state for the workflow management dropdown
   const [workflowMenuOpen, setWorkflowMenuOpen] = useState(false);
   const workflowMenuRef = useRef<HTMLDivElement | null>(null);
-
-  // WIP limit calculations used to render the indicator bar
   const hasWipLimit =
     typeof column.wipLimit === 'number' && column.wipLimit > 0;
   const isAtCapacity =
@@ -70,10 +64,6 @@ const Column = ({
         100,
       )
     : 0;
-
-  // Close the workflow menu when clicking anywhere outside of it. This
-  // effect attaches a global listener when the menu is open and cleans up
-  // afterward to avoid memory leaks.
   useEffect(() => {
     if (!workflowMenuOpen) return;
 
@@ -93,7 +83,6 @@ const Column = ({
   return (
     <div
       className={`${styles.column} ${column.name === 'Stories' ? styles.storyColumn : ''}`}
-      // In the HTML drag‑and‑drop API the browser’s default behaviour for a dragged item over an element is “not a valid drop target”.
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         const taskId = e.dataTransfer.getData('taskId');
@@ -101,7 +90,6 @@ const Column = ({
       }}
     >
       <div className={styles.columnHeader}>
-        {/* title row contains name and optional manage button */}
         <div className={styles.columnTitleRow}>
           <h3 className={styles.columnTitle}>{column.name}</h3>
           {canManageColumns && (
@@ -124,7 +112,6 @@ const Column = ({
                   id={`column-manage-menu-${column.id}`}
                   role="menu"
                 >
-                  {/* workflow action buttons shown conditionally */}
                   {onMoveLeft && (
                     <button
                       type="button"
@@ -192,7 +179,6 @@ const Column = ({
             </div>
           )}
         </div>
-        {/* WIP indicator shows task count vs limit or an unlimited message */}
         {hasWipLimit ? (
           <div className={styles.wipIndicator}>
             <div className={styles.wipProgressTrack}>
