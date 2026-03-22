@@ -7,12 +7,12 @@ const cookieOptions = {
   sameSite: 'strict' as const,
 };
 
+// Extends the Express Request interface to include user information
 export interface AuthRequest extends Request {
   user?: {
     id: string;
     globalRole: string;
   };
-  file?: Express.Multer.File;
 }
 
 export const register = async (
