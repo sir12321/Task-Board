@@ -12,6 +12,8 @@ interface Props {
  * Mirrors the pattern of RenameColumn / EditWIPColumn.
  */
 const AddColumn = ({ onSubmit, onCancel, setShortError }: Props) => {
+  const titleId = 'add-column-title';
+  const inputId = 'add-column-name';
   const [name, setName] = useState('');
 
   const handleSave = async () => {
@@ -31,9 +33,20 @@ const AddColumn = ({ onSubmit, onCancel, setShortError }: Props) => {
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <h4 className={styles.heading}>Add column</h4>
+      <div
+        className={styles.modal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
+        <h4 id={titleId} className={styles.heading}>
+          Add column
+        </h4>
+        <label htmlFor={inputId} className={styles.heading}>
+          Column name
+        </label>
         <input
+          id={inputId}
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}

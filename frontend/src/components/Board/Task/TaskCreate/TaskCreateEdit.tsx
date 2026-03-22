@@ -46,6 +46,9 @@ const TaskCreateEditModal = ({
   onSave,
   onDelete,
 }: Props) => {
+  const titleId = `task-${mode}-title`;
+  const subtitleId = `task-${mode}-subtitle`;
+  const errorId = `task-${mode}-error`;
   const isClosedTask =
     mode === 'edit' &&
     Boolean(
@@ -163,15 +166,29 @@ const TaskCreateEditModal = ({
 
   return (
     <div className={styles.overall} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <button className={styles.closeButton} onClick={onClose}>
+      <div
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={subtitleId}
+      >
+        <button
+          type="button"
+          className={styles.closeButton}
+          onClick={onClose}
+          aria-label="Close task editor"
+        >
           ✕
         </button>
 
-        <h2 className={styles.title}>
+        <h2 id={titleId} className={styles.title}>
           {mode === 'create' ? 'Create Task' : 'Edit Task'}
         </h2>
-        <p className={styles.subtitle}>Column: {columnName}</p>
+        <p id={subtitleId} className={styles.subtitle}>
+          Column: {columnName}
+        </p>
         {isClosedTask && (
           <p className={styles.subtitle}>This task is closed and read-only.</p>
         )}
@@ -186,6 +203,8 @@ const TaskCreateEditModal = ({
               placeholder="Task title"
               required
               disabled={isClosedTask}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? errorId : undefined}
             />
           </label>
 
@@ -198,6 +217,8 @@ const TaskCreateEditModal = ({
               placeholder="Describe the task"
               rows={4}
               disabled={isClosedTask}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? errorId : undefined}
             />
           </label>
 
@@ -211,6 +232,7 @@ const TaskCreateEditModal = ({
                   (e) => setType(e.target.value as NewTaskInput['type']) // to narrow down the possibility of type
                 }
                 disabled={isClosedTask}
+                aria-describedby={error ? errorId : undefined}
               >
                 {defaultStoryColumnId !== initialColumnId && (
                   <option value="TASK">TASK</option>
@@ -233,6 +255,7 @@ const TaskCreateEditModal = ({
                   setPriority(e.target.value as NewTaskInput['priority'])
                 }
                 disabled={isClosedTask}
+                aria-describedby={error ? errorId : undefined}
               >
                 <option value="LOW">LOW</option>
                 <option value="MEDIUM">MEDIUM</option>
@@ -252,6 +275,7 @@ const TaskCreateEditModal = ({
                 onChange={(e) => setDueDate(e.target.value)}
                 min={new Date().toISOString().slice(0, 10)}
                 disabled={isClosedTask}
+                aria-describedby={error ? errorId : undefined}
               />
             </label>
 
@@ -262,6 +286,7 @@ const TaskCreateEditModal = ({
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
                 disabled={isClosedTask}
+                aria-describedby={error ? errorId : undefined}
               >
                 <option value="">Unassigned</option>
                 {assignableMembers.map((member) => (
@@ -282,6 +307,7 @@ const TaskCreateEditModal = ({
                 setParentId(e.target.value);
               }}
               disabled={isClosedTask}
+              aria-describedby={error ? errorId : undefined}
             >
               <option value="">None</option>
               {candidateParents.map((parentTask) => (
@@ -292,7 +318,16 @@ const TaskCreateEditModal = ({
             </select>
           </label>
 
-          {error && <div className={styles.error}>{error}</div>}
+          {error && (
+            <div
+              id={errorId}
+              className={styles.error}
+              role="alert"
+              aria-live="assertive"
+            >
+              {error}
+            </div>
+          )}
 
           {/*Submit Button*/}
           <div className={styles.actions}>
@@ -333,8 +368,13 @@ const TaskCreateEditModal = ({
             <div
               className={styles.deleteConfirmDialog}
               onClick={(e) => e.stopPropagation()}
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="delete-task-title"
             >
-              <h3 className={styles.deleteConfirmTitle}>Delete this task?</h3>
+              <h3 id="delete-task-title" className={styles.deleteConfirmTitle}>
+                Delete this task?
+              </h3>
               <p className={styles.deleteConfirmText}>
                 This action cannot be undone.
               </p>

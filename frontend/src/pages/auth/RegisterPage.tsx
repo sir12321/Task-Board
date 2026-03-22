@@ -4,6 +4,11 @@ import styles from './RegisterPage.module.css';
 import { apiClient } from '../../utils/api';
 
 function RegisterPage() {
+  const nameInputId = 'register-name';
+  const emailInputId = 'register-email';
+  const passwordInputId = 'register-password';
+  const confirmPasswordInputId = 'register-confirm-password';
+  const errorMessageId = 'register-error-message';
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -56,51 +61,72 @@ function RegisterPage() {
         <h1 className={styles.title}>Register</h1>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Name */}
           <div className={styles.field}>
-            <label>Name</label>
+            <label htmlFor={nameInputId}>Name</label>
             <input
+              id={nameInputId}
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              aria-required="true"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? errorMessageId : undefined}
             />
           </div>
 
-          {/* Email */}
           <div className={styles.field}>
-            <label>Email</label>
+            <label htmlFor={emailInputId}>Email</label>
             <input
+              id={emailInputId}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              aria-required="true"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? errorMessageId : undefined}
             />
           </div>
 
-          {/* Password */}
           <div className={styles.field}>
-            <label>Password</label>
+            <label htmlFor={passwordInputId}>Password</label>
             <input
+              id={passwordInputId}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              aria-required="true"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? errorMessageId : undefined}
             />
           </div>
 
-          {/* Confirm Password */}
           <div className={styles.field}>
-            <label>Confirm Password</label>
+            <label htmlFor={confirmPasswordInputId}>Confirm Password</label>
             <input
+              id={confirmPasswordInputId}
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              aria-required="true"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? errorMessageId : undefined}
             />
           </div>
 
-          {error && <p className={styles.error}>{error}</p>}
+          {error && (
+            <p
+              id={errorMessageId}
+              className={styles.error}
+              role="alert"
+              aria-live="assertive"
+            >
+              {error}
+            </p>
+          )}
 
           <button type="submit" className={styles.button}>
             Register

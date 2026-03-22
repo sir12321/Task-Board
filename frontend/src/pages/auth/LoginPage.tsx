@@ -5,6 +5,9 @@ import { apiClient } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 
 function LoginPage() {
+  const emailInputId = 'login-email';
+  const passwordInputId = 'login-password';
+  const errorMessageId = 'login-error-message';
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -46,40 +49,58 @@ function LoginPage() {
         <h1 className={styles.title}>Login</h1>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Email */}
           <div className={styles.field}>
-            <label>Email</label>
+            <label htmlFor={emailInputId}>Email</label>
             <input
+              id={emailInputId}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              aria-required="true"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? errorMessageId : undefined}
             />
           </div>
 
-          {/* Password */}
           <div className={styles.field}>
-            <label>Password</label>
+            <label htmlFor={passwordInputId}>Password</label>
 
             <div className={styles.passwordWrapper}>
               <input
+                id={passwordInputId}
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                aria-required="true"
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? errorMessageId : undefined}
               />
 
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className={styles.toggleButton}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                aria-controls={passwordInputId}
               >
                 {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
           </div>
 
-          {error && <p className={styles.error}>{error}</p>}
+          {error && (
+            <p
+              id={errorMessageId}
+              className={styles.error}
+              role="alert"
+              aria-live="assertive"
+            >
+              {error}
+            </p>
+          )}
 
           <button type="submit" className={styles.button}>
             Login

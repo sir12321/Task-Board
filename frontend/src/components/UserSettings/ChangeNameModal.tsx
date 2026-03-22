@@ -24,8 +24,16 @@ const ChangeNameModal = ({
 
   return (
     <div className={styles.modalBackdrop} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <h3 className={styles.modalTitle}>Change Name</h3>
+      <div
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="change-name-title"
+      >
+        <h3 id="change-name-title" className={styles.modalTitle}>
+          Change Name
+        </h3>
         <form onSubmit={onSubmit} className={styles.form}>
           <label className={styles.label} htmlFor="settings-name">
             New Name
@@ -37,7 +45,11 @@ const ChangeNameModal = ({
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="Enter your new name"
           />
-          {error && <p className={styles.error}>{error}</p>}
+          {error && (
+            <p className={styles.error} role="alert" aria-live="assertive">
+              {error}
+            </p>
+          )}
           <div className={styles.modalActions}>
             <button className={styles.button} type="submit">
               Save

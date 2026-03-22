@@ -191,6 +191,7 @@ const CreateProjectManager = ({
 
           <div className={styles.userSearchBar}>
             <div className={styles.formField}>
+              <label htmlFor="directory-search">Search available users</label>
               <input
                 id="directory-search"
                 value={directoryQuery}

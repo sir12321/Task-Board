@@ -19,6 +19,8 @@ const DeleteColumn = ({
   onCancel,
   setShortError,
 }: Props) => {
+  const titleId = 'delete-column-title';
+  const descriptionId = 'delete-column-description';
   const handleConfirm = async () => {
     try {
       await onSubmit(columnId);
@@ -30,9 +32,17 @@ const DeleteColumn = ({
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <h4 className={styles.heading}>Delete column</h4>
-        <p className={styles.message}>
+      <div
+        className={styles.modal}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+      >
+        <h4 id={titleId} className={styles.heading}>
+          Delete column
+        </h4>
+        <p id={descriptionId} className={styles.message}>
           Are you sure you want to delete <strong>"{columnName}"</strong>? This
           cannot be undone.
         </p>

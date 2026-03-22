@@ -22,6 +22,7 @@ const DashboardPage = () => {
   const { message, showMessage } = useTransientMessage();
 
   const [view, setView] = useState<'active' | 'archived'>('active');
+  const projectsSectionLabelId = 'dashboard-projects-heading';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -125,19 +126,30 @@ const DashboardPage = () => {
             <button
               className={`${styles.tab} ${view === 'active' ? styles.activeTab : ''}`}
               onClick={() => setView('active')}
+              type="button"
+              aria-pressed={view === 'active'}
             >
               Active
             </button>
             <button
               className={`${styles.tab} ${view === 'archived' ? styles.activeTab : ''}`}
               onClick={() => setView('archived')}
+              type="button"
+              aria-pressed={view === 'archived'}
             >
               Archived
             </button>
           </div>
         </div>
 
-        <div className={styles.grid}>
+        <div
+          className={styles.grid}
+          role="region"
+          aria-labelledby={projectsSectionLabelId}
+        >
+          <h2 id={projectsSectionLabelId} hidden>
+            Project list
+          </h2>
           {filteredProjects.map((project) => (
             <div key={project.id} className={styles.projectCard}>
               <div className={styles.projectHeader}>
@@ -146,10 +158,12 @@ const DashboardPage = () => {
                   {canArchiveProject(project) && (
                     <button
                       className={styles.archiveBtn}
+                      type="button"
                       onClick={() =>
                         handleToggleArchive(project.id, !!project.isArchived)
                       }
                       title={project.isArchived ? 'Unarchive' : 'Archive'}
+                      aria-label={`${project.isArchived ? 'Restore' : 'Archive'} project ${project.name}`}
                     >
                       {project.isArchived ? 'Restore' : 'Archive'}
                     </button>
@@ -163,8 +177,10 @@ const DashboardPage = () => {
                   {project.boards.map((board) => (
                     <button
                       key={board.id}
+                      type="button"
                       className={styles.boardButton}
                       onClick={() => handleBoardClick(project.id, board.id)}
+                      aria-label={`Open board ${board.name} in project ${project.name}`}
                     >
                       <span className={styles.boardName}>{board.name}</span>
                     </button>
@@ -180,17 +196,21 @@ const DashboardPage = () => {
                         }
                         placeholder="New board name"
                         className={styles.inlineInput}
+                        aria-label={`New board name for project ${project.name}`}
                       />
                       <div className={styles.inlineActions}>
                         <button
+                          type="button"
                           onClick={() => handleAddBoard(project.id)}
                           className={styles.addBtn}
                         >
                           Add
                         </button>
                         <button
+                          type="button"
                           onClick={() => setAddingBoardTo(null)}
                           className={styles.cancelBtn}
+                          aria-label={`Cancel adding board to project ${project.name}`}
                         >
                           x
                         </button>
@@ -198,8 +218,10 @@ const DashboardPage = () => {
                     </div>
                   ) : canCreateBoard(project) ? (
                     <button
+                      type="button"
                       onClick={() => setAddingBoardTo(project.id)}
                       className={styles.addBoardTrigger}
+                      aria-label={`Add board to project ${project.name}`}
                     >
                       + Add Board
                     </button>

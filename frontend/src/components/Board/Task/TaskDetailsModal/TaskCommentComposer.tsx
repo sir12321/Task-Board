@@ -98,6 +98,8 @@ export const TaskCommentComposer = forwardRef<
   TaskCommentComposerHandle,
   TaskCommentComposerProps
 >(({ mentionSourceMembers, onAddComment, onEditComment, showMessage }, ref) => {
+  const hintId = 'comment-composer-hint';
+  const mentionMenuId = 'comment-mention-menu';
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [mentionQuery, setMentionQuery] = useState('');
   const [isMentionMenuOpen, setIsMentionMenuOpen] = useState(false);
@@ -337,6 +339,9 @@ export const TaskCommentComposer = forwardRef<
         role="textbox"
         aria-multiline="true"
         aria-label="Write a markdown comment"
+        aria-describedby={hintId}
+        aria-expanded={isMentionMenuOpen}
+        aria-controls={isMentionMenuOpen ? mentionMenuId : undefined}
         data-placeholder="Write a comment"
         suppressContentEditableWarning
         onInput={(event) => {
@@ -403,7 +408,7 @@ export const TaskCommentComposer = forwardRef<
         }}
       />
       {isMentionMenuOpen && mentionSuggestions.length > 0 && (
-        <div className={styles.mentionMenu}>
+        <div className={styles.mentionMenu} id={mentionMenuId} role="listbox">
           {mentionSuggestions.map((member, memberIndex) => (
             <button
               key={member.id}
@@ -417,6 +422,8 @@ export const TaskCommentComposer = forwardRef<
                 event.preventDefault();
                 insertMention(member);
               }}
+              role="option"
+              aria-selected={memberIndex === activeMentionIndex}
             >
               <span className={styles.mentionOptionName}>
                 @{getCanonicalMentionHandle(member.name)}
@@ -428,7 +435,7 @@ export const TaskCommentComposer = forwardRef<
           ))}
         </div>
       )}
-      <div className={styles.commentHint}>
+      <div className={styles.commentHint} id={hintId}>
         Use Markdown: **bold**, *italic*, __underline__, ~~strike~~, `inline
         code`, [links](https://example.com), lists with - item or 1. item. Type
         @ to mention collaborators.

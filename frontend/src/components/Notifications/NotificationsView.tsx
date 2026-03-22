@@ -128,17 +128,25 @@ const NotificationsView = () => {
         </div>
         <button
           className={styles.markAllButton}
+          type="button"
           onClick={markAllAsRead}
           disabled={unreadCount === 0 || updatingId === 'all'}
+          aria-label="Mark all notifications as read"
         >
           {updatingId === 'all' ? 'Marking...' : 'Mark all as read'}
         </button>
       </div>
 
       {loading && (
-        <div className={styles.loading}>Loading notifications...</div>
+        <div className={styles.loading} role="status" aria-live="polite">
+          Loading notifications...
+        </div>
       )}
-      {error && !loading && <div className={styles.error}>{error}</div>}
+      {error && !loading && (
+        <div className={styles.error} role="alert" aria-live="assertive">
+          {error}
+        </div>
+      )}
 
       {!loading && !error && notifications.length === 0 && (
         <div className={styles.empty}>
@@ -163,8 +171,14 @@ const NotificationsView = () => {
               </div>
               <button
                 className={styles.markOneButton}
+                type="button"
                 onClick={() => markAsRead(notification.id)}
                 disabled={notification.isRead || updatingId === notification.id}
+                aria-label={
+                  notification.isRead
+                    ? 'Notification already read'
+                    : `Mark notification as read: ${notification.content}`
+                }
               >
                 {notification.isRead
                   ? 'Read'

@@ -23,6 +23,8 @@ const EditWIPColumn = ({
   onCancel,
   setShortError,
 }: Props) => {
+  const titleId = 'edit-wip-title';
+  const inputId = 'edit-wip-input';
   const [value, setValue] = useState(
     currentWip === null ? '' : String(currentWip),
   );
@@ -56,15 +58,27 @@ const EditWIPColumn = ({
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <h4 className={styles.heading}>Set WIP limit</h4>
+      <div
+        className={styles.modal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
+        <h4 id={titleId} className={styles.heading}>
+          Set WIP limit
+        </h4>
+        <label htmlFor={inputId} className={styles.heading}>
+          WIP limit
+        </label>
         <input
+          id={inputId}
           type="number"
           min={1}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Empty = no limit"
           className={styles.textInput}
+          aria-describedby={titleId}
         />
         <div className={styles.buttonRow}>
           <button type="button" onClick={onCancel} className={styles.button}>

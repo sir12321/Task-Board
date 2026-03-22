@@ -23,6 +23,8 @@ const RenameColumn = ({
   onCancel,
   setShortError,
 }: Props) => {
+  const titleId = 'rename-column-title';
+  const inputId = 'rename-column-input';
   const [name, setName] = useState(currentName);
 
   const handleSave = async () => {
@@ -47,19 +49,30 @@ const RenameColumn = ({
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <h4 className={styles.heading}>Rename column</h4>
+      <div
+        className={styles.modal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
+        <h4 id={titleId} className={styles.heading}>
+          Rename column
+        </h4>
+        <label htmlFor={inputId} className={styles.heading}>
+          Column name
+        </label>
         <input
+          id={inputId}
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           className={styles.textInput}
         />
         <div className={styles.buttonRow}>
-          <button onClick={onCancel} className={styles.button}>
+          <button type="button" onClick={onCancel} className={styles.button}>
             Cancel
           </button>
-          <button onClick={handleSave} className={styles.button}>
+          <button type="button" onClick={handleSave} className={styles.button}>
             Save
           </button>
         </div>

@@ -25,7 +25,13 @@ const Sidebar = ({ collapsed, toggle }: Props) => {
 
   return (
     <div className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
-      <button className={styles.collapseBtn} onClick={toggle}>
+      <button
+        type="button"
+        className={styles.collapseBtn}
+        onClick={toggle}
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-pressed={collapsed}
+      >
         {collapsed ? '→' : '←'}
       </button>
 
@@ -119,17 +125,11 @@ const Sidebar = ({ collapsed, toggle }: Props) => {
       </nav>
 
       <div className={styles.sidebarFooter}>
-        <div
+        <button
+          type="button"
           className={styles.userInfo}
           onClick={() => navigate('/user-settings')}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              navigate('/user-settings');
-            }
-          }}
+          aria-label={`Open user settings for ${user.name}`}
         >
           <div className={styles.avatar}>
             {user.avatarUrl ? (
@@ -145,15 +145,17 @@ const Sidebar = ({ collapsed, toggle }: Props) => {
               <div className={styles.userEmail}>{user.email}</div>
             </div>
           )}
-        </div>
+        </button>
 
-        <div
+        <button
+          type="button"
           className={`${styles.navItem} ${styles.logout}`}
           onClick={handleLogout}
+          aria-label="Log out"
         >
           <span className={styles.icon}>↩</span>
           {!collapsed && <span className={styles.label}>Logout</span>}
-        </div>
+        </button>
       </div>
     </div>
   );

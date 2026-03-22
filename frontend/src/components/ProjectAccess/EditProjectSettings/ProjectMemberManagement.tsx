@@ -155,6 +155,7 @@ export const ProjectMemberManagement = ({
               <div className={styles.memberActions}>
                 <div className={styles.memberRoleSelectWrap}>
                   <select
+                    aria-label={`Set role for ${member.name}`}
                     value={member.role}
                     disabled={isSubmitting}
                     onChange={(event) =>
@@ -176,6 +177,7 @@ export const ProjectMemberManagement = ({
                   className={styles.deleteActionButton}
                   disabled={isSubmitting}
                   onClick={() => handleRemoveMember(member.id)}
+                  aria-label={`Remove ${member.name} from the project`}
                 >
                   Remove
                 </button>

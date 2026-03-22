@@ -110,12 +110,20 @@ const Column = ({
                 type="button"
                 className={styles.manageButton}
                 onClick={() => setWorkflowMenuOpen((prev) => !prev)}
+                aria-haspopup="menu"
+                aria-expanded={workflowMenuOpen}
+                aria-controls={`column-manage-menu-${column.id}`}
+                aria-label={`Manage column ${column.name}`}
               >
                 Manage
               </button>
 
               {workflowMenuOpen && (
-                <div className={styles.workflowMenu}>
+                <div
+                  className={styles.workflowMenu}
+                  id={`column-manage-menu-${column.id}`}
+                  role="menu"
+                >
                   {/* workflow action buttons shown conditionally */}
                   {onMoveLeft && (
                     <button
@@ -220,6 +228,7 @@ const Column = ({
           type="button"
           className={styles.createButton}
           onClick={() => onCreateTask(column.id)}
+          aria-label={`Create task in column ${column.name}`}
         >
           + Create task
         </button>

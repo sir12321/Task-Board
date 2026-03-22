@@ -429,7 +429,13 @@ const Board = ({
       </div>
 
       {shortError && (
-        <div className={styles['shortError-bottom-right']}>{shortError}</div>
+        <div
+          className={styles['shortError-bottom-right']}
+          role="alert"
+          aria-live="assertive"
+        >
+          {shortError}
+        </div>
       )}
 
       <BoardModals

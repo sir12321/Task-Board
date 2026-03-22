@@ -172,15 +172,28 @@ const TaskDetailsModal = ({
     // propagation so clicks inside do not close it unintentionally.
     <div className={styles['overall-modal']} onClick={handleModalClose}>
       {message && <ToastMessage message={message} />}
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <button className={styles['close-btn']} onClick={handleModalClose}>
+      <div
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`task-details-title-${task.id}`}
+      >
+        <button
+          type="button"
+          className={styles['close-btn']}
+          onClick={handleModalClose}
+          aria-label="Close task details"
+        >
           ✕
         </button>
 
         <div className={styles.container}>
           <div className={styles.content}>
             <div className={styles.headerRow}>
-              <h2 className={styles.title}>{task.title}</h2>
+              <h2 id={`task-details-title-${task.id}`} className={styles.title}>
+                {task.title}
+              </h2>
               <div className={styles.headerMeta}>
                 <div className={styles.status}>{task.columnName}</div>
                 <div className={`${styles.typeBadge} ${styles[taskTypeClass]}`}>

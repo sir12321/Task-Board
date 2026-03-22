@@ -101,6 +101,8 @@ const AssignUsersManager = ({
                           : ''
                       }`}
                       onClick={() => setSelectedProjectId(project.id)}
+                      aria-pressed={project.id === selectedProjectId}
+                      aria-label={`Select project ${project.name}`}
                     >
                       <div className={styles.projectTitle}>{project.name}</div>
                       <div className={styles.projectDetails}>
@@ -130,6 +132,7 @@ const AssignUsersManager = ({
                       </div>
                       <div className={styles.memberRoleField}>
                         <select
+                          aria-label={`Assign role for ${member.name}`}
                           value={member.role}
                           disabled={isUpdating}
                           onChange={(event) =>
@@ -153,7 +156,11 @@ const AssignUsersManager = ({
             </>
           )}
 
-          {statusMsg && <div className={styles.Message}>{statusMsg}</div>}
+          {statusMsg && (
+            <div className={styles.Message} role="status" aria-live="polite">
+              {statusMsg}
+            </div>
+          )}
         </section>
       </div>
     </div>

@@ -23,16 +23,27 @@ const ChangeAvatarModal = ({
 
   return (
     <div onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}>
-        <h2>Update Avatar</h2>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="change-avatar-title"
+      >
+        <h2 id="change-avatar-title">Update Avatar</h2>
         <form onSubmit={onSubmit}>
+          <label htmlFor="change-avatar-url">Avatar URL</label>
           <input
+            id="change-avatar-url"
             type="url"
             value={avatarUrl}
             onChange={(e) => onAvatarUrlChange(e.target.value)}
             placeholder="Paste image URL here..."
           />
-          {error && <p>{error}</p>}
+          {error && (
+            <p role="alert" aria-live="assertive">
+              {error}
+            </p>
+          )}
           <button type="submit">Save</button>
           <button type="button" onClick={onClose}>
             Cancel

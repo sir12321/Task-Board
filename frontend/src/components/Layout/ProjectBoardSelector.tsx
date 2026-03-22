@@ -26,6 +26,7 @@ const ProjectBoardSelector = () => {
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(
     projectId ?? null,
   );
+  const menuId = 'project-board-selector-menu';
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -136,6 +137,9 @@ const ProjectBoardSelector = () => {
         className={styles.pbsToggle}
         onClick={() => setOpen((s) => !s)}
         aria-expanded={open}
+        aria-haspopup="menu"
+        aria-controls={menuId}
+        aria-label={`Selected project ${selected.project.name}, board ${selected.board?.name ?? 'none selected'}. Toggle board selector`}
       >
         <div className={styles.pbsLabel}>
           <div className={styles.pbsProject}>{selected.project.name}</div>
@@ -147,19 +151,23 @@ const ProjectBoardSelector = () => {
       </button>
 
       {open && (
-        <div className={styles.pbsMenu}>
+        <div className={styles.pbsMenu} id={menuId} role="menu">
           {projects.map((project) => (
             <div key={project.id} className={styles.pbsProjectBlock}>
-              <div
+              <button
+                type="button"
                 className={`${styles.pbsProjectName} ${
                   project.id === selected.project.id ? styles.selected : ''
                 }`}
                 onClick={() => setExpandedProjectId(project.id)}
+                aria-expanded={project.id === expandedProjectId}
+                aria-controls={`project-boards-${project.id}`}
               >
                 {project.name}
-              </div>
+              </button>
 
               <div
+                id={`project-boards-${project.id}`}
                 className={`${styles.pbsBoards} ${
                   project.id === expandedProjectId
                     ? styles.expanded
@@ -177,6 +185,7 @@ const ProjectBoardSelector = () => {
                         : ''
                     }`}
                     onClick={() => handleSelectBoard(project.id, b.id)}
+                    aria-label={`Open board ${b.name} in project ${project.name}`}
                   >
                     {b.name}
                   </button>
@@ -187,6 +196,7 @@ const ProjectBoardSelector = () => {
                     className={styles.pbsCreateBoardBtn}
                     onClick={() => handleCreateBoard(project.id)}
                     title="Create new board"
+                    aria-label={`Create a new board in project ${project.name}`}
                   >
                     + New Board
                   </button>
@@ -201,6 +211,7 @@ const ProjectBoardSelector = () => {
               className={styles.pbsCreateProjectBtn}
               onClick={handleCreateProject}
               title="Create new project"
+              aria-label="Create a new project"
             >
               + New Project
             </button>

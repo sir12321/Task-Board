@@ -21,6 +21,10 @@ const WorkflowEditor = ({
   onCancel,
   setShortError,
 }: Props) => {
+  const titleId = 'workflow-editor-title';
+  const descriptionId = 'workflow-editor-description';
+  const resolvedSelectId = 'workflow-resolved-column';
+  const closedSelectId = 'workflow-closed-column';
   const storyColumn = useMemo(
     () =>
       columns.find(
@@ -145,9 +149,19 @@ const WorkflowEditor = ({
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <h4 className={styles.heading}>{title}</h4>
-        <p className={styles.description}>{description}</p>
+      <div
+        className={styles.modal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+      >
+        <h4 id={titleId} className={styles.heading}>
+          {title}
+        </h4>
+        <p id={descriptionId} className={styles.description}>
+          {description}
+        </p>
 
         <div className={styles.grid}>
           <div className={styles.field}>
@@ -192,6 +206,7 @@ const WorkflowEditor = ({
           <label className={styles.field}>
             <span className={styles.label}>Resolved Column</span>
             <select
+              id={resolvedSelectId}
               className={styles.select}
               value={value.resolvedColumnId ?? ''}
               onChange={(event) =>
@@ -213,6 +228,7 @@ const WorkflowEditor = ({
           <label className={styles.field}>
             <span className={styles.label}>Closed Column</span>
             <select
+              id={closedSelectId}
               className={styles.select}
               value={value.closedColumnId ?? ''}
               onChange={(event) =>

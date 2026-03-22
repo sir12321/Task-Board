@@ -57,6 +57,18 @@ const TaskCard = ({
         setIsDragging(false);
       }}
       role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={`Open task ${task.title}`}
+      onKeyDown={(event) => {
+        if (!onClick) {
+          return;
+        }
+
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onClick();
+        }
+      }}
     >
       <h4>{task.title}</h4>
 
@@ -71,6 +83,7 @@ const TaskCard = ({
             onEdit();
           }}
           onMouseDown={(e) => e.stopPropagation()} // prevents the event to get bubbling up to parent DOM elements, preventing unintended side effects.
+          aria-label={`Edit task ${task.title}`}
         >
           Edit
         </button>

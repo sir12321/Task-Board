@@ -85,6 +85,7 @@ const EditProjectSettingsManager = ({
           ) : (
             <>
               <div className={styles.searchInputGroup}>
+                <label htmlFor="project-search">Search projects</label>
                 <input
                   id="project-search"
                   value={projectQuery}
@@ -103,6 +104,8 @@ const EditProjectSettingsManager = ({
                         : ''
                     }`}
                     onClick={() => setSelectedProjectId(project.id)}
+                    aria-pressed={project.id === selectedProjectId}
+                    aria-label={`Select project ${project.name}`}
                   >
                     <div className={styles.projectTitle}>{project.name}</div>
                     <div className={styles.projectDetails}>
@@ -162,6 +165,7 @@ const EditProjectSettingsManager = ({
                   className={styles.archiveToggle}
                   checked={draftArchived}
                   onChange={(event) => setDraftArchived(event.target.checked)}
+                  aria-label="Archive project"
                 />
               </div>
 
@@ -234,7 +238,13 @@ const EditProjectSettingsManager = ({
           )}
 
           {statusMessage && (
-            <div className={styles.feedbackMessage}>{statusMessage}</div>
+            <div
+              className={styles.feedbackMessage}
+              role="status"
+              aria-live="polite"
+            >
+              {statusMessage}
+            </div>
           )}
         </section>
       </div>
