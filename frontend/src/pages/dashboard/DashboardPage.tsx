@@ -7,6 +7,8 @@ import type { Board, ProjectDetails } from '../../types/Types';
 import { useAuth } from '../../context/AuthContext';
 import styles from './DashboardPage.module.css';
 import WorkflowEditor from '../../components/Board/Board/WorkflowEditor';
+import ToastMessage from '../../components/Feedback/ToastMessage';
+import useTransientMessage from '../../hooks/useTransientMessage';
 
 const DashboardPage = () => {
   const [projects, setProjects] = useState<ProjectDetails[]>([]);
@@ -17,6 +19,7 @@ const DashboardPage = () => {
   const [addingBoardTo, setAddingBoardTo] = useState<string | null>(null);
   const [newBoardName, setNewBoardName] = useState('');
   const [workflowBoard, setWorkflowBoard] = useState<Board | null>(null);
+  const { message, showMessage } = useTransientMessage();
 
   const [view, setView] = useState<'active' | 'archived'>('active');
 
@@ -25,14 +28,14 @@ const DashboardPage = () => {
       try {
         const data = await apiClient('/projects');
         setProjects(data);
-      } catch (error) {
-        console.error('Failed to load projects:', error);
+      } catch {
+        showMessage('Failed to load projects.');
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [showMessage]);
 
   const handleToggleArchive = async (projectId: string, archived: boolean) => {
     try {
@@ -46,9 +49,8 @@ const DashboardPage = () => {
         ),
       );
       notifyProjectsUpdated();
-    } catch (error) {
-      alert('Failed to update project. Please try again.');
-      console.error('Archive toggle error:', error);
+    } catch {
+      showMessage('Failed to update project. Please try again.');
     }
   };
 
@@ -79,9 +81,8 @@ const DashboardPage = () => {
       setWorkflowBoard(createdBoard);
       setAddingBoardTo(null);
       setNewBoardName('');
-    } catch (error) {
-      alert('Failed to add board.');
-      console.error('Board addition error:', error);
+    } catch {
+      showMessage('Failed to add board.');
     }
   };
 
@@ -113,6 +114,7 @@ const DashboardPage = () => {
 
   return (
     <Layout>
+      {message && <ToastMessage message={message} />}
       <div className={styles.container}>
         <div className={styles.headerSection}>
           <div className={styles.titleRow}>

@@ -14,9 +14,6 @@ interface Props {
   onUpdateGlobalRole: (userId: string, globalRole: GlobalRole) => Promise<void>;
 }
 
-const roleLabel = (role: GlobalRole): string =>
-  role === 'GLOBAL_ADMIN' ? 'Global Admin' : 'User';
-
 const GlobalRoleManager = ({
   user,
   directoryUsers,

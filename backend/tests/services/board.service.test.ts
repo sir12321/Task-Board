@@ -79,9 +79,11 @@ describe('Board Service', () => {
 
       const res = await getBoards('b1');
       expect(res?.id).toBe('b1');
-      expect((res?.tasks[0] as any).columnName).toBe('colname');
-      expect((res?.tasks[0] as any).assigneeName).toBe('Assig');
-      expect((res?.tasks[0] as any).reporterName).toBe('Unknown');
+      expect(res?.tasks[0]).toMatchObject({
+        columnName: 'colname',
+        assigneeName: 'Assig',
+        reporterName: 'Unknown',
+      });
     });
   });
 });

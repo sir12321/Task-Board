@@ -154,8 +154,7 @@ const TaskCreateEditModal = ({
       await onDelete(task.id);
       setShowDeleteConfirm(false);
       onClose();
-    } catch (deleteError) {
-      console.error('Failed to delete task:', deleteError);
+    } catch {
       setError('Failed to delete task.');
     } finally {
       setDeleting(false);

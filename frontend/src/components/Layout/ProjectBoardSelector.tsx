@@ -7,6 +7,8 @@ import {
   subscribeToProjectsUpdated,
 } from '../../utils/projectsEvents';
 import { useAuth } from '../../context/AuthContext';
+import ToastMessage from '../Feedback/ToastMessage';
+import useTransientMessage from '../../hooks/useTransientMessage';
 import styles from './ProjectBoardSelector.module.css';
 import WorkflowEditor from '../Board/Board/WorkflowEditor';
 
@@ -20,6 +22,7 @@ const ProjectBoardSelector = () => {
   const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState<ProjectDetails[]>([]);
   const [workflowBoard, setWorkflowBoard] = useState<Board | null>(null);
+  const { message, showMessage } = useTransientMessage();
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(
     projectId ?? null,
   );
@@ -97,9 +100,8 @@ const ProjectBoardSelector = () => {
       setWorkflowBoard(createdBoard);
 
       handleSelectBoard(projectId, newBoard.id);
-    } catch (error) {
-      console.error('Failed to create board:', error);
-      alert('Failed to create board');
+    } catch {
+      showMessage('Failed to create board.');
     }
   };
 
@@ -128,6 +130,7 @@ const ProjectBoardSelector = () => {
 
   return (
     <div className={styles.projectBoardSelector}>
+      {message && <ToastMessage message={message} />}
       <button
         type="button"
         className={styles.pbsToggle}

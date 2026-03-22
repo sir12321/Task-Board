@@ -152,7 +152,7 @@ const Board = ({
         board: normalizeBoard({ board, StoryColumnId, StoryColumnName }),
       },
     });
-  }, [board]);
+  }, [StoryColumnId, StoryColumnName, board]);
 
   useEffect(() => {
     if (!pendingWorkflowColumnDelete) {

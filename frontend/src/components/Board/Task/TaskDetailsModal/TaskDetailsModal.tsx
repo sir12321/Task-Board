@@ -20,6 +20,8 @@ import {
   getMentionSuggestions,
 } from '../../../../utils/mentions';
 import { apiClient } from '../../../../utils/api';
+import ToastMessage from '../../../Feedback/ToastMessage';
+import useTransientMessage from '../../../../hooks/useTransientMessage';
 
 const isMentionCharacter = (character: string) => {
   const code = character.charCodeAt(0);
@@ -200,6 +202,7 @@ const TaskDetailsModal = ({
     string | null
   >(null);
   const [isDeletingComment, setIsDeletingComment] = useState(false);
+  const { message, showMessage } = useTransientMessage();
 
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(task.auditLogs || []);
 
@@ -211,8 +214,8 @@ const TaskDetailsModal = ({
         if (isMounted && data.auditLogs) {
           setAuditLogs(data.auditLogs);
         }
-      } catch (error) {
-        console.error('Failed to fetch task details:', error);
+      } catch {
+        showMessage('Failed to load task activity.');
       }
     };
 
@@ -221,7 +224,7 @@ const TaskDetailsModal = ({
     return () => {
       isMounted = false;
     };
-  }, [task.id, task.updatedAt, task.comments?.length]);
+  }, [showMessage, task.id, task.updatedAt, task.comments?.length]);
 
   const timelineItems = useMemo<TimeLineItem[]>(() => {
     const comments: TimeLineComment[] = (task.comments || []).map(
@@ -399,7 +402,6 @@ const TaskDetailsModal = ({
 
     if (editComment && editCommentId) {
       if (!onEditComment) {
-        console.warn('Comment edit handler is not provided.');
         return;
       }
 
@@ -407,8 +409,8 @@ const TaskDetailsModal = ({
         setIsSubmitting(true);
         await onEditComment(editCommentId, content);
         resetComposer(true);
-      } catch (error) {
-        console.error('Failed to edit comment:', error);
+      } catch {
+        showMessage('Failed to edit comment.');
       } finally {
         setIsSubmitting(false);
       }
@@ -417,8 +419,6 @@ const TaskDetailsModal = ({
     }
 
     if (!onAddComment) {
-      // to be removed in future when onAddComment is guaranteed to be provided
-      console.log('New comment:', content);
       resetComposer();
       return;
     }
@@ -427,8 +427,8 @@ const TaskDetailsModal = ({
       setIsSubmitting(true);
       await onAddComment(content);
       resetComposer();
-    } catch (error) {
-      console.error('Failed to add comment:', error);
+    } catch {
+      showMessage('Failed to add comment.');
     } finally {
       setIsSubmitting(false);
     }
@@ -478,8 +478,8 @@ const TaskDetailsModal = ({
       setIsDeletingComment(true);
       await onDeleteComment(pendingDeleteCommentId);
       setPendingDeleteCommentId(null);
-    } catch (error) {
-      console.error('Failed to delete comment:', error);
+    } catch {
+      showMessage('Failed to delete comment.');
     } finally {
       setIsDeletingComment(false);
     }
@@ -489,6 +489,7 @@ const TaskDetailsModal = ({
     // Clicking the overlay closes the modal. The inner modal stops
     // propagation so clicks inside do not close it unintentionally.
     <div className={styles['overall-modal']} onClick={handleModalClose}>
+      {message && <ToastMessage message={message} />}
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <button className={styles['close-btn']} onClick={handleModalClose}>
           ✕

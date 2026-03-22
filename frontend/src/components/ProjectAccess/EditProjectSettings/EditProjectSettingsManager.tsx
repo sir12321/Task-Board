@@ -119,7 +119,7 @@ const EditProjectSettingsManager = ({
         member.name.toLowerCase().includes(query) ||
         member.email.toLowerCase().includes(query),
     );
-  }, [draftMembers, memberQuery]);
+  }, [draftMembers, memberQuery, selectedProject]);
 
   useEffect(() => {
     if (!selectedProject) {

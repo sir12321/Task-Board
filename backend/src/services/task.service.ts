@@ -1,5 +1,5 @@
 import prisma from '../utils/prisma';
-import { TaskType, Priority, Task } from '@prisma/client';
+import { Prisma, TaskType, Priority, Task } from '@prisma/client';
 import { createNotification } from './notification.service';
 import {
   getFallbackWorkflowColumnIds,
@@ -53,7 +53,20 @@ const checkWipLimit = async (columnId: string): Promise<void> => {
   }
 };
 
-const getBoardWorkflow = async (boardId: string) =>
+type BoardWorkflowRecord = Prisma.BoardGetPayload<{
+  select: {
+    storyColumnId: true;
+    workflowColumnIds: true;
+    todoColumnId: true;
+    inProgressColumnId: true;
+    resolvedColumnId: true;
+    closedColumnId: true;
+  };
+}>;
+
+const getBoardWorkflow = async (
+  boardId: string,
+): Promise<BoardWorkflowRecord | null> =>
   prisma.board.findUnique({
     where: { id: boardId },
     select: {
