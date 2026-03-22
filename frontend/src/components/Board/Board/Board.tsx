@@ -15,10 +15,7 @@ import { handleDrop as handleDropTask, canMoveTask } from './HandleDropTask';
 import BoardModals from './BoardModals';
 import { useBoardActions } from './useBoardActions';
 import styles from './Board.module.css';
-import {
-  getStoryColumnId,
-} from './workflow';
-
+import { getStoryColumnId } from './workflow';
 
 interface Props {
   board: BoardType;
@@ -67,7 +64,6 @@ const Board = ({
   const StoryColumnName =
     board.columns.find((c) => c.id === StoryColumnId)?.name ?? 'Stories';
 
-
   const [state, dispatch] = useReducer(BoardReducer, {
     board: normalizeBoard({ board, StoryColumnId, StoryColumnName }),
     projectDetails,
@@ -107,7 +103,6 @@ const Board = ({
         ? 'Project Member'
         : 'Viewer';
 
-
   const canManageTasks =
     effectiveProjectRole === 'PROJECT_ADMIN' ||
     effectiveProjectRole === 'PROJECT_MEMBER' ||
@@ -124,13 +119,11 @@ const Board = ({
     (member) => member.id !== user?.id,
   );
 
-
   useEffect(() => {
     if (!shortError) return;
     const id = setTimeout(() => setShortError(null), 3000);
     return () => clearTimeout(id);
   }, [shortError]);
-
 
   useEffect(() => {
     dispatch({
@@ -169,11 +162,20 @@ const Board = ({
     handleSubmitAddColumn,
     handleMoveColumn,
     handleSubmitDeleteColumn,
-    handleSubmitWorkflow
+    handleSubmitWorkflow,
   } = useBoardActions({
-    onRenameColumn, onUpdateColumnWip, onAddColumn, onReorderColumn,
-    onDeleteColumn, onUpdateWorkflow, setShortError, dispatch, state,
-    sortedColumns, setPendingWorkflowColumnDelete, StoryColumnId
+    onRenameColumn,
+    onUpdateColumnWip,
+    onAddColumn,
+    onReorderColumn,
+    onDeleteColumn,
+    onUpdateWorkflow,
+    setShortError,
+    dispatch,
+    state,
+    sortedColumns,
+    setPendingWorkflowColumnDelete,
+    StoryColumnId,
   });
 
   const openRenameColumn = (columnId: string, currentName: string) => {
@@ -217,7 +219,6 @@ const Board = ({
         <div className={styles.board}>
           {sortedColumns.map((column, index) =>
             (() => {
-
               const leftNeighbor = index > 0 ? sortedColumns[index - 1] : null;
               const rightNeighbor =
                 index < sortedColumns.length - 1
@@ -384,31 +385,50 @@ const Board = ({
         </div>
       </div>
 
-
       {shortError && (
         <div className={styles['shortError-bottom-right']}>{shortError}</div>
       )}
 
       <BoardModals
-        addColumnOpen={addColumnOpen} setAddColumnOpen={setAddColumnOpen}
-        workflowDialogOpen={workflowDialogOpen} setWorkflowDialogOpen={setWorkflowDialogOpen}
-        deleteColumnDialog={deleteColumnDialog} setDeleteColumnDialog={setDeleteColumnDialog}
-        wipDialog={wipDialog} setWipDialog={setWipDialog}
-        renameColumnDialog={renameColumnDialog} setRenameColumnDialog={setRenameColumnDialog}
-        selectedTaskId={selectedTaskId} setSelectedTaskId={setSelectedTaskId}
-        createColumnId={createColumnId} setCreateColumnId={setCreateColumnId}
-        editingTaskId={editingTaskId} setEditingTaskId={setEditingTaskId}
-        handleSubmitAddColumn={handleSubmitAddColumn} handleSubmitWorkflow={handleSubmitWorkflow}
-        handleSubmitDeleteColumn={handleSubmitDeleteColumn} handleSubmitWip={handleSubmitWip}
-        handleRenameColumn={handleRenameColumn} setShortError={setShortError}
-        sortedColumns={sortedColumns} state={state} dispatch={dispatch} user={user}
+        addColumnOpen={addColumnOpen}
+        setAddColumnOpen={setAddColumnOpen}
+        workflowDialogOpen={workflowDialogOpen}
+        setWorkflowDialogOpen={setWorkflowDialogOpen}
+        deleteColumnDialog={deleteColumnDialog}
+        setDeleteColumnDialog={setDeleteColumnDialog}
+        wipDialog={wipDialog}
+        setWipDialog={setWipDialog}
+        renameColumnDialog={renameColumnDialog}
+        setRenameColumnDialog={setRenameColumnDialog}
+        selectedTaskId={selectedTaskId}
+        setSelectedTaskId={setSelectedTaskId}
+        createColumnId={createColumnId}
+        setCreateColumnId={setCreateColumnId}
+        editingTaskId={editingTaskId}
+        setEditingTaskId={setEditingTaskId}
+        handleSubmitAddColumn={handleSubmitAddColumn}
+        handleSubmitWorkflow={handleSubmitWorkflow}
+        handleSubmitDeleteColumn={handleSubmitDeleteColumn}
+        handleSubmitWip={handleSubmitWip}
+        handleRenameColumn={handleRenameColumn}
+        setShortError={setShortError}
+        sortedColumns={sortedColumns}
+        state={state}
+        dispatch={dispatch}
+        user={user}
         effectiveProjectRole={effectiveProjectRole}
-        mentionableProjectMembers={mentionableProjectMembers} assignableMembers={assignableMembers}
-        StoryColumnId={StoryColumnId} canManageColumns={canManageColumns}
-        layoutEditMode={layoutEditMode} dispatchBoardUpdate={dispatchBoardUpdate}
-        onEditComment={onEditComment} onAddComment={onAddComment}
-        onDeleteComment={onDeleteComment} onCreateTask={onCreateTask}
-        onUpdateTask={onUpdateTask} onDeleteTask={onDeleteTask}
+        mentionableProjectMembers={mentionableProjectMembers}
+        assignableMembers={assignableMembers}
+        StoryColumnId={StoryColumnId}
+        canManageColumns={canManageColumns}
+        layoutEditMode={layoutEditMode}
+        dispatchBoardUpdate={dispatchBoardUpdate}
+        onEditComment={onEditComment}
+        onAddComment={onAddComment}
+        onDeleteComment={onDeleteComment}
+        onCreateTask={onCreateTask}
+        onUpdateTask={onUpdateTask}
+        onDeleteTask={onDeleteTask}
       />
     </div>
   );

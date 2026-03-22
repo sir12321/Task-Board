@@ -1,14 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Board, BoardWorkflow, NewTaskInput, ProjectDetails, Task } from '../types/Types';
+import type {
+  Board,
+  BoardWorkflow,
+  NewTaskInput,
+  ProjectDetails,
+  Task,
+} from '../types/Types';
 import { apiClient } from '../utils/api';
-import { getTaskStatus, isClosedColumn, isResolvedColumn } from '../components/Board/Board/workflow';
+import {
+  getTaskStatus,
+  isClosedColumn,
+  isResolvedColumn,
+} from '../components/Board/Board/workflow';
 
 export function useBoardData(
   projectId: string | undefined,
   boardId: string | undefined,
   user: any,
   navigate: any,
-  showMessage: (msg: string) => void
+  showMessage: (msg: string) => void,
 ) {
   const [board, setBoard] = useState<Board | null>(null);
   const [project, setProject] = useState<ProjectDetails | null>(null);
@@ -39,7 +49,8 @@ export function useBoardData(
       const nextWorkflowColumnIds = [...currentBoard.workflowColumnIds];
       const closedIndex = currentBoard.closedColumnId
         ? nextWorkflowColumnIds.findIndex(
-            (workflowColumnId) => workflowColumnId === currentBoard.closedColumnId,
+            (workflowColumnId) =>
+              workflowColumnId === currentBoard.closedColumnId,
           )
         : -1;
 
@@ -56,12 +67,21 @@ export function useBoardData(
 
   const removeColumnFromWorkflow = useCallback(
     (currentBoard: Board, columnId: string): BoardWorkflow => ({
-      storyColumnId: currentBoard.storyColumnId === columnId ? null : currentBoard.storyColumnId,
+      storyColumnId:
+        currentBoard.storyColumnId === columnId
+          ? null
+          : currentBoard.storyColumnId,
       workflowColumnIds: currentBoard.workflowColumnIds.filter(
         (workflowColumnId) => workflowColumnId !== columnId,
       ),
-      resolvedColumnId: currentBoard.resolvedColumnId === columnId ? null : currentBoard.resolvedColumnId,
-      closedColumnId: currentBoard.closedColumnId === columnId ? null : currentBoard.closedColumnId,
+      resolvedColumnId:
+        currentBoard.resolvedColumnId === columnId
+          ? null
+          : currentBoard.resolvedColumnId,
+      closedColumnId:
+        currentBoard.closedColumnId === columnId
+          ? null
+          : currentBoard.closedColumnId,
     }),
     [],
   );
@@ -120,11 +140,16 @@ export function useBoardData(
           return;
         }
 
-        let resolvedProject = projectId ? projects.find((p) => p.id === projectId) : projects[0];
+        let resolvedProject = projectId
+          ? projects.find((p) => p.id === projectId)
+          : projects[0];
         if (!resolvedProject) resolvedProject = projects[0];
 
         let resolvedBoardId = boardId;
-        if (!resolvedBoardId || !resolvedProject.boards.find((b) => b.id === resolvedBoardId)) {
+        if (
+          !resolvedBoardId ||
+          !resolvedProject.boards.find((b) => b.id === resolvedBoardId)
+        ) {
           resolvedBoardId = resolvedProject.boards[0]?.id;
         }
 
@@ -136,7 +161,10 @@ export function useBoardData(
         }
 
         if (resolvedProject.id !== projectId || resolvedBoardId !== boardId) {
-          navigate(`/projects/${resolvedProject.id}/boards/${resolvedBoardId}`, { replace: true });
+          navigate(
+            `/projects/${resolvedProject.id}/boards/${resolvedBoardId}`,
+            { replace: true },
+          );
           return;
         }
 
@@ -161,7 +189,10 @@ export function useBoardData(
   const deleteTask = useCallback(
     async (taskId: string): Promise<void> => {
       if (!project || !board) return;
-      if (project.userRole === 'PROJECT_VIEWER' && user?.globalRole !== 'GLOBAL_ADMIN') {
+      if (
+        project.userRole === 'PROJECT_VIEWER' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('You do not have permission to delete tasks.');
         return;
       }
@@ -174,7 +205,9 @@ export function useBoardData(
 
       await apiClient(`/tasks/${taskId}`, { method: 'DELETE' });
       setBoard((prev) =>
-        prev ? { ...prev, tasks: prev.tasks.filter((t) => t.id !== taskId) } : prev,
+        prev
+          ? { ...prev, tasks: prev.tasks.filter((t) => t.id !== taskId) }
+          : prev,
       );
     },
     [board, project, user],
@@ -183,7 +216,10 @@ export function useBoardData(
   const createTask = useCallback(
     async (payload: NewTaskInput): Promise<void> => {
       if (!project || !board || !user) return;
-      if (project.userRole === 'PROJECT_VIEWER' && user.globalRole !== 'GLOBAL_ADMIN') {
+      if (
+        project.userRole === 'PROJECT_VIEWER' &&
+        user.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('You do not have permission to create tasks.');
         return;
       }
@@ -198,8 +234,10 @@ export function useBoardData(
       });
 
       const column = board.columns.find((c) => c.id === payload.columnId);
-      const assigneeMember = project.members.find((member) => member.id === payload.assigneeId);
-      
+      const assigneeMember = project.members.find(
+        (member) => member.id === payload.assigneeId,
+      );
+
       updateBoardState((currentBoard) => ({
         ...currentBoard,
         tasks: [
@@ -207,9 +245,11 @@ export function useBoardData(
             ...created,
             columnName: column?.name ?? 'Unknown',
             reporterName: created.reporterName ?? user.name,
-            reporterAvatarUrl: created.reporterAvatarUrl ?? user.avatarUrl ?? null,
+            reporterAvatarUrl:
+              created.reporterAvatarUrl ?? user.avatarUrl ?? null,
             assigneeName: created.assigneeName ?? assigneeMember?.name,
-            assigneeAvatarUrl: created.assigneeAvatarUrl ?? assigneeMember?.avatarUrl,
+            assigneeAvatarUrl:
+              created.assigneeAvatarUrl ?? assigneeMember?.avatarUrl,
             comments: [],
             resolvedAt: isResolvedColumn(currentBoard, payload.columnId)
               ? (created.resolvedAt ?? new Date().toISOString())
@@ -228,13 +268,17 @@ export function useBoardData(
   const updateTask = useCallback(
     async (taskId: string, payload: NewTaskInput): Promise<void> => {
       if (!project || !board) return;
-      if (project.userRole === 'PROJECT_VIEWER' && user?.globalRole !== 'GLOBAL_ADMIN') {
+      if (
+        project.userRole === 'PROJECT_VIEWER' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('You do not have permission to edit tasks.');
         return;
       }
 
       const existingTask = board.tasks.find((t) => t.id === taskId);
-      const statusChanged = !!existingTask && existingTask.columnId !== payload.columnId;
+      const statusChanged =
+        !!existingTask && existingTask.columnId !== payload.columnId;
 
       const hasTaskFieldChanges =
         !existingTask ||
@@ -275,7 +319,8 @@ export function useBoardData(
                       : task.closedAt,
                   updatedAt:
                     movedTask && 'updatedAt' in movedTask
-                      ? ((movedTask.updatedAt as string | undefined) ?? task.updatedAt)
+                      ? ((movedTask.updatedAt as string | undefined) ??
+                        task.updatedAt)
                       : task.updatedAt,
                 }
               : task,
@@ -298,10 +343,13 @@ export function useBoardData(
       });
 
       const column = board.columns.find((c) => c.id === payload.columnId);
-      const assigneeMember = project.members.find((member) => member.id === payload.assigneeId);
+      const assigneeMember = project.members.find(
+        (member) => member.id === payload.assigneeId,
+      );
       const assigneeName = assigneeMember?.name ?? null;
-      const parentName = board.tasks.find((task) => task.id === payload.parentId)?.title ?? null;
-      
+      const parentName =
+        board.tasks.find((task) => task.id === payload.parentId)?.title ?? null;
+
       updateBoardState((currentBoard) => ({
         ...currentBoard,
         tasks: currentBoard.tasks.map((task) =>
@@ -316,10 +364,14 @@ export function useBoardData(
                 dueDate: payload.dueDate,
                 assigneeId: payload.assigneeId ?? null,
                 assigneeName: updatedTask.assigneeName ?? assigneeName,
-                assigneeAvatarUrl: updatedTask.assigneeAvatarUrl ?? assigneeMember?.avatarUrl ?? null,
+                assigneeAvatarUrl:
+                  updatedTask.assigneeAvatarUrl ??
+                  assigneeMember?.avatarUrl ??
+                  null,
                 parentId: payload.parentId ?? null,
                 parentName: updatedTask.parentName ?? parentName,
-                columnName: column?.name ?? updatedTask.columnName ?? task.columnName,
+                columnName:
+                  column?.name ?? updatedTask.columnName ?? task.columnName,
                 updatedAt: updatedTask.updatedAt ?? new Date().toISOString(),
               }
             : task,
@@ -332,7 +384,10 @@ export function useBoardData(
   const addComment = useCallback(
     async (taskId: string, content: string): Promise<void> => {
       if (!project) return;
-      if (project.userRole === 'PROJECT_VIEWER' && user?.globalRole !== 'GLOBAL_ADMIN') {
+      if (
+        project.userRole === 'PROJECT_VIEWER' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('You do not have permission to add comments.');
         return;
       }
@@ -342,10 +397,14 @@ export function useBoardData(
         body: JSON.stringify({ taskId, content }),
       });
 
-      const authorMember = project.members.find((member) => member.id === createdComment.authorId);
+      const authorMember = project.members.find(
+        (member) => member.id === createdComment.authorId,
+      );
       const authorName = authorMember?.name ?? user?.name ?? 'Unknown User';
       const authorAvatarUrl =
-        authorMember?.avatarUrl ?? (createdComment.authorId === user?.id ? user?.avatarUrl : null) ?? null;
+        authorMember?.avatarUrl ??
+        (createdComment.authorId === user?.id ? user?.avatarUrl : null) ??
+        null;
 
       setBoard((prev) =>
         prev
@@ -393,7 +452,9 @@ export function useBoardData(
 
       if (!isGlobalAdmin) {
         const createdAtMs = new Date(commentToEdit.createdAt).getTime();
-        const isWithinEditWindow = Number.isFinite(createdAtMs) && Date.now() - createdAtMs <= commentEditWindowMs;
+        const isWithinEditWindow =
+          Number.isFinite(createdAtMs) &&
+          Date.now() - createdAtMs <= commentEditWindowMs;
 
         if (!isWithinEditWindow) {
           alert('You can only edit a comment within 6 days of posting it.');
@@ -418,7 +479,8 @@ export function useBoardData(
                   ? {
                       ...comment,
                       content: updatedComment.content ?? content,
-                      updatedAt: updatedComment.updatedAt ?? new Date().toISOString(),
+                      updatedAt:
+                        updatedComment.updatedAt ?? new Date().toISOString(),
                     }
                   : comment,
               ),
@@ -456,7 +518,9 @@ export function useBoardData(
 
       if (!isGlobalAdmin) {
         const createdAtMs = new Date(commentToDelete.createdAt).getTime();
-        const isWithinDeleteWindow = Number.isFinite(createdAtMs) && Date.now() - createdAtMs <= commentDeleteWindowMs;
+        const isWithinDeleteWindow =
+          Number.isFinite(createdAtMs) &&
+          Date.now() - createdAtMs <= commentDeleteWindowMs;
 
         if (!isWithinDeleteWindow) {
           alert('You can only delete a comment within 2 days of posting it.');
@@ -489,12 +553,19 @@ export function useBoardData(
       try {
         const newColumn = await apiClient('/columns', {
           method: 'POST',
-          body: JSON.stringify({ name: columnName, boardId: board.id, wipLimit: null }),
+          body: JSON.stringify({
+            name: columnName,
+            boardId: board.id,
+            wipLimit: null,
+          }),
         });
 
         updateBoardState((currentBoard) => ({
           ...currentBoard,
-          workflowColumnIds: insertColumnIntoWorkflow(currentBoard, newColumn.id),
+          workflowColumnIds: insertColumnIntoWorkflow(
+            currentBoard,
+            newColumn.id,
+          ),
           columns: [...currentBoard.columns, newColumn],
         }));
       } catch {
@@ -507,7 +578,10 @@ export function useBoardData(
   const renameColumn = useCallback(
     async (columnId: string, newName: string): Promise<void> => {
       if (!project || !board) return;
-      if (project.userRole !== 'PROJECT_ADMIN' && user?.globalRole !== 'GLOBAL_ADMIN') {
+      if (
+        project.userRole !== 'PROJECT_ADMIN' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('Only Project Admins or Global Admins can rename columns.');
         return;
       }
@@ -520,8 +594,14 @@ export function useBoardData(
 
         updateBoardState((currentBoard) => ({
           ...currentBoard,
-          columns: currentBoard.columns.map((c) => (c.id === columnId ? { ...c, name: newName } : c)),
-          tasks: currentBoard.tasks.map((task) => (task.columnId === columnId ? { ...task, columnName: newName } : task)),
+          columns: currentBoard.columns.map((c) =>
+            c.id === columnId ? { ...c, name: newName } : c,
+          ),
+          tasks: currentBoard.tasks.map((task) =>
+            task.columnId === columnId
+              ? { ...task, columnName: newName }
+              : task,
+          ),
         }));
       } catch {
         showMessage('Failed to rename column.');
@@ -533,7 +613,10 @@ export function useBoardData(
   const reorderColumn = useCallback(
     async (columnId: string, direction: 'left' | 'right'): Promise<void> => {
       if (!project || !board) return;
-      if (project.userRole !== 'PROJECT_ADMIN' && user?.globalRole !== 'GLOBAL_ADMIN') {
+      if (
+        project.userRole !== 'PROJECT_ADMIN' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('Only ProjectAdmin can reorder columns.');
         return;
       }
@@ -548,7 +631,8 @@ export function useBoardData(
           if (!prev) return prev;
           const sorted = [...prev.columns].sort((a, b) => a.order - b.order);
           const currentIndex = sorted.findIndex((c) => c.id === columnId);
-          const targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+          const targetIndex =
+            direction === 'left' ? currentIndex - 1 : currentIndex + 1;
           if (targetIndex < 0 || targetIndex >= sorted.length) return prev;
 
           const currentOrder = sorted[currentIndex].order;
@@ -557,8 +641,10 @@ export function useBoardData(
           return {
             ...prev,
             columns: prev.columns.map((c) => {
-              if (c.id === sorted[currentIndex].id) return { ...c, order: targetOrder };
-              if (c.id === sorted[targetIndex].id) return { ...c, order: currentOrder };
+              if (c.id === sorted[currentIndex].id)
+                return { ...c, order: targetOrder };
+              if (c.id === sorted[targetIndex].id)
+                return { ...c, order: currentOrder };
               return c;
             }),
           };
@@ -573,7 +659,10 @@ export function useBoardData(
   const updateColumnWip = useCallback(
     async (columnId: string, newWipLimit: number | null): Promise<void> => {
       if (!project || !board) return;
-      if (project.userRole !== 'PROJECT_ADMIN' && user?.globalRole !== 'GLOBAL_ADMIN') {
+      if (
+        project.userRole !== 'PROJECT_ADMIN' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('Only Project Admins or Global Admins can edit WIP limits.');
         return;
       }
@@ -588,7 +677,9 @@ export function useBoardData(
           prev
             ? {
                 ...prev,
-                columns: prev.columns.map((c) => (c.id === columnId ? { ...c, wipLimit: newWipLimit } : c)),
+                columns: prev.columns.map((c) =>
+                  c.id === columnId ? { ...c, wipLimit: newWipLimit } : c,
+                ),
               }
             : prev,
         );
@@ -602,12 +693,17 @@ export function useBoardData(
   const deleteColumn = useCallback(
     async (columnId: string): Promise<void> => {
       if (!project || !board) return;
-      if (project.userRole !== 'PROJECT_ADMIN' && user?.globalRole !== 'GLOBAL_ADMIN') {
+      if (
+        project.userRole !== 'PROJECT_ADMIN' &&
+        user?.globalRole !== 'GLOBAL_ADMIN'
+      ) {
         alert('Only Project Admins or Global Admins can delete columns.');
         return;
       }
 
-      const column = board.columns.find((currentColumn) => currentColumn.id === columnId);
+      const column = board.columns.find(
+        (currentColumn) => currentColumn.id === columnId,
+      );
       if (board.storyColumnId === column?.id) {
         alert('Stories column cannot be deleted.');
         return;
@@ -622,10 +718,19 @@ export function useBoardData(
           columns: currentBoard.columns.filter((c) => c.id !== columnId),
         }));
       } catch {
-        showMessage('Cannot delete a column that contains tasks. Move or delete them first.');
+        showMessage(
+          'Cannot delete a column that contains tasks. Move or delete them first.',
+        );
       }
     },
-    [project, board, removeColumnFromWorkflow, showMessage, updateBoardState, user],
+    [
+      project,
+      board,
+      removeColumnFromWorkflow,
+      showMessage,
+      updateBoardState,
+      user,
+    ],
   );
 
   const updateWorkflow = useCallback(

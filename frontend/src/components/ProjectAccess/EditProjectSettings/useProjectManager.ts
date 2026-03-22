@@ -18,13 +18,15 @@ export const useProjectManager = (
     isArchived: boolean;
     members: ProjectMemberSummary[];
   }) => Promise<void>,
-  onDeleteProject: (input: { projectId: string }) => Promise<void>
+  onDeleteProject: (input: { projectId: string }) => Promise<void>,
 ) => {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [projectQuery, setProjectQuery] = useState('');
   const [userQuery, setUserQuery] = useState('');
   const [memberQuery, setMemberQuery] = useState('');
-  const [directoryRoles, setDirectoryRoles] = useState<Record<string, ProjectRole>>({});
+  const [directoryRoles, setDirectoryRoles] = useState<
+    Record<string, ProjectRole>
+  >({});
   const [draftName, setDraftName] = useState('');
   const [draftDescription, setDraftDescription] = useState('');
   const [draftArchived, setDraftArchived] = useState(false);
@@ -35,7 +37,9 @@ export const useProjectManager = (
   const filteredProjects = useMemo(() => {
     const query = projectQuery.trim().toLowerCase();
     if (!query) return adminProjects;
-    return adminProjects.filter((project) => project.name.toLowerCase().includes(query));
+    return adminProjects.filter((project) =>
+      project.name.toLowerCase().includes(query),
+    );
   }, [adminProjects, projectQuery]);
 
   useEffect(() => {
@@ -44,7 +48,10 @@ export const useProjectManager = (
       return;
     }
 
-    if (selectedProjectId && !filteredProjects.some((project) => project.id === selectedProjectId)) {
+    if (
+      selectedProjectId &&
+      !filteredProjects.some((project) => project.id === selectedProjectId)
+    ) {
       setSelectedProjectId(filteredProjects[0]?.id ?? '');
     }
   }, [filteredProjects, selectedProjectId]);
@@ -63,7 +70,10 @@ export const useProjectManager = (
       if (person.globalRole === 'GLOBAL_ADMIN') return false;
       if (assignedEmails.has(person.email)) return false;
       if (!query) return true;
-      return person.name.toLowerCase().includes(query) || person.email.toLowerCase().includes(query);
+      return (
+        person.name.toLowerCase().includes(query) ||
+        person.email.toLowerCase().includes(query)
+      );
     });
   }, [directoryUsers, draftMembers, selectedProject, userQuery]);
 
@@ -72,7 +82,9 @@ export const useProjectManager = (
     const query = memberQuery.trim().toLowerCase();
     if (!query) return draftMembers;
     return draftMembers.filter(
-      (member) => member.name.toLowerCase().includes(query) || member.email.toLowerCase().includes(query)
+      (member) =>
+        member.name.toLowerCase().includes(query) ||
+        member.email.toLowerCase().includes(query),
     );
   }, [draftMembers, memberQuery, selectedProject]);
 
@@ -118,14 +130,16 @@ export const useProjectManager = (
       });
       setStatusMessage(`Saved settings for "${draftName.trim()}".`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to save settings.';
+      const message =
+        error instanceof Error ? error.message : 'Failed to save settings.';
       setStatusMessage(message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const canDeleteSelectedProject = Boolean(selectedProject) && user.globalRole === 'GLOBAL_ADMIN';
+  const canDeleteSelectedProject =
+    Boolean(selectedProject) && user.globalRole === 'GLOBAL_ADMIN';
 
   const handleDeleteProject = async (): Promise<void> => {
     if (!selectedProject || !canDeleteSelectedProject) {
@@ -135,7 +149,7 @@ export const useProjectManager = (
     }
 
     const shouldDelete = window.confirm(
-      `Delete project "${selectedProject.name}"? This action cannot be undone.`
+      `Delete project "${selectedProject.name}"? This action cannot be undone.`,
     );
     if (!shouldDelete) return;
 
@@ -145,7 +159,8 @@ export const useProjectManager = (
       setStatusMessage(`Deleted "${selectedProject.name}".`);
       setSelectedProjectId('');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to delete project.';
+      const message =
+        error instanceof Error ? error.message : 'Failed to delete project.';
       setStatusMessage(message);
     } finally {
       setIsSubmitting(false);
@@ -172,14 +187,19 @@ export const useProjectManager = (
         avatarUrl: directoryUser.avatarUrl,
       },
     ]);
-    setStatusMessage(`Added ${directoryUser.name} to the draft. Save settings to persist it.`);
+    setStatusMessage(
+      `Added ${directoryUser.name} to the draft. Save settings to persist it.`,
+    );
     setUserQuery('');
   };
 
-  const handleUpdateMemberRole = async (memberId: string, nextRole: ProjectRole): Promise<void> => {
+  const handleUpdateMemberRole = async (
+    memberId: string,
+    nextRole: ProjectRole,
+  ): Promise<void> => {
     if (!selectedProject) return;
     const nextMembers = draftMembers.map((member) =>
-      member.id === memberId ? { ...member, role: nextRole } : member
+      member.id === memberId ? { ...member, role: nextRole } : member,
     );
 
     if (!nextMembers.some((member) => member.role === 'PROJECT_ADMIN')) {
@@ -188,35 +208,50 @@ export const useProjectManager = (
     }
 
     setDraftMembers(nextMembers);
-    setStatusMessage('Updated the draft member role. Save settings to persist it.');
+    setStatusMessage(
+      'Updated the draft member role. Save settings to persist it.',
+    );
   };
 
   const handleRemoveMember = async (memberId: string): Promise<void> => {
     if (!selectedProject) return;
-    const memberToRemove = draftMembers.find((member) => member.id === memberId);
+    const memberToRemove = draftMembers.find(
+      (member) => member.id === memberId,
+    );
     if (!memberToRemove) return;
 
     if (
       memberToRemove.role === 'PROJECT_ADMIN' &&
-      !draftMembers.some((member) => member.id !== memberId && member.role === 'PROJECT_ADMIN')
+      !draftMembers.some(
+        (member) => member.id !== memberId && member.role === 'PROJECT_ADMIN',
+      )
     ) {
       setStatusMessage('Each project must keep at least one admin.');
       return;
     }
 
     setDraftMembers((prev) => prev.filter((member) => member.id !== memberId));
-    setStatusMessage(`Removed ${memberToRemove.name} from the draft. Save settings to persist it.`);
+    setStatusMessage(
+      `Removed ${memberToRemove.name} from the draft. Save settings to persist it.`,
+    );
   };
 
   return {
-    selectedProjectId, setSelectedProjectId,
-    projectQuery, setProjectQuery,
-    userQuery, setUserQuery,
-    memberQuery, setMemberQuery,
+    selectedProjectId,
+    setSelectedProjectId,
+    projectQuery,
+    setProjectQuery,
+    userQuery,
+    setUserQuery,
+    memberQuery,
+    setMemberQuery,
     directoryRoles,
-    draftName, setDraftName,
-    draftDescription, setDraftDescription,
-    draftArchived, setDraftArchived,
+    draftName,
+    setDraftName,
+    draftDescription,
+    setDraftDescription,
+    draftArchived,
+    setDraftArchived,
     draftMembers,
     statusMessage,
     isSubmitting,
@@ -231,6 +266,6 @@ export const useProjectManager = (
     updateDirectoryRole,
     handleAddUser,
     handleUpdateMemberRole,
-    handleRemoveMember
+    handleRemoveMember,
   };
 };

@@ -30,14 +30,21 @@ const EditProjectSettingsManager = ({
   onDeleteProject,
 }: Props) => {
   const {
-    selectedProjectId, setSelectedProjectId,
-    projectQuery, setProjectQuery,
-    userQuery, setUserQuery,
-    memberQuery, setMemberQuery,
+    selectedProjectId,
+    setSelectedProjectId,
+    projectQuery,
+    setProjectQuery,
+    userQuery,
+    setUserQuery,
+    memberQuery,
+    setMemberQuery,
     directoryRoles,
-    draftName, setDraftName,
-    draftDescription, setDraftDescription,
-    draftArchived, setDraftArchived,
+    draftName,
+    setDraftName,
+    draftDescription,
+    setDraftDescription,
+    draftArchived,
+    setDraftArchived,
     draftMembers,
     statusMessage,
     isSubmitting,
@@ -52,8 +59,14 @@ const EditProjectSettingsManager = ({
     updateDirectoryRole,
     handleAddUser,
     handleUpdateMemberRole,
-    handleRemoveMember
-  } = useProjectManager(user, adminProjects, directoryUsers, onSaveProjectSettings, onDeleteProject);
+    handleRemoveMember,
+  } = useProjectManager(
+    user,
+    adminProjects,
+    directoryUsers,
+    onSaveProjectSettings,
+    onDeleteProject,
+  );
 
   return (
     <div className={styles.pageContainer}>

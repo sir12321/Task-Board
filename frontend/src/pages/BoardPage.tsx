@@ -14,9 +14,21 @@ export default function BoardPage() {
   const { message, showMessage } = useTransientMessage();
 
   const {
-    board, project, loading,
-    deleteTask, createTask, updateTask, addComment, editComment, deleteComment,
-    addColumn, renameColumn, reorderColumn, updateColumnWip, deleteColumn, updateWorkflow
+    board,
+    project,
+    loading,
+    deleteTask,
+    createTask,
+    updateTask,
+    addComment,
+    editComment,
+    deleteComment,
+    addColumn,
+    renameColumn,
+    reorderColumn,
+    updateColumnWip,
+    deleteColumn,
+    updateWorkflow,
   } = useBoardData(projectId, boardId, user, navigate, showMessage);
 
   if (loading && !board) {

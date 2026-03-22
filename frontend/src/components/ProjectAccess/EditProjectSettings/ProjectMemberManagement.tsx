@@ -1,4 +1,9 @@
-import type { AuthUser, DirectoryUser, ProjectMemberSummary, ProjectRole } from '../../../types/Types';
+import type {
+  AuthUser,
+  DirectoryUser,
+  ProjectMemberSummary,
+  ProjectRole,
+} from '../../../types/Types';
 import { getInitials } from '../../../utils/getInitials';
 import { PROJECT_ROLE_OPTIONS } from '../../../utils/getUtils';
 import styles from './EditProjectSettingsManager.module.css';
@@ -44,7 +49,9 @@ export const ProjectMemberManagement = ({
             </div>
           </div>
 
-          <div className={`${styles.searchInputGroup} ${styles.compactSearchInputGroup}`}>
+          <div
+            className={`${styles.searchInputGroup} ${styles.compactSearchInputGroup}`}
+          >
             <label htmlFor="project-user-search">Search users</label>
             <input
               id="project-user-search"
@@ -77,7 +84,10 @@ export const ProjectMemberManagement = ({
                       value={directoryRoles[person.email] ?? 'PROJECT_MEMBER'}
                       disabled={isSubmitting}
                       onChange={(event) =>
-                        updateDirectoryRole(person.email, event.target.value as ProjectRole)
+                        updateDirectoryRole(
+                          person.email,
+                          event.target.value as ProjectRole,
+                        )
                       }
                     >
                       {PROJECT_ROLE_OPTIONS.map((role) => (
@@ -101,7 +111,9 @@ export const ProjectMemberManagement = ({
           </div>
 
           {availableUsers.length === 0 && (
-            <div className={styles.emptyMessage}>No additional users match the current search.</div>
+            <div className={styles.emptyMessage}>
+              No additional users match the current search.
+            </div>
           )}
         </>
       )}
@@ -112,7 +124,9 @@ export const ProjectMemberManagement = ({
         </div>
       </div>
 
-      <div className={`${styles.searchInputGroup} ${styles.compactSearchInputGroup}`}>
+      <div
+        className={`${styles.searchInputGroup} ${styles.compactSearchInputGroup}`}
+      >
         <label htmlFor="project-member-search">Search current members</label>
         <input
           id="project-member-search"
@@ -144,7 +158,10 @@ export const ProjectMemberManagement = ({
                     value={member.role}
                     disabled={isSubmitting}
                     onChange={(event) =>
-                      handleUpdateMemberRole(member.id, event.target.value as ProjectRole)
+                      handleUpdateMemberRole(
+                        member.id,
+                        event.target.value as ProjectRole,
+                      )
                     }
                   >
                     {PROJECT_ROLE_OPTIONS.map((role) => (
@@ -174,7 +191,9 @@ export const ProjectMemberManagement = ({
       </div>
 
       {filteredMembers.length === 0 && (
-        <div className={styles.emptyMessage}>No current members match the current search.</div>
+        <div className={styles.emptyMessage}>
+          No current members match the current search.
+        </div>
       )}
     </div>
   );

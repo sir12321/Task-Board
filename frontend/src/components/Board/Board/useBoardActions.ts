@@ -1,13 +1,23 @@
 import type { Dispatch } from 'react';
 import type { BoardAction, BoardState } from './BoardReducer';
-import type { Board as BoardType, BoardWorkflow, Task } from '../../../types/Types';
+import type {
+  Board as BoardType,
+  BoardWorkflow,
+  Task,
+} from '../../../types/Types';
 import { getTaskStatus } from './workflow';
 
 interface UseBoardActionsProps {
   onRenameColumn?: (columnId: string, newName: string) => Promise<void> | void;
-  onUpdateColumnWip?: (columnId: string, wipLimit: number | null) => Promise<void> | void;
+  onUpdateColumnWip?: (
+    columnId: string,
+    wipLimit: number | null,
+  ) => Promise<void> | void;
   onAddColumn?: (columnName: string) => Promise<void> | void;
-  onReorderColumn?: (columnId: string, direction: 'left' | 'right') => Promise<void> | void;
+  onReorderColumn?: (
+    columnId: string,
+    direction: 'left' | 'right',
+  ) => Promise<void> | void;
   onDeleteColumn?: (columnId: string) => Promise<void> | void;
   onUpdateWorkflow?: (workflow: BoardWorkflow) => Promise<void> | void;
   setShortError: (err: string | null) => void;
@@ -19,11 +29,19 @@ interface UseBoardActionsProps {
 }
 
 export const useBoardActions = ({
-  onRenameColumn, onUpdateColumnWip, onAddColumn, onReorderColumn,
-  onDeleteColumn, onUpdateWorkflow, setShortError, dispatch, state,
-  sortedColumns, setPendingWorkflowColumnDelete, StoryColumnId
+  onRenameColumn,
+  onUpdateColumnWip,
+  onAddColumn,
+  onReorderColumn,
+  onDeleteColumn,
+  onUpdateWorkflow,
+  setShortError,
+  dispatch,
+  state,
+  sortedColumns,
+  setPendingWorkflowColumnDelete,
+  StoryColumnId,
 }: UseBoardActionsProps) => {
-
   const handleRenameColumn = async (columnId: string, newName: string) => {
     if (onRenameColumn) {
       try {
@@ -75,13 +93,19 @@ export const useBoardActions = ({
     dispatch({ type: 'ADD_COLUMN', payload: { name: columnName } });
   };
 
-  const handleMoveColumn = async (columnId: string, direction: 'left' | 'right') => {
+  const handleMoveColumn = async (
+    columnId: string,
+    direction: 'left' | 'right',
+  ) => {
     if (columnId === StoryColumnId) {
       setShortError('Stories column must stay first');
       return;
     }
-    const currentIndex = sortedColumns.findIndex((column) => column.id === columnId);
-    const targetIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+    const currentIndex = sortedColumns.findIndex(
+      (column) => column.id === columnId,
+    );
+    const targetIndex =
+      direction === 'left' ? currentIndex - 1 : currentIndex + 1;
     if (targetIndex < 0 || targetIndex >= sortedColumns.length) return;
     if (sortedColumns[targetIndex]?.id === StoryColumnId) {
       setShortError('Stories column must stay first');
@@ -128,6 +152,6 @@ export const useBoardActions = ({
     handleSubmitAddColumn,
     handleMoveColumn,
     handleSubmitDeleteColumn,
-    handleSubmitWorkflow
+    handleSubmitWorkflow,
   };
 };

@@ -6,7 +6,14 @@ import HandleRenameColumn from './RenameColumn';
 import WorkflowEditor from './WorkflowEditor';
 import TaskDetailsModal from '../Task/TaskDetailsModal/TaskDetailsModal';
 import TaskCreateEditModal from '../Task/TaskCreate/TaskCreateEdit';
-import type { Board as BoardType, BoardWorkflow, NewTaskInput, ProjectMemberSummary, Task, ProjectRole } from '../../../types/Types';
+import type {
+  Board as BoardType,
+  BoardWorkflow,
+  NewTaskInput,
+  ProjectMemberSummary,
+  Task,
+  ProjectRole,
+} from '../../../types/Types';
 import { isClosedColumn, isResolvedColumn } from './workflow';
 
 interface BoardModalsProps {
@@ -16,11 +23,25 @@ interface BoardModalsProps {
   workflowDialogOpen: boolean;
   setWorkflowDialogOpen: (open: boolean) => void;
   deleteColumnDialog: { columnId: string; columnName: string } | null;
-  setDeleteColumnDialog: (dialog: { columnId: string; columnName: string } | null) => void;
-  wipDialog: { columnId: string; currentWip: number | null; columnTaskCount: number } | null;
-  setWipDialog: (dialog: { columnId: string; currentWip: number | null; columnTaskCount: number } | null) => void;
+  setDeleteColumnDialog: (
+    dialog: { columnId: string; columnName: string } | null,
+  ) => void;
+  wipDialog: {
+    columnId: string;
+    currentWip: number | null;
+    columnTaskCount: number;
+  } | null;
+  setWipDialog: (
+    dialog: {
+      columnId: string;
+      currentWip: number | null;
+      columnTaskCount: number;
+    } | null,
+  ) => void;
   renameColumnDialog: { columnId: string; currentName: string } | null;
-  setRenameColumnDialog: (dialog: { columnId: string; currentName: string } | null) => void;
+  setRenameColumnDialog: (
+    dialog: { columnId: string; currentName: string } | null,
+  ) => void;
   selectedTaskId: string | null;
   setSelectedTaskId: (id: string | null) => void;
   createColumnId: string | null;
@@ -52,27 +73,53 @@ interface BoardModalsProps {
   onAddComment?: (taskId: string, content: string) => Promise<void> | void;
   onDeleteComment?: (commentId: string) => Promise<void> | void;
   onCreateTask?: (payload: NewTaskInput) => Promise<void> | void;
-  onUpdateTask?: (taskId: string, payload: NewTaskInput) => Promise<void> | void;
+  onUpdateTask?: (
+    taskId: string,
+    payload: NewTaskInput,
+  ) => Promise<void> | void;
   onDeleteTask?: (taskId: string) => Promise<void> | void;
 }
 
 const BoardModals: React.FC<BoardModalsProps> = ({
-  addColumnOpen, setAddColumnOpen,
-  workflowDialogOpen, setWorkflowDialogOpen,
-  deleteColumnDialog, setDeleteColumnDialog,
-  wipDialog, setWipDialog,
-  renameColumnDialog, setRenameColumnDialog,
-  selectedTaskId, setSelectedTaskId,
-  createColumnId, setCreateColumnId,
-  editingTaskId, setEditingTaskId,
-  handleSubmitAddColumn, handleSubmitWorkflow,
-  handleSubmitDeleteColumn, handleSubmitWip,
-  handleRenameColumn, setShortError,
-  sortedColumns, state, dispatch, user,
-  effectiveProjectRole, mentionableProjectMembers, assignableMembers,
-  StoryColumnId, canManageColumns, layoutEditMode, dispatchBoardUpdate,
-  onEditComment, onAddComment, onDeleteComment,
-  onCreateTask, onUpdateTask, onDeleteTask
+  addColumnOpen,
+  setAddColumnOpen,
+  workflowDialogOpen,
+  setWorkflowDialogOpen,
+  deleteColumnDialog,
+  setDeleteColumnDialog,
+  wipDialog,
+  setWipDialog,
+  renameColumnDialog,
+  setRenameColumnDialog,
+  selectedTaskId,
+  setSelectedTaskId,
+  createColumnId,
+  setCreateColumnId,
+  editingTaskId,
+  setEditingTaskId,
+  handleSubmitAddColumn,
+  handleSubmitWorkflow,
+  handleSubmitDeleteColumn,
+  handleSubmitWip,
+  handleRenameColumn,
+  setShortError,
+  sortedColumns,
+  state,
+  dispatch,
+  user,
+  effectiveProjectRole,
+  mentionableProjectMembers,
+  assignableMembers,
+  StoryColumnId,
+  canManageColumns,
+  layoutEditMode,
+  dispatchBoardUpdate,
+  onEditComment,
+  onAddComment,
+  onDeleteComment,
+  onCreateTask,
+  onUpdateTask,
+  onDeleteTask,
 }) => {
   return (
     <>
@@ -217,7 +264,9 @@ const BoardModals: React.FC<BoardModalsProps> = ({
                     task.id === selectedTaskId
                       ? {
                           ...task,
-                          comments: task.comments?.filter((c) => c.id !== commentId),
+                          comments: task.comments?.filter(
+                            (c) => c.id !== commentId,
+                          ),
                         }
                       : task,
                   ),
@@ -242,7 +291,9 @@ const BoardModals: React.FC<BoardModalsProps> = ({
               await onCreateTask(payload);
               return;
             }
-            const column = state.board.columns.find((c: any) => c.id === payload.columnId);
+            const column = state.board.columns.find(
+              (c: any) => c.id === payload.columnId,
+            );
             const now = new Date().toISOString();
             const draftBoard = {
               ...state.board,
@@ -262,10 +313,16 @@ const BoardModals: React.FC<BoardModalsProps> = ({
                   reporterId: 'current-user',
                   reporterName: 'Current User',
                   assigneeId: payload.assigneeId ?? null,
-                  assigneeName: assignableMembers.find((m) => m.id === payload.assigneeId)?.name ?? null,
+                  assigneeName:
+                    assignableMembers.find((m) => m.id === payload.assigneeId)
+                      ?.name ?? null,
                   parentId: payload.parentId ?? null,
-                  resolvedAt: isResolvedColumn(state.board, payload.columnId) ? now : null,
-                  closedAt: isClosedColumn(state.board, payload.columnId) ? now : null,
+                  resolvedAt: isResolvedColumn(state.board, payload.columnId)
+                    ? now
+                    : null,
+                  closedAt: isClosedColumn(state.board, payload.columnId)
+                    ? now
+                    : null,
                 },
                 ...state.board.tasks,
               ],
@@ -282,7 +339,8 @@ const BoardModals: React.FC<BoardModalsProps> = ({
           defaultStoryColumnId={StoryColumnId}
           closedColumnId={state.board.closedColumnId}
           defaultColumnId={
-            state.board.tasks.find((t: Task) => t.id === editingTaskId)?.columnId ?? 'col-backlog'
+            state.board.tasks.find((t: Task) => t.id === editingTaskId)
+              ?.columnId ?? 'col-backlog'
           }
           columns={state.board.columns}
           tasks={state.board.tasks}
