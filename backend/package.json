@@ -29,7 +29,6 @@
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "multer": "^2.1.1",
     "sanitize-html": "^2.17.1"
   },
   "devDependencies": {
@@ -49,11 +48,9 @@
     "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.3.0",
-    "jest": "^30.2.0",
     "prettier": "^3.8.1",
     "prisma": "^7.4.2",
     "supertest": "^7.2.2",
-    "ts-jest": "^29.4.6",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
