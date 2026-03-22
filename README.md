@@ -50,6 +50,7 @@ backend/.env (from .env.example):
 
 ```
 PORT=8000
+DATABASE_URL="file:./dev.db"
 FRONTEND_ORIGIN=http://localhost:5173
 JWT_ACCESS_SECRET=change-me-access-secret
 JWT_REFRESH_SECRET=change-me-refresh-secret
@@ -67,7 +68,7 @@ Backend:
 npm test
 npm run test:unit
 npm run test:e2e
-npm run test::integration
+npm run test:integration
 ```
 
 ## Seeded Login

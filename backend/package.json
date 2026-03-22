@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:unit": "vitest run tests/services tests/controllers",
     "test:e2e": "vitest run tests/e2e",
+    "test:integration": "vitest run tests/integration",
     "lint": "eslint .",
     "format": "prettier --write .",
     "postinstall": "prisma generate"

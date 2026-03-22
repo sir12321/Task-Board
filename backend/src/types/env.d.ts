@@ -4,9 +4,8 @@ declare namespace NodeJS {
     NODE_ENV: 'development' | 'production' | 'test';
     DATABASE_URL: string;
 
-    ACCESS_TOKEN_SECRET: string;
-    REFRESH_TOKEN_SECRET: string;
-    ACCESS_TOKEN_EXPIRES: string;
-    REFRESH_TOKEN_EXPIRES: string;
+    FRONTEND_ORIGIN: string;
+    JWT_ACCESS_SECRET: string;
+    JWT_REFRESH_SECRET: string;
   }
 }
