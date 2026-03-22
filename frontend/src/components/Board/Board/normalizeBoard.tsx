@@ -6,7 +6,7 @@ interface Props {
   StoryColumnName: string;
   board: BoardType;
 }
-// Ensure story tasks always live in the Stories column.
+// Keep frontend state consistent with backend workflow rules before deriving task statuses.
 const normalizeBoard = ({
   board,
   StoryColumnId,
@@ -28,6 +28,7 @@ const normalizeBoard = ({
         : task;
 
     return {
+      // Recompute status after normalizing story placement so derived story progress stays accurate.
       ...normalizedTask,
       status: getTaskStatus(
         {

@@ -285,11 +285,9 @@ const Board = ({
                   key={column.id}
                   userRole={effectiveProjectRole}
                   column={column}
-                  // sort tasks within column by priority, due date, title
                   tasks={state.board.tasks
                     .filter((t) => t.columnId === column.id)
                     .sort((a: Task, b: Task) => {
-                      // Mapping priorities to numbers makes them easily sortable
                       const priorityOrder: Record<string, number> = {
                         CRITICAL: 4,
                         HIGH: 3,
@@ -313,7 +311,6 @@ const Board = ({
                     })}
                   isDraggable={canManageTasks}
                   onDropTask={async (taskId, colId) => {
-                    // Prevent dropping tasks if they violate WIP limits or invalid workflow sequences
                     if (
                       !canMoveTask(
                         state.board,

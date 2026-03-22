@@ -20,7 +20,6 @@ import type { BoardAction, BoardState } from './BoardReducer';
 import { isClosedColumn, isResolvedColumn } from './workflow';
 
 interface BoardModalsProps {
-  // Modal visibility states
   addColumnOpen: boolean;
   setAddColumnOpen: (open: boolean) => void;
   workflowDialogOpen: boolean;
@@ -51,8 +50,6 @@ interface BoardModalsProps {
   setCreateColumnId: (id: string | null) => void;
   editingTaskId: string | null;
   setEditingTaskId: (id: string | null) => void;
-
-  // Handlers and data
   handleSubmitAddColumn: (name: string) => Promise<void>;
   handleSubmitWorkflow: (workflow: BoardWorkflow) => Promise<void>;
   handleSubmitDeleteColumn: (columnId: string) => Promise<void>;
@@ -70,8 +67,6 @@ interface BoardModalsProps {
   canManageColumns: boolean;
   layoutEditMode: boolean;
   dispatchBoardUpdate: (nextBoard: BoardType) => void;
-
-  // Prop callbacks
   onEditComment?: (commentId: string, content: string) => Promise<void> | void;
   onAddComment?: (taskId: string, content: string) => Promise<void> | void;
   onDeleteComment?: (commentId: string) => Promise<void> | void;

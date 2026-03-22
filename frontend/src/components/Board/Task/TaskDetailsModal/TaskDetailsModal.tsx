@@ -19,13 +19,6 @@ import {
   type TaskCommentComposerHandle,
 } from './TaskCommentComposer';
 
-/**
- * Props for the TaskDetailsModal component.
- * - `userRole`: role of the current user in the project (may affect actions)
- * - `task`: task object with all details to display
- * - `onClose`: callback to close the modal
- * - `onDelete`: optional delete handler for this task
- */
 interface Properties {
   userRole: ProjectRole;
   task: Task;
@@ -42,12 +35,6 @@ interface Properties {
   onDeleteComment?: (commentId: string) => Promise<void> | void;
 }
 
-/**
- * TaskDetailsModal
- * Displays detailed information about a task in a modal overlay,
- * including title, status, description, activity/comments and metadata
- * such as assignee, reporter, priority, created/due dates and parent.
- */
 const TaskDetailsModal = ({
   userRole,
   task,
@@ -62,8 +49,6 @@ const TaskDetailsModal = ({
   onEditComment,
 }: Properties) => {
   const composerRef = useRef<TaskCommentComposerHandle>(null);
-
-  // Use lowercased type as a CSS class key (matches module CSS entries).
   const taskTypeClass = task.type.toLowerCase();
 
   const commentDeleteWindowMs = 2 * 24 * 60 * 60 * 1000;
@@ -96,8 +81,7 @@ const TaskDetailsModal = ({
           setAuditLogs(data.auditLogs);
         }
       } catch {
-        // The modal can still render comments and any locally available
-        // activity data, so a fetch miss here should fail silently.
+        // The modal can still render comments and existing activity, so a fetch miss is non-fatal.
       }
     };
 
@@ -168,8 +152,7 @@ const TaskDetailsModal = ({
   };
 
   return (
-    // Clicking the overlay closes the modal. The inner modal stops
-    // propagation so clicks inside do not close it unintentionally.
+    // The overlay closes the modal; the inner panel stops propagation.
     <div className={styles['overall-modal']} onClick={handleModalClose}>
       {message && <ToastMessage message={message} />}
       <div
@@ -201,8 +184,6 @@ const TaskDetailsModal = ({
                 </div>
               </div>
             </div>
-
-            {/* Task description with sensible fallback */}
             <p className={styles.description}>
               {task.description || 'No description'}
             </p>

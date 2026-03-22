@@ -116,10 +116,6 @@ export const TaskSidebar = ({ task }: TaskSidebarProps) => {
           <div className={styles.detailLabel}>Parent</div>
           <div className={styles.detailValue}>{task.parentName || 'None'}</div>
         </div>
-
-        {/* Only show delete button when user has sufficient role and a
-            delete handler is provided. The parent component handles
-            any error reporting for deletions. */}
       </div>
     </aside>
   );

@@ -37,8 +37,6 @@ const TaskCard = ({
     isDraggable = false;
   }
   const assignee = task.assigneeName || null;
-
-  // Normalize task type to use as a CSS class.
   const taskType = task.type.toLowerCase();
 
   return (
@@ -46,8 +44,6 @@ const TaskCard = ({
       className={`${styles.taskCard} ${styles[taskType]} ${!isDraggable ? styles.notDraggable : ''} ${isDragging ? styles.isDragging : ''}`}
       draggable={isDraggable}
       onClick={onClick}
-      // When dragging starts, place the task id on the dataTransfer so
-      // drop targets can identify which task is being moved.
       onDragStart={(e) => {
         if (!isDraggable) return;
         setTimeout(() => setIsDragging(true), 0);
@@ -71,18 +67,15 @@ const TaskCard = ({
       }}
     >
       <h4>{task.title}</h4>
-
-      {/* Optional edit button; stopPropagation prevents the card click
-          handler from also firing when editing. */}
       {projectRole !== 'PROJECT_VIEWER' && onEdit && (
         <button
           type="button"
           className={styles.editTaskBtn}
           onClick={(e) => {
-            e.stopPropagation(); // stops the trigger to bubble up to parent DOM elements, preventing unintended side effects.
+            e.stopPropagation();
             onEdit();
           }}
-          onMouseDown={(e) => e.stopPropagation()} // prevents the event to get bubbling up to parent DOM elements, preventing unintended side effects.
+          onMouseDown={(e) => e.stopPropagation()}
           aria-label={`Edit task ${task.title}`}
         >
           Edit
@@ -92,7 +85,6 @@ const TaskCard = ({
       <p className={styles.meta}>
         <span className={`${styles.priority} ${styles[taskType]}`}>
           {' '}
-          {/* span : <span> is an inline element, meaning: It does not start on a new line*/}
           {task.type}
         </span>
         {task.dueDate && (

@@ -157,15 +157,12 @@
   display: flex;
   gap: 12px;
 }
-
-/* comments authored by current user get right-aligned layout */
 .commentMine {
   justify-content: flex-end;
 }
 .commentMine .commentBody {
   margin-left: auto;
 }
-/* optionally move avatar to the right for own messages */
 .commentMine .commentAvatar {
   order: 2;
 }
@@ -337,7 +334,6 @@
 .detailValue {
   color: #0f172a;
   font-size: 14px;
-  /* values are right-aligned within the row for readability */
   text-align: right;
   flex: 1;
 }

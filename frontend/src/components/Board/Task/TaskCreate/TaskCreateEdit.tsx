@@ -194,7 +194,6 @@ const TaskCreateEditModal = ({
         )}
 
         <form className={styles.form} onSubmit={submit}>
-          {/*Title*/}
           <label>
             Title
             <input
@@ -207,8 +206,6 @@ const TaskCreateEditModal = ({
               aria-describedby={error ? errorId : undefined}
             />
           </label>
-
-          {/*Description*/}
           <label>
             Description
             <textarea
@@ -223,13 +220,12 @@ const TaskCreateEditModal = ({
           </label>
 
           <div className={styles.grid2}>
-            {/*Type*/}
             <label>
               Type
               <select
                 value={type}
                 onChange={
-                  (e) => setType(e.target.value as NewTaskInput['type']) // to narrow down the possibility of type
+                  (e) => setType(e.target.value as NewTaskInput['type'])
                 }
                 disabled={isClosedTask}
                 aria-describedby={error ? errorId : undefined}
@@ -245,8 +241,6 @@ const TaskCreateEditModal = ({
                 )}
               </select>
             </label>
-
-            {/*Priority*/}
             <label>
               Priority
               <select
@@ -266,7 +260,6 @@ const TaskCreateEditModal = ({
           </div>
 
           <div className={styles.grid2}>
-            {/*Due Date*/}
             <label>
               Due Date
               <input
@@ -278,8 +271,6 @@ const TaskCreateEditModal = ({
                 aria-describedby={error ? errorId : undefined}
               />
             </label>
-
-            {/*Assignee*/}
             <label>
               Assignee ID
               <select
@@ -297,8 +288,6 @@ const TaskCreateEditModal = ({
               </select>
             </label>
           </div>
-
-          {/*Parent*/}
           <label>
             Parent
             <select
@@ -328,8 +317,6 @@ const TaskCreateEditModal = ({
               {error}
             </div>
           )}
-
-          {/*Submit Button*/}
           <div className={styles.actions}>
             {mode === 'edit' && onDelete && task && (
               <button
@@ -346,7 +333,6 @@ const TaskCreateEditModal = ({
             </button>
             <button type="submit" disabled={saving || isClosedTask}>
               {' '}
-              {/* Disable submit while saving to prevent duplicate requests*/}
               {saving
                 ? 'Saving...'
                 : mode === 'create'

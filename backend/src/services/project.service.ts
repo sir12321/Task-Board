@@ -17,8 +17,6 @@ interface ProjectSummary {
   }[];
   boards: { id: string; name: string }[];
 }
-
-// instead of searching, use hashmap for O(1) access
 export const getUserProjects = async (
   userId: string,
   globalRole?: string,

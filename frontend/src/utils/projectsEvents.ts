@@ -13,7 +13,7 @@ export const subscribeToProjectsUpdated = (
 ): (() => void) => {
   if (typeof window === 'undefined') {
     return () => {
-      // no-op in non-browser environments
+      // No-op for SSR and tests.
     };
   }
 

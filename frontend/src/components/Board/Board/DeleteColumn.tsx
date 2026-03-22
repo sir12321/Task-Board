@@ -10,7 +10,7 @@ interface Props {
 
 /**
  * Confirmation modal for deleting a workflow column.
- * Replaces the native window.confirm so the UI stays consistent.
+ * Using a real modal keeps the flow consistent with the rest of the board UI.
  */
 const DeleteColumn = ({
   columnId,

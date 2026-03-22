@@ -11,9 +11,7 @@ interface Props {
 }
 
 /**
- * Modal used to rename a workflow column. It lives separately
- * from `Board.tsx` so the board stays concise and we can customize the
- * dialog styling or behaviour independently.
+ * Separate rename modal so board layout logic stays isolated from form behavior.
  */
 const RenameColumn = ({
   columnId,

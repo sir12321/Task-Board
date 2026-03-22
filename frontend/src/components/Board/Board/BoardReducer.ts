@@ -95,14 +95,10 @@ export const BoardReducer = (
 
       const task = state.board.tasks.find((t) => t.id === taskId);
       if (!task) return state;
-
-      // Block moves for users with PROJECT_VIEWER role immediately
       const userRole = state.projectDetails?.userRole;
       if (userRole === 'PROJECT_VIEWER') {
         return state;
       }
-
-      // WIP Enforcement
       const column = state.board.columns.find((c) => c.id === targetColumnId);
 
       const sourceColumn = state.board.columns.find(

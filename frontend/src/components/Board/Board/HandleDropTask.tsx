@@ -15,24 +15,19 @@ export const canMoveTask = (
 
   const targetColumn = board.columns.find((c) => c.id === targetColumnId);
   if (!targetColumn) return false;
-
-  // Disallow non-story tasks from being moved into the dedicated story column
+  // The Stories column is a container for epics only; regular work items must stay in workflow columns.
   if (targetColumn.id === storyColumnId && task.type !== 'STORY') {
     setshortError(
       'Move forbidden: only stories can go into the Stories column',
     );
     return false;
   }
-
-  // Prevent STORY tasks from being moved out of the story column
+  // Stories never advance through workflow stages directly; their status is derived from child tasks.
   if (task.type === 'STORY' && targetColumn.id !== storyColumnId) {
     setshortError('Move forbidden: stories must remain in the Stories column');
     return false;
   }
-
-  // Column-order enforcement: only allow moves to the adjacent next column
-  // (i.e., move forward by exactly 1). Disallow backward moves or jumps.
-  // We check this before WIP so the user sees the most relevant error first.
+  // Check workflow order before WIP so the user gets the most relevant error first.
   const sourceColumn = board.columns.find((c) => c.id === task.columnId);
   if (sourceColumn) {
     const currentStep = getWorkflowStep(board, sourceColumn.id);
@@ -45,8 +40,6 @@ export const canMoveTask = (
       return false;
     }
   }
-
-  // Strict WIP enforcement with safe parsing.
   const wipLimit =
     targetColumn.wipLimit !== null && targetColumn.wipLimit !== undefined
       ? Number(targetColumn.wipLimit)
@@ -67,9 +60,7 @@ export const canMoveTask = (
 };
 
 /**
- * Handler used by the board when a task is dropped into a column. This
- * encapsulates the validation logic and dispatch call that previously lived
- * inside `Board.tsx`.
+ * Board drop handler that centralizes validation before dispatching the move.
  */
 export const handleDrop = (
   state: BoardState,
