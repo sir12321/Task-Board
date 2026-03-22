@@ -121,6 +121,8 @@ export interface Project {
 }
 
 export interface ProjectDetails extends Project {
+  createdAt?: string;
+  updatedAt?: string;
   userRole: ProjectRole;
   members: ProjectMemberSummary[];
   boards: {

@@ -1,5 +1,6 @@
 import prisma from '../utils/prisma';
 import { ProjectMember, ProjectRole } from '@prisma/client';
+import { touchProject } from '../utils/touchProject.util';
 
 const verifyAccess = async (
   requesterId: string,
@@ -33,13 +34,17 @@ export const addMember = async (
     throw new Error('User not found');
   }
 
-  return prisma.projectMember.create({
+  const member = await prisma.projectMember.create({
     data: {
       projectId,
       userId: userToAdd.id,
       role,
     },
   });
+
+  await touchProject(projectId);
+
+  return member;
 };
 
 export const updateMemberRole = async (
@@ -51,10 +56,14 @@ export const updateMemberRole = async (
 ): Promise<ProjectMember> => {
   await verifyAccess(requesterId, projectId, globalRole);
 
-  return prisma.projectMember.update({
+  const updated = await prisma.projectMember.update({
     where: { userId_projectId: { userId: targetUserId, projectId } },
     data: { role: newRole },
   });
+
+  await touchProject(projectId);
+
+  return updated;
 };
 
 export const removeMember = async (
@@ -85,4 +94,6 @@ export const removeMember = async (
   await prisma.projectMember.delete({
     where: { userId_projectId: { userId: targetUserId, projectId } },
   });
+
+  await touchProject(projectId);
 };

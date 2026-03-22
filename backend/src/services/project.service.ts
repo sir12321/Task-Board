@@ -5,6 +5,8 @@ interface ProjectSummary {
   id: string;
   name: string;
   description: string | null;
+  createdAt: Date;
+  updatedAt: Date;
   userRole: string;
   members: {
     id: string;
@@ -55,6 +57,8 @@ export const getUserProjects = async (
       id: project.id,
       name: project.name,
       description: project.description,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
       userRole: effectiveRole,
       isArchived: project.isArchived,
       members: project.members.map((m) => ({

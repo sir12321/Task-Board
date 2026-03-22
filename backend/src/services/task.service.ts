@@ -8,6 +8,7 @@ import {
   isResolvedColumn,
   parseWorkflowColumnIds,
 } from '../utils/workflow.util';
+import { touchProjectByBoardId } from '../utils/touchProject.util';
 
 import {
   verifyTaskPermissions,
@@ -112,6 +113,8 @@ export const makeTask = async (
     );
   }
 
+  await touchProjectByBoardId(data.boardId);
+
   return task;
 };
 
@@ -206,6 +209,8 @@ export const moveTask = async (
     },
   });
 
+  await touchProjectByBoardId(task.boardId);
+
   return updatedTask;
 };
 
@@ -247,9 +252,13 @@ export const removeTask = async (
     }
   }
 
-  return prisma.task.delete({
+  const deleted = await prisma.task.delete({
     where: { id },
   });
+
+  await touchProjectByBoardId(task.boardId);
+
+  return deleted;
 };
 
 export const closeTask = async (
@@ -270,10 +279,14 @@ export const closeTask = async (
 
   await checkStoryChildren(id);
 
-  return prisma.task.update({
+  const updated = await prisma.task.update({
     where: { id },
     data: { closedAt: new Date() },
   });
+
+  await touchProjectByBoardId(task.boardId);
+
+  return updated;
 };
 
 export const updateTask = async (
@@ -363,6 +376,8 @@ export const updateTask = async (
       `Your assigned task has been updated: ${updatedTask.title}${scope}`,
     );
   }
+
+  await touchProjectByBoardId(task.boardId);
 
   return updatedTask;
 };

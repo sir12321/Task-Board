@@ -167,6 +167,49 @@
   text-transform: uppercase;
 }
 
+.projectTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.projectInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.projectTimestamps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+.timestampItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timestampLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  min-width: 60px;
+}
+
+.timestampValue {
+  font-size: 13px;
+  color: #334155;
+  font-weight: 500;
+  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  white-space: nowrap;
+}
+
 @media (max-width: 900px) {
   .projectSection {
     padding: 16px;

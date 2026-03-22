@@ -8,6 +8,7 @@ import {
   type BoardWorkflowConfig,
   validateWorkflowConfig,
 } from '../utils/workflow.util';
+import { touchProject } from '../utils/touchProject.util';
 
 type TaskWithColumnName = Task & { comments: Comment[]; columnName: string };
 
@@ -166,6 +167,8 @@ export const createBoard = async (
       ),
     );
 
+    await touchProject(projectId);
+
     return board;
   });
 };
@@ -221,7 +224,7 @@ export const updateBoardWorkflow = async (
     columns.map((column) => column.id),
   );
 
-  return p.board.update({
+  const board = await p.board.update({
     where: { id: boardId },
     data: {
       storyColumnId: workflow.storyColumnId,
@@ -230,6 +233,16 @@ export const updateBoardWorkflow = async (
       closedColumnId: workflow.closedColumnId,
     },
   });
+
+  const boardWithProject = await p.board.findUnique({
+    where: { id: boardId },
+    select: { projectId: true },
+  });
+  if (boardWithProject) {
+    await touchProject(boardWithProject.projectId);
+  }
+
+  return board;
 };
 
 export const verifyCreationPermission = async (

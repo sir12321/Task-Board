@@ -1,6 +1,7 @@
 import prisma from '../utils/prisma';
 import { Comment } from '@prisma/client';
 import { createNotification } from './notification.service';
+import { touchProject, touchProjectByBoardId } from '../utils/touchProject.util';
 import {
   getRichTextNotificationSnippet,
   getRichTextPlainText,
@@ -93,6 +94,10 @@ export const makeComment = async (data: {
     );
   }
 
+  if (task?.board?.projectId) {
+    await touchProject(task.board.projectId);
+  }
+
   return comment;
 };
 
@@ -117,7 +122,20 @@ export const deleteComment = async (
     throw new Error('Unauthorized to delete this comment');
   }
 
+  const deletedComment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    select: {
+      task: {
+        select: { boardId: true },
+      },
+    },
+  });
+
   await prisma.comment.delete({ where: { id: commentId } });
+
+  if (deletedComment?.task?.boardId) {
+    await touchProjectByBoardId(deletedComment.task.boardId);
+  }
 };
 
 export const editComment = async (
@@ -149,8 +167,19 @@ export const editComment = async (
     throw new Error('Unauthorized to edit this comment');
   }
 
-  return await prisma.comment.update({
+  const updated = await prisma.comment.update({
     where: { id: commentId },
     data: { content: sanitizedContent },
+    include: {
+      task: {
+        select: { boardId: true },
+      },
+    },
   });
+
+  if (updated.task?.boardId) {
+    await touchProjectByBoardId(updated.task.boardId);
+  }
+
+  return updated;
 };

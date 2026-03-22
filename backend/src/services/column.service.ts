@@ -1,6 +1,7 @@
 import prisma from '../utils/prisma';
 import { Column } from '@prisma/client';
 import { parseWorkflowColumnIds } from '../utils/workflow.util';
+import { touchProjectByBoardId } from '../utils/touchProject.util';
 
 const verifyAdmin = async (
   userId: string,
@@ -82,6 +83,8 @@ export const createColumn = async (
       },
     });
 
+    await touchProjectByBoardId(boardId);
+
     return column;
   });
 };
@@ -103,13 +106,17 @@ export const updateColumn = async (
 
   await verifyAdmin(userId, column.boardId, globalRole);
 
-  return prisma.column.update({
+  const updated = await prisma.column.update({
     where: { id: columnId },
     data: {
       name: data.name,
       wipLimit: data.wipLimit,
     },
   });
+
+  await touchProjectByBoardId(column.boardId);
+
+  return updated;
 };
 
 export const deleteColumn = async (
@@ -179,6 +186,8 @@ export const deleteColumn = async (
       },
     }),
   ]);
+
+  await touchProjectByBoardId(column.boardId);
 };
 
 export const reorderColumn = async (
@@ -228,4 +237,6 @@ export const reorderColumn = async (
       data: { order: column.order },
     }),
   ]);
+
+  await touchProjectByBoardId(column.boardId);
 };

@@ -185,13 +185,50 @@ const Board = ({
   return (
     <div className={styles.page}>
       <div className={styles.projectSection}>
-        <div className={styles['project-name']}>
-          {state.projectDetails.name}
+        <div className={styles.projectTopRow}>
+          <div className={styles.projectInfo}>
+            <div className={styles['project-name']}>
+              {state.projectDetails.name}
+            </div>
+            <div className={styles['project-description']}>
+              {state.projectDetails.description}
+            </div>
+            <div className={styles.projectRoleChip}>{projectRoleLabel}</div>
+          </div>
+          {(state.projectDetails.createdAt ||
+            state.projectDetails.updatedAt) && (
+            <div className={styles.projectTimestamps}>
+              {state.projectDetails.createdAt && (
+                <div className={styles.timestampItem}>
+                  <span className={styles.timestampLabel}>Created</span>
+                  <span className={styles.timestampValue}>
+                    {new Date(
+                      state.projectDetails.createdAt,
+                    ).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </div>
+              )}
+              {state.projectDetails.updatedAt && (
+                <div className={styles.timestampItem}>
+                  <span className={styles.timestampLabel}>Updated</span>
+                  <span className={styles.timestampValue}>
+                    {new Date(
+                      state.projectDetails.updatedAt,
+                    ).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        <div className={styles['project-description']}>
-          {state.projectDetails.description}
-        </div>
-        <div className={styles.projectRoleChip}>{projectRoleLabel}</div>
         <div className={styles.boardHeader}>
           <h2>{state.board.name}</h2>
           {canManageColumns && (
