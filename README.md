@@ -20,12 +20,14 @@ Prerequisites:
 
 ### 1) Backend
 
+```bash
 cd backend
 npm install
 cp .env.example .env
 npx prisma migrate dev
 npx prisma db seed
 npm run dev
+```
 
 Backend runs on: http://localhost:8000
 
@@ -33,10 +35,12 @@ Backend runs on: http://localhost:8000
 
 Open a new terminal:
 
+```bash
 cd frontend
 npm install
 cp .env.example .env
 npm run dev
+```
 
 Frontend runs on: http://localhost:5173
 
@@ -44,10 +48,12 @@ Frontend runs on: http://localhost:5173
 
 backend/.env (from .env.example):
 
-- PORT=8000
-- FRONTEND_ORIGIN=http://localhost:5173
-- JWT_ACCESS_SECRET=change-me-access-secret
-- JWT_REFRESH_SECRET=change-me-refresh-secret
+```
+PORT=8000
+FRONTEND_ORIGIN=http://localhost:5173
+JWT_ACCESS_SECRET=change-me-access-secret
+JWT_REFRESH_SECRET=change-me-refresh-secret
+```
 
 frontend/.env (from .env.example):
 
@@ -57,9 +63,12 @@ frontend/.env (from .env.example):
 
 Backend:
 
-- npm test
-- npm run test:unit
-- npm run test:e2e
+```
+npm test
+npm run test:unit
+npm run test:e2e
+npm run test::integration
+```
 
 ## Seeded Login
 
@@ -76,6 +85,7 @@ Auth: JWT via HTTP-only cookies
 
 Main route groups:
 
+```
 - /api/auth
 - /api/users
 - /api/projects
@@ -85,9 +95,12 @@ Main route groups:
 - /api/tasks
 - /api/comments
 - /api/notifications
+```
 
 Health check:
 
-- GET /health
+```
+GET /health
+```
 
 For detailed API contracts, workflow rules, and design decisions, refer to report.pdf.
