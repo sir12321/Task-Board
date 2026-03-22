@@ -24,16 +24,21 @@ export function useBoardTasks(
         return;
       }
 
-      const hasChildren = board.tasks.some((t) => t.parentId === taskId);
-      if (hasChildren) {
-        alert('Cannot delete a Story with child tasks.');
-        return;
-      }
+      // const hasChildren = board.tasks.some((t) => t.parentId === taskId);
+      // if (hasChildren) {
+      //   alert('Cannot delete a Story with child tasks.');
+      //   return;
+      // }
 
       await apiClient(`/tasks/${taskId}`, { method: 'DELETE' });
       setBoard((prev) =>
         prev
-          ? { ...prev, tasks: prev.tasks.filter((t) => t.id !== taskId) }
+          ? {
+              ...prev,
+              tasks: prev.tasks.filter(
+                (t) => t.id !== taskId && t.parentId !== taskId,
+              ),
+            }
           : prev,
       );
     },
