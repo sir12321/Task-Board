@@ -105,7 +105,9 @@ export const BoardReducer = (
       // WIP Enforcement
       const column = state.board.columns.find((c) => c.id === targetColumnId);
 
-      const sourceColumn = state.board.columns.find((c) => c.id === task.columnId);
+      const sourceColumn = state.board.columns.find(
+        (c) => c.id === task.columnId,
+      );
 
       if (sourceColumn && column) {
         const currentStep = getWorkflowStep(state.board, sourceColumn.id);
@@ -142,7 +144,7 @@ export const BoardReducer = (
               columnId: targetColumnId,
               columnName: column?.name || t.columnName,
               resolvedAt: isResolvedColumn(state.board, targetColumnId)
-                ? t.resolvedAt ?? new Date().toISOString()
+                ? (t.resolvedAt ?? new Date().toISOString())
                 : null,
               closedAt: isClosedColumn(state.board, targetColumnId)
                 ? new Date().toISOString()

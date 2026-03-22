@@ -1,10 +1,19 @@
-import type { Board, BoardWorkflow, BoardColumn, Task } from '../../../types/Types';
+import type {
+  Board,
+  BoardWorkflow,
+  BoardColumn,
+  Task,
+} from '../../../types/Types';
 
 export const getStoryColumnId = (board: Board): string =>
-  board.storyColumnId ?? board.columns.find((column) => column.order === 0)?.id ?? '';
+  board.storyColumnId ??
+  board.columns.find((column) => column.order === 0)?.id ??
+  '';
 
 export const getWorkflowSequence = (workflow: BoardWorkflow): string[] =>
-  workflow.workflowColumnIds.filter((columnId): columnId is string => Boolean(columnId));
+  workflow.workflowColumnIds.filter((columnId): columnId is string =>
+    Boolean(columnId),
+  );
 
 export const getWorkflowStep = (
   workflow: BoardWorkflow,
@@ -15,7 +24,8 @@ export const isResolvedColumn = (
   workflow: BoardWorkflow,
   columnId: string,
 ): boolean =>
-  workflow.resolvedColumnId === columnId || workflow.closedColumnId === columnId;
+  workflow.resolvedColumnId === columnId ||
+  workflow.closedColumnId === columnId;
 
 export const isClosedColumn = (
   workflow: BoardWorkflow,
@@ -26,7 +36,9 @@ export const getColumnNameById = (
   columns: BoardColumn[],
   columnId: string | null,
 ): string | null =>
-  columnId ? columns.find((column) => column.id === columnId)?.name ?? null : null;
+  columnId
+    ? (columns.find((column) => column.id === columnId)?.name ?? null)
+    : null;
 
 export const getTaskStatus = (board: Board, task: Task): string => {
   if (task.type !== 'STORY') {

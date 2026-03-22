@@ -1,10 +1,7 @@
 import type { Board as BoardType } from '../../../types/Types';
 import type { Dispatch } from 'react';
 import type { BoardState, BoardAction } from './BoardReducer';
-import {
-  getStoryColumnId,
-  getWorkflowStep,
-} from './workflow';
+import { getStoryColumnId, getWorkflowStep } from './workflow';
 
 export const canMoveTask = (
   board: BoardType,
@@ -81,8 +78,7 @@ export const handleDrop = (
   targetColumnId: string,
   setshortError: (message: string | null) => void,
 ) => {
-  const resolvedStoryColumnId =
-    getStoryColumnId(state.board);
+  const resolvedStoryColumnId = getStoryColumnId(state.board);
 
   if (
     !canMoveTask(

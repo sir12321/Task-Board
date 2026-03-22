@@ -54,7 +54,8 @@ export default function BoardPage() {
       const nextWorkflowColumnIds = [...currentBoard.workflowColumnIds];
       const closedIndex = currentBoard.closedColumnId
         ? nextWorkflowColumnIds.findIndex(
-            (workflowColumnId) => workflowColumnId === currentBoard.closedColumnId,
+            (workflowColumnId) =>
+              workflowColumnId === currentBoard.closedColumnId,
           )
         : -1;
 
@@ -322,17 +323,11 @@ export default function BoardPage() {
                     columnName: column?.name ?? task.columnName,
                     resolvedAt:
                       movedTask && 'resolvedAt' in movedTask
-                        ? (movedTask.resolvedAt as
-                            | string
-                            | null
-                            | undefined)
+                        ? (movedTask.resolvedAt as string | null | undefined)
                         : task.resolvedAt,
                     closedAt:
                       movedTask && 'closedAt' in movedTask
-                        ? (movedTask.closedAt as
-                            | string
-                            | null
-                            | undefined)
+                        ? (movedTask.closedAt as string | null | undefined)
                         : task.closedAt,
                     updatedAt:
                       movedTask && 'updatedAt' in movedTask
@@ -593,7 +588,10 @@ export default function BoardPage() {
 
         updateBoardState((currentBoard) => ({
           ...currentBoard,
-          workflowColumnIds: insertColumnIntoWorkflow(currentBoard, newColumn.id),
+          workflowColumnIds: insertColumnIntoWorkflow(
+            currentBoard,
+            newColumn.id,
+          ),
           columns: [...currentBoard.columns, newColumn],
         }));
       } catch (error) {

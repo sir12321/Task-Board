@@ -48,7 +48,9 @@ const TaskCreateEditModal = ({
 }: Props) => {
   const isClosedTask =
     mode === 'edit' &&
-    Boolean(task?.columnId && closedColumnId && task.columnId === closedColumnId);
+    Boolean(
+      task?.columnId && closedColumnId && task.columnId === closedColumnId,
+    );
   const initialColumnId = task?.columnId ?? defaultColumnId;
   const initialType =
     task?.type ?? (initialColumnId === defaultStoryColumnId ? 'STORY' : 'TASK');

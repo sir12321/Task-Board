@@ -17,7 +17,14 @@ const normalizeBoard = ({
   tasks: board.tasks.map((task) => {
     const normalizedTask =
       task.type === 'STORY'
-        ? { ...task, columnId: getStoryColumnId({ ...board, storyColumnId: board.storyColumnId ?? StoryColumnId }), columnName: StoryColumnName }
+        ? {
+            ...task,
+            columnId: getStoryColumnId({
+              ...board,
+              storyColumnId: board.storyColumnId ?? StoryColumnId,
+            }),
+            columnName: StoryColumnName,
+          }
         : task;
 
     return {
