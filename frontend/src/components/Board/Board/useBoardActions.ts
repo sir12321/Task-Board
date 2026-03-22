@@ -2,6 +2,7 @@ import type { Dispatch } from 'react';
 import type { BoardAction, BoardState } from './BoardReducer';
 import type {
   Board as BoardType,
+  BoardColumn,
   BoardWorkflow,
   Task,
 } from '../../../types/Types';
@@ -23,7 +24,7 @@ interface UseBoardActionsProps {
   setShortError: (err: string | null) => void;
   dispatch: Dispatch<BoardAction>;
   state: BoardState;
-  sortedColumns: any[];
+  sortedColumns: BoardColumn[];
   setPendingWorkflowColumnDelete: (id: string | null) => void;
   StoryColumnId: string;
 }

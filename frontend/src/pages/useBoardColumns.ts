@@ -1,5 +1,10 @@
 import { useCallback, useRef } from 'react';
-import type { Board, BoardWorkflow, ProjectDetails } from '../types/Types';
+import type {
+  AuthUser,
+  Board,
+  BoardWorkflow,
+  ProjectDetails,
+} from '../types/Types';
 import { apiClient } from '../utils/api';
 
 export function useBoardColumns(
@@ -8,7 +13,7 @@ export function useBoardColumns(
   updateBoardState: (updater: (currentBoard: Board) => Board) => void,
   setBoard: React.Dispatch<React.SetStateAction<Board | null>>,
   showMessage: (msg: string) => void,
-  user: any,
+  user: AuthUser | null,
 ) {
   const boardRef = useRef(board);
   boardRef.current = board;

@@ -1,5 +1,11 @@
 import { useCallback, useRef } from 'react';
-import type { Board, NewTaskInput, ProjectDetails, Task } from '../types/Types';
+import type {
+  AuthUser,
+  Board,
+  NewTaskInput,
+  ProjectDetails,
+  Task,
+} from '../types/Types';
 import { apiClient } from '../utils/api';
 import {
   isClosedColumn,
@@ -11,7 +17,7 @@ export function useBoardTasks(
   project: ProjectDetails | null,
   updateBoardState: (updater: (currentBoard: Board) => Board) => void,
   setBoard: React.Dispatch<React.SetStateAction<Board | null>>,
-  user: any,
+  user: AuthUser | null,
 ) {
   const boardRef = useRef(board);
   boardRef.current = board;
@@ -72,7 +78,9 @@ export function useBoardTasks(
         }),
       });
 
-      const column = currentBoard.columns.find((c) => c.id === payload.columnId);
+      const column = currentBoard.columns.find(
+        (c) => c.id === payload.columnId,
+      );
       const assigneeMember = currentProject.members.find(
         (member) => member.id === payload.assigneeId,
       );
@@ -142,7 +150,9 @@ export function useBoardTasks(
       }
 
       if (statusChanged && !hasTaskFieldChanges) {
-        const column = currentBoard.columns.find((c) => c.id === payload.columnId);
+        const column = currentBoard.columns.find(
+          (c) => c.id === payload.columnId,
+        );
         updateBoardState((board) => ({
           ...board,
           tasks: board.tasks.map((task) =>
@@ -184,13 +194,16 @@ export function useBoardTasks(
         }),
       });
 
-      const column = currentBoard.columns.find((c) => c.id === payload.columnId);
+      const column = currentBoard.columns.find(
+        (c) => c.id === payload.columnId,
+      );
       const assigneeMember = currentProject.members.find(
         (member) => member.id === payload.assigneeId,
       );
       const assigneeName = assigneeMember?.name ?? null;
       const parentName =
-        currentBoard.tasks.find((task) => task.id === payload.parentId)?.title ?? null;
+        currentBoard.tasks.find((task) => task.id === payload.parentId)
+          ?.title ?? null;
 
       updateBoardState((board) => ({
         ...board,

@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import type { Board, ProjectDetails } from '../types/Types';
+import type { AuthUser, Board, ProjectDetails } from '../types/Types';
 import { apiClient } from '../utils/api';
 
 export function useBoardComments(
@@ -7,7 +7,7 @@ export function useBoardComments(
   project: ProjectDetails | null,
   setBoard: React.Dispatch<React.SetStateAction<Board | null>>,
   showMessage: (msg: string) => void,
-  user: any,
+  user: AuthUser | null,
 ) {
   const boardRef = useRef(board);
   boardRef.current = board;
@@ -37,10 +37,13 @@ export function useBoardComments(
       const authorMember = currentProject.members.find(
         (member) => member.id === createdComment.authorId,
       );
-      const authorName = authorMember?.name ?? currentUser?.name ?? 'Unknown User';
+      const authorName =
+        authorMember?.name ?? currentUser?.name ?? 'Unknown User';
       const authorAvatarUrl =
         authorMember?.avatarUrl ??
-        (createdComment.authorId === currentUser?.id ? currentUser?.avatarUrl : null) ??
+        (createdComment.authorId === currentUser?.id
+          ? currentUser?.avatarUrl
+          : null) ??
         null;
 
       setBoard((prev) =>

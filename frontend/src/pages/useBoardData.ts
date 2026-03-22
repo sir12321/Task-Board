@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Board, ProjectDetails } from '../types/Types';
+import type { AuthUser, Board, ProjectDetails } from '../types/Types';
+import type { NavigateFunction } from 'react-router-dom';
 import { apiClient } from '../utils/api';
 import { getTaskStatus } from '../components/Board/Board/workflow';
 import { useBoardTasks } from './useBoardTasks';
@@ -9,8 +10,8 @@ import { useBoardColumns } from './useBoardColumns';
 export function useBoardData(
   projectId: string | undefined,
   boardId: string | undefined,
-  user: any,
-  navigate: any,
+  user: AuthUser | null,
+  navigate: NavigateFunction,
   showMessage: (msg: string) => void,
 ) {
   const [board, setBoard] = useState<Board | null>(null);

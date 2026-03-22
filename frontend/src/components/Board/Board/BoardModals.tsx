@@ -7,13 +7,16 @@ import WorkflowEditor from './WorkflowEditor';
 import TaskDetailsModal from '../Task/TaskDetailsModal/TaskDetailsModal';
 import TaskCreateEditModal from '../Task/TaskCreate/TaskCreateEdit';
 import type {
+  AuthUser,
   Board as BoardType,
+  BoardColumn,
   BoardWorkflow,
   NewTaskInput,
   ProjectMemberSummary,
   Task,
   ProjectRole,
 } from '../../../types/Types';
+import type { BoardAction, BoardState } from './BoardReducer';
 import { isClosedColumn, isResolvedColumn } from './workflow';
 
 interface BoardModalsProps {
@@ -56,10 +59,10 @@ interface BoardModalsProps {
   handleSubmitWip: (columnId: string, wipLimit: number | null) => Promise<void>;
   handleRenameColumn: (columnId: string, name: string) => Promise<void>;
   setShortError: (err: string | null) => void;
-  sortedColumns: any[];
-  state: any;
-  dispatch: any;
-  user: any;
+  sortedColumns: BoardColumn[];
+  state: BoardState;
+  dispatch: React.Dispatch<BoardAction>;
+  user: AuthUser | null;
   effectiveProjectRole: ProjectRole;
   mentionableProjectMembers: ProjectMemberSummary[];
   assignableMembers: ProjectMemberSummary[];
@@ -292,7 +295,7 @@ const BoardModals: React.FC<BoardModalsProps> = ({
               return;
             }
             const column = state.board.columns.find(
-              (c: any) => c.id === payload.columnId,
+              (c) => c.id === payload.columnId,
             );
             const now = new Date().toISOString();
             const draftBoard = {
