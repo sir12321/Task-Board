@@ -9,6 +9,7 @@ import {
   updateUserAvatar,
   changeName,
   changePassword,
+  changeGlobalRole,
 } from '../../src/controllers/user.controller';
 
 vi.mock('../../src/utils/prisma', () => ({
@@ -18,15 +19,18 @@ vi.mock('../../src/utils/prisma', () => ({
 vi.mock('../../src/services/user.service', () => ({
   updateName: vi.fn(),
   updatePassword: vi.fn(),
+  updateGlobalRole: vi.fn(),
 }));
 
-const buildApp = (userId?: string): express.Express => {
+type GlobalRole = 'USER' | 'GLOBAL_ADMIN';
+
+const buildApp = (userId?: string, globalRole: GlobalRole = 'USER'): express.Express => {
   const app = express();
   app.use(express.json());
 
   const mockAuth = (req: Request, _res: Response, next: NextFunction): void => {
     if (userId) {
-      (req as Request & { user: { id: string; globalRole: string } }).user = { id: userId, globalRole: 'USER' };
+      (req as Request & { user: { id: string; globalRole: string } }).user = { id: userId, globalRole };
     }
     next();
   };
@@ -35,6 +39,7 @@ const buildApp = (userId?: string): express.Express => {
   app.patch('/api/users/avatar', mockAuth, updateUserAvatar);
   app.patch('/api/users/name', mockAuth, changeName);
   app.patch('/api/users/password', mockAuth, changePassword);
+  app.patch('/api/users/:id/global-role', mockAuth, changeGlobalRole);
 
   return app;
 };
@@ -153,6 +158,104 @@ describe('User Controller', () => {
       const res = await request(buildApp('user-1'))
         .patch('/api/users/password')
         .send({ currentPassword: 'old', newPassword: 'new' });
+      expect(res.status).toBe(500);
+    });
+
+    it('returns 400 for incorrect current password', async () => {
+      vi.mocked(userService.updatePassword).mockRejectedValue(
+        new Error('Current password is incorrect'),
+      );
+      const res = await request(buildApp('user-1'))
+        .patch('/api/users/password')
+        .send({ currentPassword: 'wrong', newPassword: 'new' });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/incorrect/i);
+    });
+
+    it('returns 404 when user is not found', async () => {
+      vi.mocked(userService.updatePassword).mockRejectedValue(
+        new Error('User not found'),
+      );
+      const res = await request(buildApp('user-1'))
+        .patch('/api/users/password')
+        .send({ currentPassword: 'old', newPassword: 'new' });
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe('PATCH /api/users/:id/global-role', () => {
+    it('updates the global role successfully as a GLOBAL_ADMIN', async () => {
+      vi.mocked(userService.updateGlobalRole).mockResolvedValue({
+        id: 'target-1',
+        name: 'Target',
+        email: 'target@example.com',
+        avatarUrl: null,
+        globalRole: 'GLOBAL_ADMIN',
+      } as never);
+
+      const res = await request(buildApp('admin-1', 'GLOBAL_ADMIN'))
+        .patch('/api/users/target-1/global-role')
+        .send({ globalRole: 'GLOBAL_ADMIN' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toMatch(/success/i);
+      expect(userService.updateGlobalRole).toHaveBeenCalledWith('target-1', 'GLOBAL_ADMIN');
+    });
+
+    it('returns 401 when the request has no user', async () => {
+      const res = await request(buildApp())
+        .patch('/api/users/target-1/global-role')
+        .send({ globalRole: 'USER' });
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 403 when a non-admin user attempts the change', async () => {
+      const res = await request(buildApp('user-1', 'USER'))
+        .patch('/api/users/target-1/global-role')
+        .send({ globalRole: 'USER' });
+      expect(res.status).toBe(403);
+      expect(res.body.error).toMatch(/Forbidden/i);
+    });
+
+    it('returns 400 when an invalid role is provided', async () => {
+      const res = await request(buildApp('admin-1', 'GLOBAL_ADMIN'))
+        .patch('/api/users/target-1/global-role')
+        .send({ globalRole: 'INVALID_ROLE' });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/Invalid global role/i);
+    });
+
+    it('returns 400 when demoting the last global admin', async () => {
+      vi.mocked(userService.updateGlobalRole).mockRejectedValue(
+        new Error('At least one global admin is required'),
+      );
+
+      const res = await request(buildApp('admin-1', 'GLOBAL_ADMIN'))
+        .patch('/api/users/admin-1/global-role')
+        .send({ globalRole: 'USER' });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/at least one global admin/i);
+    });
+
+    it('returns 404 when the target user is not found', async () => {
+      vi.mocked(userService.updateGlobalRole).mockRejectedValue(
+        new Error('User not found'),
+      );
+
+      const res = await request(buildApp('admin-1', 'GLOBAL_ADMIN'))
+        .patch('/api/users/missing/global-role')
+        .send({ globalRole: 'USER' });
+      expect(res.status).toBe(404);
+    });
+
+    it('returns 500 on unexpected service error', async () => {
+      vi.mocked(userService.updateGlobalRole).mockRejectedValue(
+        new Error('DB crash'),
+      );
+
+      const res = await request(buildApp('admin-1', 'GLOBAL_ADMIN'))
+        .patch('/api/users/target-1/global-role')
+        .send({ globalRole: 'USER' });
       expect(res.status).toBe(500);
     });
   });

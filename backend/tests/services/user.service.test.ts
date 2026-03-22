@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockReset } from 'vitest-mock-extended';
 import pMock from '../mocks/prisma';
 import * as hashUtil from '../../src/utils/hash.util';
-import { updateName, updatePassword } from '../../src/services/user.service';
+import { updateName, updatePassword, updateGlobalRole } from '../../src/services/user.service';
 
 vi.mock('../../src/utils/prisma', () => ({
   default: pMock,
@@ -80,6 +80,60 @@ describe('User Service', () => {
       vi.mocked(hashUtil.comparePasswords).mockResolvedValue(false);
 
       await expect(updatePassword('user-1', 'wrong-old', 'new')).rejects.toThrow('Current password is incorrect');
+    });
+  });
+
+  describe('updateGlobalRole', () => {
+    it('updates the role successfully', async () => {
+      pMock.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        globalRole: 'USER',
+      } as never);
+      pMock.user.update.mockResolvedValue({
+        id: 'user-1',
+        name: 'Test',
+        email: 'test@example.com',
+        avatarUrl: null,
+        globalRole: 'GLOBAL_ADMIN',
+      } as never);
+
+      const result = await updateGlobalRole('user-1', 'GLOBAL_ADMIN');
+      expect(result.globalRole).toBe('GLOBAL_ADMIN');
+    });
+
+    it('throws when user is not found', async () => {
+      pMock.user.findUnique.mockResolvedValue(null);
+      await expect(updateGlobalRole('missing', 'USER')).rejects.toThrow('User not found');
+    });
+
+    it('throws when demoting the last global admin', async () => {
+      pMock.user.findUnique.mockResolvedValue({
+        id: 'admin-1',
+        globalRole: 'GLOBAL_ADMIN',
+      } as never);
+      pMock.user.count.mockResolvedValue(1);
+
+      await expect(updateGlobalRole('admin-1', 'USER')).rejects.toThrow(
+        'At least one global admin is required',
+      );
+    });
+
+    it('allows demoting when there are multiple admins', async () => {
+      pMock.user.findUnique.mockResolvedValue({
+        id: 'admin-1',
+        globalRole: 'GLOBAL_ADMIN',
+      } as never);
+      pMock.user.count.mockResolvedValue(3);
+      pMock.user.update.mockResolvedValue({
+        id: 'admin-1',
+        name: 'Admin',
+        email: 'admin@example.com',
+        avatarUrl: null,
+        globalRole: 'USER',
+      } as never);
+
+      const result = await updateGlobalRole('admin-1', 'USER');
+      expect(result.globalRole).toBe('USER');
     });
   });
 });

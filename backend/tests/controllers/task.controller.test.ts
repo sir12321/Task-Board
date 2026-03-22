@@ -138,6 +138,19 @@ describe('Task Controller', () => {
       expect(res.status).toBe(400);
       expect(res.body.error).toMatch(/WIP limit/i);
     });
+
+    it('returns 500 on unexpected service error', async () => {
+      vi.mocked(taskService.makeTask).mockRejectedValue(
+        new Error('DB crash'),
+      );
+
+      const res = await request(buildApp('user-1'))
+        .post('/api/tasks')
+        .send({ title: 'Boom' });
+
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('Failed to create task');
+    });
   });
 
   describe('DELETE /api/tasks/:id', () => {
@@ -171,6 +184,21 @@ describe('Task Controller', () => {
       const res = await request(buildApp('user-1')).delete('/api/tasks/task-1');
 
       expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when no userId is present', async () => {
+      const res = await request(buildApp()).delete('/api/tasks/task-1');
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 500 on unexpected service error', async () => {
+      vi.mocked(taskService.removeTask).mockRejectedValue(
+        new Error('DB crash'),
+      );
+
+      const res = await request(buildApp('user-1')).delete('/api/tasks/task-1');
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('Failed to delete task');
     });
   });
 
@@ -291,6 +319,62 @@ describe('Task Controller', () => {
       expect(res.status).toBe(400);
       expect(res.body.error).toMatch(/targetColumnId/i);
     });
+
+    it('returns 400 when no userId is present', async () => {
+      const res = await request(buildApp())
+        .patch('/api/tasks/task-1/status')
+        .send({ targetColumnId: 'col-2' });
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 404 when closing a task that does not exist', async () => {
+      pMock.task.findUnique.mockResolvedValue(null);
+
+      const res = await request(buildApp('user-1'))
+        .patch('/api/tasks/task-1/status')
+        .send({ close: true });
+
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('Task not found');
+    });
+
+    it('returns 400 when moveTask throws a workflow error', async () => {
+      pMock.task.findUnique.mockResolvedValue({
+        title: 'Fix the bug',
+        assigneeId: null,
+        reporterId: 'user-1',
+        column: { name: 'To Do' },
+      } as never);
+      pMock.column.findUnique.mockResolvedValue({ name: 'Done' } as never);
+      vi.mocked(taskService.moveTask).mockRejectedValue(
+        new Error('Invalid transition'),
+      );
+
+      const res = await request(buildApp('user-1'))
+        .patch('/api/tasks/task-1/status')
+        .send({ targetColumnId: 'col-done' });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 500 on unexpected error in updateTaskStatus', async () => {
+      pMock.task.findUnique.mockResolvedValue({
+        title: 'Fix the bug',
+        assigneeId: null,
+        reporterId: 'user-1',
+        column: { name: 'To Do' },
+      } as never);
+      pMock.column.findUnique.mockResolvedValue({ name: 'Done' } as never);
+      vi.mocked(taskService.moveTask).mockRejectedValue(
+        new Error('Something unexpected'),
+      );
+
+      const res = await request(buildApp('user-1'))
+        .patch('/api/tasks/task-1/status')
+        .send({ targetColumnId: 'col-done' });
+
+      expect(res.status).toBe(500);
+    });
   });
 
   describe('PATCH /api/tasks/:id', () => {
@@ -328,6 +412,69 @@ describe('Task Controller', () => {
         .send({ title: 'Blocked' });
 
       expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when no userId is present', async () => {
+      const res = await request(buildApp())
+        .patch('/api/tasks/task-1')
+        .send({ title: 'Blocked' });
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 500 on unexpected service error', async () => {
+      pMock.task.findUnique.mockResolvedValue({
+        assigneeId: null,
+        assignee: null,
+      } as never);
+
+      vi.mocked(taskService.updateTask).mockRejectedValue(
+        new Error('DB crash'),
+      );
+
+      const res = await request(buildApp('user-1'))
+        .patch('/api/tasks/task-1')
+        .send({ title: 'Crash' });
+
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('Failed to update task');
+    });
+
+    it('logs audit when assignee changes', async () => {
+      pMock.task.findUnique.mockResolvedValue({
+        assigneeId: 'old-user',
+        assignee: { name: 'OldPerson' },
+      } as never);
+
+      vi.mocked(taskService.updateTask).mockResolvedValue({
+        ...sampleTask,
+        assigneeId: 'new-user',
+      } as never);
+
+      pMock.user.findUnique.mockResolvedValue({ name: 'NewPerson' } as never);
+      vi.mocked(auditService.logAct).mockResolvedValue(undefined);
+
+      const res = await request(buildApp('user-1'))
+        .patch('/api/tasks/task-1')
+        .send({ title: 'Updated', assigneeId: 'new-user' });
+
+      expect(res.status).toBe(200);
+      expect(auditService.logAct).toHaveBeenCalledWith(
+        'task-1',
+        'user-1',
+        'ASSIGNEE_CHANGED',
+        'OldPerson',
+        'NewPerson',
+      );
+    });
+  });
+
+  describe('GET /api/tasks/:id (additional branches)', () => {
+    it('returns 500 when getData throws', async () => {
+      vi.mocked(taskService.getData).mockRejectedValue(new Error('DB error'));
+
+      const res = await request(buildApp('user-1')).get('/api/tasks/task-1');
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('Failed to fetch task data');
     });
   });
 });
