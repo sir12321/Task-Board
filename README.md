@@ -44,6 +44,8 @@ npm run dev
 
 Frontend runs on: http://localhost:5173
 
+Note: the frontend Vite dev server proxies `/api` and `/uploads` to the backend at `http://localhost:8000`, so the backend server must be running for the app to function correctly.
+
 ## Environment Variables
 
 backend/.env (from .env.example):
@@ -69,6 +71,43 @@ npm test
 npm run test:unit
 npm run test:e2e
 npm run test:integration
+```
+
+## Build And Run
+
+Backend:
+
+```bash
+cd backend
+npm run build
+npm start
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm run build
+npm run preview
+```
+
+## Linting And Formatting
+
+Backend:
+
+```bash
+cd backend
+npm run lint
+npm run format
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm run lint
+npm run lint:fix
+npm run format
 ```
 
 ## Seeded Login
