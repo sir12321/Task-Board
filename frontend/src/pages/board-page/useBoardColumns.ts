@@ -4,8 +4,8 @@ import type {
   Board,
   BoardWorkflow,
   ProjectDetails,
-} from '../types/Types';
-import { apiClient } from '../utils/api';
+} from '../../types/Types';
+import { apiClient } from '../../utils/api';
 
 export function useBoardColumns(
   board: Board | null,

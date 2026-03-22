@@ -5,12 +5,12 @@ import type {
   NewTaskInput,
   ProjectDetails,
   Task,
-} from '../types/Types';
-import { apiClient } from '../utils/api';
+} from '../../types/Types';
+import { apiClient } from '../../utils/api';
 import {
   isClosedColumn,
   isResolvedColumn,
-} from '../components/Board/Board/workflow';
+} from '../../components/Board/Board/workflow';
 
 export function useBoardTasks(
   board: Board | null,

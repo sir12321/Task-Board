@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
-import type { AuthUser, Board, ProjectDetails } from '../types/Types';
-import { apiClient } from '../utils/api';
+import type { AuthUser, Board, ProjectDetails } from '../../types/Types';
+import { apiClient } from '../../utils/api';
 
 export function useBoardComments(
   board: Board | null,

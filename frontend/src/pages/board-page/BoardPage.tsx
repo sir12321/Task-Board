@@ -1,9 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import Layout from '../components/Layout/Layout';
-import BoardView from '../components/Board/Board/Board';
-import { useAuth } from '../context/AuthContext';
-import ToastMessage from '../components/Feedback/ToastMessage';
-import useTransientMessage from '../hooks/useTransientMessage';
+import Layout from '../../components/Layout/Layout';
+import BoardView from '../../components/Board/Board/Board';
+import { useAuth } from '../../context/AuthContext';
+import ToastMessage from '../../components/Feedback/ToastMessage';
+import useTransientMessage from '../../hooks/useTransientMessage';
 import { useBoardData } from './useBoardData';
 
 export default function BoardPage() {
