@@ -240,5 +240,75 @@ describe('Task Service', () => {
       const res = await getData('t1');
       expect(res.id).toBe('t1');
     });
+
+    it('throws when task is not found', async () => {
+      pMock.task.findUnique.mockResolvedValue(null);
+      await expect(getData('missing')).rejects.toThrow('Task not found');
+    });
+  });
+
+  describe('closeTask (additional branches)', () => {
+    it('throws when task is not found', async () => {
+      pMock.task.findUnique.mockResolvedValue(null);
+      await expect(closeTask('missing', 'u1')).rejects.toThrow(
+        'Task not found',
+      );
+    });
+  });
+
+  describe('updateTask (additional branches)', () => {
+    it('throws when task is in a closed column', async () => {
+      pMock.task.findUnique.mockResolvedValue({
+        id: 't1',
+        boardId: 'b1',
+        columnId: 'done-col',
+        assigneeId: null,
+        reporterId: 'u1',
+        type: 'TASK',
+      } as never);
+      pMock.board.findUnique.mockResolvedValue({
+        closedColumnId: 'done-col',
+      } as never);
+
+      await expect(
+        updateTask('t1', { title: 'New' }, 'u1'),
+      ).rejects.toThrow(/closed and locked/i);
+    });
+
+    it('throws when task is not found', async () => {
+      pMock.task.findUnique.mockResolvedValue(null);
+      await expect(
+        updateTask('missing', { title: 'New' }, 'u1'),
+      ).rejects.toThrow('Task not found');
+    });
+  });
+
+  describe('moveTask (additional branches)', () => {
+    it('throws when task is not found', async () => {
+      pMock.task.findUnique.mockResolvedValue(null);
+      await expect(moveTask('missing', 'col-1', 'u1')).rejects.toThrow(
+        'Task not found',
+      );
+    });
+
+    it('throws when target column is not found', async () => {
+      pMock.task.findUnique.mockResolvedValue({
+        id: 't1',
+        boardId: 'b1',
+        columnId: 'todo-col',
+        type: 'TASK',
+        column: { order: 1 },
+        board: workflowBoard,
+      } as never);
+      pMock.board.findUnique.mockResolvedValue({
+        closedColumnId: 'done-col',
+      } as never);
+      mockPermissions();
+      pMock.column.findUnique.mockResolvedValue(null);
+
+      await expect(moveTask('t1', 'missing-col', 'u1')).rejects.toThrow(
+        'Target column not found',
+      );
+    });
   });
 });
