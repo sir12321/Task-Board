@@ -50,8 +50,6 @@ model Board {
   projectId        String
   storyColumnId    String?
   workflowColumnIds String   @default("[]")
-  todoColumnId     String?
-  inProgressColumnId String?
   resolvedColumnId String?
   closedColumnId   String?
   project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)

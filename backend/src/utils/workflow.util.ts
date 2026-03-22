@@ -5,11 +5,6 @@ export interface BoardWorkflowConfig {
   closedColumnId: string | null;
 }
 
-export interface LegacyWorkflowColumns {
-  todoColumnId?: string | null;
-  inProgressColumnId?: string | null;
-}
-
 export const parseWorkflowColumnIds = (value: string | null | undefined): string[] => {
   if (!value) {
     return [];
@@ -25,7 +20,7 @@ export const parseWorkflowColumnIds = (value: string | null | undefined): string
   }
 };
 
-export const getFallbackWorkflowColumnIds = (workflow: LegacyWorkflowColumns & {
+export const getFallbackWorkflowColumnIds = (workflow: {
   workflowColumnIds?: string[];
   resolvedColumnId?: string | null;
   closedColumnId?: string | null;
@@ -35,8 +30,6 @@ export const getFallbackWorkflowColumnIds = (workflow: LegacyWorkflowColumns & {
   }
 
   return [
-    workflow.todoColumnId,
-    workflow.inProgressColumnId,
     workflow.resolvedColumnId,
     workflow.closedColumnId,
   ].filter((columnId): columnId is string => Boolean(columnId));
