@@ -1,6 +1,6 @@
 import DOMPurify from 'dompurify';
 import type { ProjectMemberSummary } from '../types/Types';
-import { getMentionMatch } from './mentions';
+import { getMentionMatch, getMentionMatches } from './mentions';
 
 const ALLOWED_TAGS = [
   'a',
@@ -76,6 +76,28 @@ const isSafeLink = (url: string) => {
 const findNext = (value: string, token: string, start: number) => {
   const index = value.indexOf(token, start);
   return index >= 0 ? index : -1;
+};
+
+const getMentionTitle = (
+  mentionText: string,
+  members: ProjectMemberSummary[],
+): string | null => {
+  const uniqueMember = getMentionMatch(mentionText, members);
+
+  if (uniqueMember) {
+    return uniqueMember.email;
+  }
+
+  const matchedMembers = getMentionMatches(mentionText, members);
+
+  if (matchedMembers.length > 1) {
+    return matchedMembers
+      .slice(0, 4)
+      .map((member) => member.email)
+      .join(' | ');
+  }
+
+  return null;
 };
 
 const hasValidInlineWrapperContent = (value: string) =>
@@ -340,13 +362,10 @@ const appendMentionDecoratedText = (
     mentionNode.className = 'rich-text-mention';
     mentionNode.textContent = mentionText;
 
-    const matchedMember = getMentionMatch(mentionText, members);
+    const mentionTitle = getMentionTitle(mentionText, members);
 
-    if (matchedMember) {
-      mentionNode.setAttribute(
-        'title',
-        `${matchedMember.name} (${matchedMember.email})`,
-      );
+    if (mentionTitle) {
+      mentionNode.setAttribute('title', mentionTitle);
     }
 
     fragment.append(mentionNode);

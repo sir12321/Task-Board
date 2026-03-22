@@ -137,31 +137,26 @@ export const getMentionMatch = (
   typedMentionText: string,
   projectMembers: ProjectMemberSummary[],
 ): ProjectMemberSummary | null => {
+  const matchedMembers = getMentionMatches(typedMentionText, projectMembers);
+
+  return matchedMembers.length === 1 ? matchedMembers[0] : null;
+};
+
+export const getMentionMatches = (
+  typedMentionText: string,
+  projectMembers: ProjectMemberSummary[],
+): ProjectMemberSummary[] => {
   const normalizedMentionAlias = normalizeMentionHandle(
     removeLeadingAtSign(typedMentionText),
   );
 
   if (!normalizedMentionAlias) {
-    return null;
+    return [];
   }
 
-  let uniqueMatchedMember: ProjectMemberSummary | null = null;
-
-  for (const projectMember of projectMembers) {
-    if (
-      !getMentionAliases(projectMember.name).includes(normalizedMentionAlias)
-    ) {
-      continue;
-    }
-
-    if (uniqueMatchedMember && uniqueMatchedMember.id !== projectMember.id) {
-      return null;
-    }
-
-    uniqueMatchedMember = projectMember;
-  }
-
-  return uniqueMatchedMember;
+  return projectMembers.filter((projectMember) =>
+    getMentionAliases(projectMember.name).includes(normalizedMentionAlias),
+  );
 };
 
 export const getMentionSuggestions = (
