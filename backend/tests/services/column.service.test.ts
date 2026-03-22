@@ -18,14 +18,34 @@ describe('Column Service', () => {
 
   describe('createColumn', () => {
     it('creates column correctly', async () => {
-      mockAdminCheck();
+      pMock.projectMember.findUnique.mockResolvedValue({ role: 'PROJECT_ADMIN' } as never);
+      pMock.board.findUnique
+        .mockResolvedValueOnce({ projectId: 'p1' } as never)
+        .mockResolvedValueOnce({
+          workflowColumnIds: JSON.stringify(['todo-col', 'done-col']),
+          closedColumnId: 'done-col',
+        } as never);
       pMock.column.findFirst.mockResolvedValue({ order: 1 } as never);
       pMock.column.create.mockResolvedValue({ id: 'c1', name: 'New Col', order: 2 } as never);
+      pMock.$transaction.mockImplementation(async (callback) =>
+        callback({
+          column: pMock.column,
+          board: pMock.board,
+        } as never),
+      );
 
       const res = await createColumn('u1', 'b1', 'New Col', null);
       expect(res.name).toBe('New Col');
       expect(res.order).toBe(2);
-      expect(pMock.column.create).toHaveBeenCalledWith({ data: expect.objectContaining({ name: 'New Col', order: 2, boardId: 'b1' }) });
+      expect(pMock.column.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ name: 'New Col', order: 2, boardId: 'b1' }),
+      });
+      expect(pMock.board.update).toHaveBeenCalledWith({
+        where: { id: 'b1' },
+        data: {
+          workflowColumnIds: JSON.stringify(['todo-col', 'c1', 'done-col']),
+        },
+      });
     });
 
     it('throws error if user not admin', async () => {
@@ -53,28 +73,44 @@ describe('Column Service', () => {
   describe('deleteColumn', () => {
     it('deletes column and decrements order of subsequent columns', async () => {
       pMock.column.findUnique.mockResolvedValue({ boardId: 'b1', order: 1 } as never);
-      mockAdminCheck();
-      
-      const deleteMock = { where: { id: 'c1' } };
-      const updateManyMock = {
-        where: { boardId: 'b1', order: { gt: 1 } },
-        data: { order: { decrement: 1 } },
-      };
-      
-      pMock.column.delete.mockReturnValue(deleteMock as never);
-      pMock.column.updateMany.mockReturnValue(updateManyMock as never);
+      pMock.projectMember.findUnique.mockResolvedValue({ role: 'PROJECT_ADMIN' } as never);
+      pMock.board.findUnique
+        .mockResolvedValueOnce({ storyColumnId: 'story-col' } as never)
+        .mockResolvedValueOnce({ projectId: 'p1' } as never)
+        .mockResolvedValueOnce({
+          storyColumnId: 'story-col',
+          workflowColumnIds: JSON.stringify(['todo-col', 'c1', 'done-col']),
+          resolvedColumnId: 'c1',
+          closedColumnId: 'done-col',
+        } as never);
       pMock.$transaction.mockResolvedValue([] as never);
 
       await deleteColumn('u1', 'c1');
-      expect(pMock.$transaction).toHaveBeenCalledWith([deleteMock, updateManyMock]);
+      expect(pMock.$transaction).toHaveBeenCalledTimes(1);
+      expect(pMock.board.update).toHaveBeenCalledWith({
+        where: { id: 'b1' },
+        data: {
+          workflowColumnIds: JSON.stringify(['todo-col', 'done-col']),
+          resolvedColumnId: null,
+          closedColumnId: undefined,
+        },
+      });
+      expect(pMock.column.delete).toHaveBeenCalledWith({ where: { id: 'c1' } });
+      expect(pMock.column.updateMany).toHaveBeenCalledWith({
+        where: { boardId: 'b1', order: { gt: 1 } },
+        data: { order: { decrement: 1 } },
+      });
     });
   });
 
   describe('reorderColumn', () => {
     it('swaps columns to left correctly', async () => {
-      pMock.column.findUnique.mockResolvedValue({ boardId: 'b1', order: 1 } as never);
-      mockAdminCheck();
-      pMock.column.findFirst.mockResolvedValue({ id: 'c0', order: 0 } as never);
+      pMock.column.findUnique.mockResolvedValue({ boardId: 'b1', order: 2 } as never);
+      pMock.board.findUnique
+        .mockResolvedValueOnce({ projectId: 'p1' } as never)
+        .mockResolvedValueOnce({ storyColumnId: 'story-col' } as never);
+      pMock.projectMember.findUnique.mockResolvedValue({ role: 'PROJECT_ADMIN' } as never);
+      pMock.column.findFirst.mockResolvedValue({ id: 'c0', order: 1 } as never);
       pMock.$transaction.mockResolvedValue([] as never);
 
       await reorderColumn('u1', 'c1', 'left');

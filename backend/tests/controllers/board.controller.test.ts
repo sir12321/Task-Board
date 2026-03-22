@@ -4,7 +4,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockReset } from 'vitest-mock-extended';
 import pMock from '../mocks/prisma';
 import * as boardService from '../../src/services/board.service';
-import { getBoard, addBoard } from '../../src/controllers/board.controller';
+import {
+    getBoard,
+    addBoard,
+    editBoardWorkflow,
+} from '../../src/controllers/board.controller';
 
 vi.mock('../../src/utils/prisma', () => ({
     default: pMock,
@@ -14,6 +18,7 @@ vi.mock('../../src/services/board.service', () => ({
     getBoards: vi.fn(),
     createBoard: vi.fn(),
     verifyCreationPermission: vi.fn(),
+    updateBoardWorkflow: vi.fn(),
 }));
 
 type GlobalRole = 'USER' | 'GLOBAL_ADMIN';
@@ -34,6 +39,7 @@ const buildApp = (userId?: string, globalRole: GlobalRole = 'USER'): express.Exp
 
     app.get('/api/boards/:id', mockAuth, getBoard);
     app.post('/api/boards', mockAuth, addBoard);
+    app.put('/api/boards/:id/workflow', mockAuth, editBoardWorkflow);
 
     return app;
 };
@@ -129,6 +135,60 @@ describe('Board Controller', () => {
 
             expect(res.status).toBe(403);
             expect(res.body.error).toMatch(/Forbidden/i);
+        });
+    });
+
+    describe('PUT /api/boards/:id/workflow', () => {
+        it('updates workflow when the request is valid', async () => {
+            vi.mocked(boardService.updateBoardWorkflow).mockResolvedValue(
+                sampleBoard as never,
+            );
+
+            const app = buildApp('admin-1', 'GLOBAL_ADMIN');
+            const res = await request(app)
+                .put('/api/boards/board-1/workflow')
+                .send({
+                    storyColumnId: 'story-col',
+                    workflowColumnIds: ['todo-col', 'doing-col', 'done-col'],
+                    resolvedColumnId: 'doing-col',
+                    closedColumnId: 'done-col',
+                });
+
+            expect(res.status).toBe(200);
+            expect(boardService.updateBoardWorkflow).toHaveBeenCalledWith(
+                'admin-1',
+                'board-1',
+                {
+                    storyColumnId: 'story-col',
+                    workflowColumnIds: ['todo-col', 'doing-col', 'done-col'],
+                    resolvedColumnId: 'doing-col',
+                    closedColumnId: 'done-col',
+                },
+                'GLOBAL_ADMIN',
+            );
+        });
+
+        it('returns 401 when the request carries no user', async () => {
+            const app = buildApp();
+            const res = await request(app)
+                .put('/api/boards/board-1/workflow')
+                .send({});
+
+            expect(res.status).toBe(401);
+        });
+
+        it('returns 400 when the workflow is invalid', async () => {
+            vi.mocked(boardService.updateBoardWorkflow).mockRejectedValue(
+                new Error('Workflow must include a Closed column'),
+            );
+
+            const app = buildApp('user-1');
+            const res = await request(app)
+                .put('/api/boards/board-1/workflow')
+                .send({});
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toMatch(/Workflow/i);
         });
     });
 });
