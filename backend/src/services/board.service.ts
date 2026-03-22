@@ -49,6 +49,8 @@ export const getBoards = async (
     storyColumnId: board.storyColumnId,
     workflowColumnIds: getFallbackWorkflowColumnIds({
       workflowColumnIds: parseWorkflowColumnIds(board.workflowColumnIds),
+      todoColumnId: board.todoColumnId,
+      inProgressColumnId: board.inProgressColumnId,
       resolvedColumnId: board.resolvedColumnId,
       closedColumnId: board.closedColumnId,
     }),

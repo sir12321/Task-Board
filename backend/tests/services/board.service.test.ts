@@ -84,6 +84,8 @@ describe('Board Service', () => {
         name: 'B1',
         storyColumnId: 'story-col',
         workflowColumnIds: JSON.stringify(['todo-col', 'doing-col', 'done-col']),
+        todoColumnId: null,
+        inProgressColumnId: null,
         resolvedColumnId: 'doing-col',
         closedColumnId: 'done-col',
         columns: [{ id: 'col1', name: 'colname', order: 0 }],

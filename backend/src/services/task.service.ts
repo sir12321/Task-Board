@@ -57,6 +57,8 @@ type BoardWorkflowRecord = Prisma.BoardGetPayload<{
   select: {
     storyColumnId: true;
     workflowColumnIds: true;
+    todoColumnId: true;
+    inProgressColumnId: true;
     resolvedColumnId: true;
     closedColumnId: true;
   };
@@ -70,6 +72,8 @@ const getBoardWorkflow = async (
     select: {
       storyColumnId: true,
       workflowColumnIds: true,
+      todoColumnId: true,
+      inProgressColumnId: true,
       resolvedColumnId: true,
       closedColumnId: true,
     },
@@ -170,6 +174,8 @@ export const makeTask = async (
     ...workflow,
     workflowColumnIds: getFallbackWorkflowColumnIds({
       workflowColumnIds: parseWorkflowColumnIds(workflow.workflowColumnIds),
+      todoColumnId: workflow.todoColumnId,
+      inProgressColumnId: workflow.inProgressColumnId,
       resolvedColumnId: workflow.resolvedColumnId,
       closedColumnId: workflow.closedColumnId,
     }),
@@ -248,6 +254,8 @@ export const moveTask = async (
           id: true,
           storyColumnId: true,
           workflowColumnIds: true,
+          todoColumnId: true,
+          inProgressColumnId: true,
           resolvedColumnId: true,
           closedColumnId: true,
         },
@@ -279,6 +287,8 @@ export const moveTask = async (
     ...task.board,
     workflowColumnIds: getFallbackWorkflowColumnIds({
       workflowColumnIds: parseWorkflowColumnIds(task.board.workflowColumnIds),
+      todoColumnId: task.board.todoColumnId,
+      inProgressColumnId: task.board.inProgressColumnId,
       resolvedColumnId: task.board.resolvedColumnId,
       closedColumnId: task.board.closedColumnId,
     }),

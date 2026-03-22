@@ -30,6 +30,8 @@ describe('Task Service', () => {
   const workflowBoard = {
     storyColumnId: 'story-col',
     workflowColumnIds: JSON.stringify(['todo-col', 'doing-col', 'done-col']),
+    todoColumnId: null,
+    inProgressColumnId: null,
     resolvedColumnId: 'doing-col',
     closedColumnId: 'done-col',
   };
