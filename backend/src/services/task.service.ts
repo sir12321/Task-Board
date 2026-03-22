@@ -51,18 +51,22 @@ export const makeTask = async (
     ...workflow,
     workflowColumnIds: getFallbackWorkflowColumnIds({
       workflowColumnIds: parseWorkflowColumnIds(workflow.workflowColumnIds),
-      todoColumnId: workflow.todoColumnId,
-      inProgressColumnId: workflow.inProgressColumnId,
       resolvedColumnId: workflow.resolvedColumnId,
       closedColumnId: workflow.closedColumnId,
     }),
   };
 
-  if (data.type === 'STORY' && normalizedWorkflow.storyColumnId !== data.columnId) {
+  if (
+    data.type === 'STORY' &&
+    normalizedWorkflow.storyColumnId !== data.columnId
+  ) {
     throw new Error('STORY tasks can only be created in the Stories column');
   }
 
-  if (data.type !== 'STORY' && normalizedWorkflow.storyColumnId === data.columnId) {
+  if (
+    data.type !== 'STORY' &&
+    normalizedWorkflow.storyColumnId === data.columnId
+  ) {
     throw new Error('Only STORY tasks can be created in the Stories column');
   }
 
@@ -78,8 +82,12 @@ export const makeTask = async (
       reporterId: data.reporterId,
       assigneeId: data.assigneeId,
       parentId: data.parentId,
-      resolvedAt: isResolvedColumn(normalizedWorkflow, data.columnId) ? new Date() : null,
-      closedAt: isClosedColumn(normalizedWorkflow, data.columnId) ? new Date() : null,
+      resolvedAt: isResolvedColumn(normalizedWorkflow, data.columnId)
+        ? new Date()
+        : null,
+      closedAt: isClosedColumn(normalizedWorkflow, data.columnId)
+        ? new Date()
+        : null,
     },
   });
 
@@ -133,8 +141,6 @@ export const moveTask = async (
           id: true,
           storyColumnId: true,
           workflowColumnIds: true,
-          todoColumnId: true,
-          inProgressColumnId: true,
           resolvedColumnId: true,
           closedColumnId: true,
         },
@@ -166,8 +172,6 @@ export const moveTask = async (
     ...task.board,
     workflowColumnIds: getFallbackWorkflowColumnIds({
       workflowColumnIds: parseWorkflowColumnIds(task.board.workflowColumnIds),
-      todoColumnId: task.board.todoColumnId,
-      inProgressColumnId: task.board.inProgressColumnId,
       resolvedColumnId: task.board.resolvedColumnId,
       closedColumnId: task.board.closedColumnId,
     }),

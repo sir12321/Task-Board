@@ -121,7 +121,7 @@ export interface ProjectDetails extends Project {
 export interface ProjectMemberSummary {
   id: string;
   name: string;
-  email: string; // what if multiple users have same email, must be handled
+  email: string;
   role: ProjectRole;
 }
 

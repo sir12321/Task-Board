@@ -2,6 +2,7 @@ import prisma from '../utils/prisma';
 import { ProjectMember, ProjectRole } from '@prisma/client';
 import { touchProject } from '../utils/touchProject.util';
 
+// Helper function to verify if the requester has access to manage members
 const verifyAccess = async (
   requesterId: string,
   projectId: string,
