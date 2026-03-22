@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import type { Board, BoardWorkflow, ProjectDetails } from '../types/Types';
 import { apiClient } from '../utils/api';
 
@@ -10,6 +10,13 @@ export function useBoardColumns(
   showMessage: (msg: string) => void,
   user: any,
 ) {
+  const boardRef = useRef(board);
+  boardRef.current = board;
+  const projectRef = useRef(project);
+  projectRef.current = project;
+  const userRef = useRef(user);
+  userRef.current = user;
+
   const insertColumnIntoWorkflow = useCallback(
     (currentBoard: Board, columnId: string): string[] => {
       const nextWorkflowColumnIds = [...currentBoard.workflowColumnIds];
@@ -54,38 +61,40 @@ export function useBoardColumns(
 
   const addColumn = useCallback(
     async (columnName: string): Promise<void> => {
-      if (!project || !board) return;
+      const currentProject = projectRef.current;
+      const currentBoard = boardRef.current;
+      if (!currentProject || !currentBoard) return;
       try {
         const newColumn = await apiClient('/columns', {
           method: 'POST',
           body: JSON.stringify({
             name: columnName,
-            boardId: board.id,
+            boardId: currentBoard.id,
             wipLimit: null,
           }),
         });
 
-        updateBoardState((currentBoard) => ({
-          ...currentBoard,
-          workflowColumnIds: insertColumnIntoWorkflow(
-            currentBoard,
-            newColumn.id,
-          ),
-          columns: [...currentBoard.columns, newColumn],
+        updateBoardState((board) => ({
+          ...board,
+          workflowColumnIds: insertColumnIntoWorkflow(board, newColumn.id),
+          columns: [...board.columns, newColumn],
         }));
       } catch {
         showMessage('Failed to create column.');
       }
     },
-    [project, board, insertColumnIntoWorkflow, showMessage, updateBoardState],
+    [insertColumnIntoWorkflow, showMessage, updateBoardState],
   );
 
   const renameColumn = useCallback(
     async (columnId: string, newName: string): Promise<void> => {
-      if (!project || !board) return;
+      const currentProject = projectRef.current;
+      const currentBoard = boardRef.current;
+      const currentUser = userRef.current;
+      if (!currentProject || !currentBoard) return;
       if (
-        project.userRole !== 'PROJECT_ADMIN' &&
-        user?.globalRole !== 'GLOBAL_ADMIN'
+        currentProject.userRole !== 'PROJECT_ADMIN' &&
+        currentUser?.globalRole !== 'GLOBAL_ADMIN'
       ) {
         alert('Only Project Admins or Global Admins can rename columns.');
         return;
@@ -97,12 +106,12 @@ export function useBoardColumns(
           body: JSON.stringify({ name: newName }),
         });
 
-        updateBoardState((currentBoard) => ({
-          ...currentBoard,
-          columns: currentBoard.columns.map((c) =>
+        updateBoardState((board) => ({
+          ...board,
+          columns: board.columns.map((c) =>
             c.id === columnId ? { ...c, name: newName } : c,
           ),
-          tasks: currentBoard.tasks.map((task) =>
+          tasks: board.tasks.map((task) =>
             task.columnId === columnId
               ? { ...task, columnName: newName }
               : task,
@@ -112,15 +121,18 @@ export function useBoardColumns(
         showMessage('Failed to rename column.');
       }
     },
-    [project, board, showMessage, updateBoardState, user],
+    [showMessage, updateBoardState],
   );
 
   const reorderColumn = useCallback(
     async (columnId: string, direction: 'left' | 'right'): Promise<void> => {
-      if (!project || !board) return;
+      const currentProject = projectRef.current;
+      const currentBoard = boardRef.current;
+      const currentUser = userRef.current;
+      if (!currentProject || !currentBoard) return;
       if (
-        project.userRole !== 'PROJECT_ADMIN' &&
-        user?.globalRole !== 'GLOBAL_ADMIN'
+        currentProject.userRole !== 'PROJECT_ADMIN' &&
+        currentUser?.globalRole !== 'GLOBAL_ADMIN'
       ) {
         alert('Only ProjectAdmin can reorder columns.');
         return;
@@ -158,15 +170,18 @@ export function useBoardColumns(
         showMessage('Failed to reorder column.');
       }
     },
-    [project, board, setBoard, showMessage, user],
+    [setBoard, showMessage],
   );
 
   const updateColumnWip = useCallback(
     async (columnId: string, newWipLimit: number | null): Promise<void> => {
-      if (!project || !board) return;
+      const currentProject = projectRef.current;
+      const currentBoard = boardRef.current;
+      const currentUser = userRef.current;
+      if (!currentProject || !currentBoard) return;
       if (
-        project.userRole !== 'PROJECT_ADMIN' &&
-        user?.globalRole !== 'GLOBAL_ADMIN'
+        currentProject.userRole !== 'PROJECT_ADMIN' &&
+        currentUser?.globalRole !== 'GLOBAL_ADMIN'
       ) {
         alert('Only Project Admins or Global Admins can edit WIP limits.');
         return;
@@ -192,24 +207,27 @@ export function useBoardColumns(
         showMessage('Failed to update WIP limit.');
       }
     },
-    [project, board, setBoard, showMessage, user],
+    [setBoard, showMessage],
   );
 
   const deleteColumn = useCallback(
     async (columnId: string): Promise<void> => {
-      if (!project || !board) return;
+      const currentProject = projectRef.current;
+      const currentBoard = boardRef.current;
+      const currentUser = userRef.current;
+      if (!currentProject || !currentBoard) return;
       if (
-        project.userRole !== 'PROJECT_ADMIN' &&
-        user?.globalRole !== 'GLOBAL_ADMIN'
+        currentProject.userRole !== 'PROJECT_ADMIN' &&
+        currentUser?.globalRole !== 'GLOBAL_ADMIN'
       ) {
         alert('Only Project Admins or Global Admins can delete columns.');
         return;
       }
 
-      const column = board.columns.find(
+      const column = currentBoard.columns.find(
         (currentColumn) => currentColumn.id === columnId,
       );
-      if (board.storyColumnId === column?.id) {
+      if (currentBoard.storyColumnId === column?.id) {
         alert('Stories column cannot be deleted.');
         return;
       }
@@ -217,10 +235,10 @@ export function useBoardColumns(
       try {
         await apiClient(`/columns/${columnId}`, { method: 'DELETE' });
 
-        updateBoardState((currentBoard) => ({
-          ...currentBoard,
-          ...removeColumnFromWorkflow(currentBoard, columnId),
-          columns: currentBoard.columns.filter((c) => c.id !== columnId),
+        updateBoardState((board) => ({
+          ...board,
+          ...removeColumnFromWorkflow(board, columnId),
+          columns: board.columns.filter((c) => c.id !== columnId),
         }));
       } catch {
         showMessage(
@@ -228,35 +246,30 @@ export function useBoardColumns(
         );
       }
     },
-    [
-      project,
-      board,
-      removeColumnFromWorkflow,
-      showMessage,
-      updateBoardState,
-      user,
-    ],
+    [removeColumnFromWorkflow, showMessage, updateBoardState],
   );
 
   const updateWorkflow = useCallback(
     async (workflow: BoardWorkflow): Promise<void> => {
-      if (!project || !board) return;
+      const currentProject = projectRef.current;
+      const currentBoard = boardRef.current;
+      if (!currentProject || !currentBoard) return;
 
       try {
-        await apiClient(`/boards/${board.id}/workflow`, {
+        await apiClient(`/boards/${currentBoard.id}/workflow`, {
           method: 'PUT',
           body: JSON.stringify(workflow),
         });
 
-        updateBoardState((currentBoard) => ({
-          ...currentBoard,
+        updateBoardState((board) => ({
+          ...board,
           ...workflow,
         }));
       } catch {
         showMessage('Failed to update workflow.');
       }
     },
-    [project, board, showMessage, updateBoardState],
+    [showMessage, updateBoardState],
   );
 
   return {

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import type { Board, NewTaskInput, ProjectDetails, Task } from '../types/Types';
 import { apiClient } from '../utils/api';
 import {
@@ -13,22 +13,26 @@ export function useBoardTasks(
   setBoard: React.Dispatch<React.SetStateAction<Board | null>>,
   user: any,
 ) {
+  const boardRef = useRef(board);
+  boardRef.current = board;
+  const projectRef = useRef(project);
+  projectRef.current = project;
+  const userRef = useRef(user);
+  userRef.current = user;
+
   const deleteTask = useCallback(
     async (taskId: string): Promise<void> => {
-      if (!project || !board) return;
+      const currentProject = projectRef.current;
+      const currentBoard = boardRef.current;
+      const currentUser = userRef.current;
+      if (!currentProject || !currentBoard) return;
       if (
-        project.userRole === 'PROJECT_VIEWER' &&
-        user?.globalRole !== 'GLOBAL_ADMIN'
+        currentProject.userRole === 'PROJECT_VIEWER' &&
+        currentUser?.globalRole !== 'GLOBAL_ADMIN'
       ) {
         alert('You do not have permission to delete tasks.');
         return;
       }
-
-      // const hasChildren = board.tasks.some((t) => t.parentId === taskId);
-      // if (hasChildren) {
-      //   alert('Cannot delete a Story with child tasks.');
-      //   return;
-      // }
 
       await apiClient(`/tasks/${taskId}`, { method: 'DELETE' });
       setBoard((prev) =>
@@ -42,15 +46,18 @@ export function useBoardTasks(
           : prev,
       );
     },
-    [board, project, setBoard, user],
+    [setBoard],
   );
 
   const createTask = useCallback(
     async (payload: NewTaskInput): Promise<void> => {
-      if (!project || !board || !user) return;
+      const currentProject = projectRef.current;
+      const currentBoard = boardRef.current;
+      const currentUser = userRef.current;
+      if (!currentProject || !currentBoard || !currentUser) return;
       if (
-        project.userRole === 'PROJECT_VIEWER' &&
-        user.globalRole !== 'GLOBAL_ADMIN'
+        currentProject.userRole === 'PROJECT_VIEWER' &&
+        currentUser.globalRole !== 'GLOBAL_ADMIN'
       ) {
         alert('You do not have permission to create tasks.');
         return;
@@ -60,55 +67,58 @@ export function useBoardTasks(
         method: 'POST',
         body: JSON.stringify({
           ...payload,
-          boardId: board.id,
-          reporterId: user.id,
+          boardId: currentBoard.id,
+          reporterId: currentUser.id,
         }),
       });
 
-      const column = board.columns.find((c) => c.id === payload.columnId);
-      const assigneeMember = project.members.find(
+      const column = currentBoard.columns.find((c) => c.id === payload.columnId);
+      const assigneeMember = currentProject.members.find(
         (member) => member.id === payload.assigneeId,
       );
 
-      updateBoardState((currentBoard) => ({
-        ...currentBoard,
+      updateBoardState((board) => ({
+        ...board,
         tasks: [
           {
             ...created,
             columnName: column?.name ?? 'Unknown',
-            reporterName: created.reporterName ?? user.name,
+            reporterName: created.reporterName ?? currentUser.name,
             reporterAvatarUrl:
-              created.reporterAvatarUrl ?? user.avatarUrl ?? null,
+              created.reporterAvatarUrl ?? currentUser.avatarUrl ?? null,
             assigneeName: created.assigneeName ?? assigneeMember?.name,
             assigneeAvatarUrl:
               created.assigneeAvatarUrl ?? assigneeMember?.avatarUrl,
             comments: [],
-            resolvedAt: isResolvedColumn(currentBoard, payload.columnId)
+            resolvedAt: isResolvedColumn(board, payload.columnId)
               ? (created.resolvedAt ?? new Date().toISOString())
               : null,
-            closedAt: isClosedColumn(currentBoard, payload.columnId)
+            closedAt: isClosedColumn(board, payload.columnId)
               ? (created.closedAt ?? new Date().toISOString())
               : null,
           },
-          ...currentBoard.tasks,
+          ...board.tasks,
         ],
       }));
     },
-    [board, project, updateBoardState, user],
+    [updateBoardState],
   );
 
   const updateTask = useCallback(
     async (taskId: string, payload: NewTaskInput): Promise<void> => {
-      if (!project || !board) return;
+      const currentProject = projectRef.current;
+      const currentBoard = boardRef.current;
+      const currentUser = userRef.current;
+      if (!currentProject || !currentBoard) return;
       if (
-        project.userRole === 'PROJECT_VIEWER' &&
-        user?.globalRole !== 'GLOBAL_ADMIN'
+        currentProject.userRole === 'PROJECT_VIEWER' &&
+        currentUser?.globalRole !== 'GLOBAL_ADMIN'
       ) {
         alert('You do not have permission to edit tasks.');
         return;
       }
 
-      const existingTask = board.tasks.find((t) => t.id === taskId);
+      const existingTask = currentBoard.tasks.find((t) => t.id === taskId);
       const statusChanged =
         !!existingTask && existingTask.columnId !== payload.columnId;
 
@@ -132,10 +142,10 @@ export function useBoardTasks(
       }
 
       if (statusChanged && !hasTaskFieldChanges) {
-        const column = board.columns.find((c) => c.id === payload.columnId);
-        updateBoardState((currentBoard) => ({
-          ...currentBoard,
-          tasks: currentBoard.tasks.map((task) =>
+        const column = currentBoard.columns.find((c) => c.id === payload.columnId);
+        updateBoardState((board) => ({
+          ...board,
+          tasks: board.tasks.map((task) =>
             task.id === taskId
               ? {
                   ...task,
@@ -174,17 +184,17 @@ export function useBoardTasks(
         }),
       });
 
-      const column = board.columns.find((c) => c.id === payload.columnId);
-      const assigneeMember = project.members.find(
+      const column = currentBoard.columns.find((c) => c.id === payload.columnId);
+      const assigneeMember = currentProject.members.find(
         (member) => member.id === payload.assigneeId,
       );
       const assigneeName = assigneeMember?.name ?? null;
       const parentName =
-        board.tasks.find((task) => task.id === payload.parentId)?.title ?? null;
+        currentBoard.tasks.find((task) => task.id === payload.parentId)?.title ?? null;
 
-      updateBoardState((currentBoard) => ({
-        ...currentBoard,
-        tasks: currentBoard.tasks.map((task) =>
+      updateBoardState((board) => ({
+        ...board,
+        tasks: board.tasks.map((task) =>
           task.id === taskId
             ? {
                 ...task,
@@ -210,7 +220,7 @@ export function useBoardTasks(
         ),
       }));
     },
-    [board, project, updateBoardState, user],
+    [updateBoardState],
   );
 
   return { deleteTask, createTask, updateTask };

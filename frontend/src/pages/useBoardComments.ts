@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import type { Board, ProjectDetails } from '../types/Types';
 import { apiClient } from '../utils/api';
 
@@ -9,12 +9,21 @@ export function useBoardComments(
   showMessage: (msg: string) => void,
   user: any,
 ) {
+  const boardRef = useRef(board);
+  boardRef.current = board;
+  const projectRef = useRef(project);
+  projectRef.current = project;
+  const userRef = useRef(user);
+  userRef.current = user;
+
   const addComment = useCallback(
     async (taskId: string, content: string): Promise<void> => {
-      if (!project) return;
+      const currentProject = projectRef.current;
+      const currentUser = userRef.current;
+      if (!currentProject) return;
       if (
-        project.userRole === 'PROJECT_VIEWER' &&
-        user?.globalRole !== 'GLOBAL_ADMIN'
+        currentProject.userRole === 'PROJECT_VIEWER' &&
+        currentUser?.globalRole !== 'GLOBAL_ADMIN'
       ) {
         alert('You do not have permission to add comments.');
         return;
@@ -25,13 +34,13 @@ export function useBoardComments(
         body: JSON.stringify({ taskId, content }),
       });
 
-      const authorMember = project.members.find(
+      const authorMember = currentProject.members.find(
         (member) => member.id === createdComment.authorId,
       );
-      const authorName = authorMember?.name ?? user?.name ?? 'Unknown User';
+      const authorName = authorMember?.name ?? currentUser?.name ?? 'Unknown User';
       const authorAvatarUrl =
         authorMember?.avatarUrl ??
-        (createdComment.authorId === user?.id ? user?.avatarUrl : null) ??
+        (createdComment.authorId === currentUser?.id ? currentUser?.avatarUrl : null) ??
         null;
 
       setBoard((prev) =>
@@ -53,15 +62,17 @@ export function useBoardComments(
           : prev,
       );
     },
-    [project, setBoard, user],
+    [setBoard],
   );
 
   const editComment = useCallback(
     async (commentId: string, content: string): Promise<void> => {
-      if (!board || !user) return;
+      const currentBoard = boardRef.current;
+      const currentUser = userRef.current;
+      if (!currentBoard || !currentUser) return;
       const commentEditWindowMs = 2 * 24 * 60 * 60 * 1000 * 3;
 
-      const commentToEdit = board.tasks
+      const commentToEdit = currentBoard.tasks
         .flatMap((task) => task.comments ?? [])
         .find((comment) => comment.id === commentId);
 
@@ -70,8 +81,8 @@ export function useBoardComments(
         return;
       }
 
-      const isAuthor = commentToEdit.authorId === user.id;
-      const isGlobalAdmin = user.globalRole === 'GLOBAL_ADMIN';
+      const isAuthor = commentToEdit.authorId === currentUser.id;
+      const isGlobalAdmin = currentUser.globalRole === 'GLOBAL_ADMIN';
 
       if (!isGlobalAdmin && !isAuthor) {
         alert('You can only edit your own comments.');
@@ -119,15 +130,17 @@ export function useBoardComments(
         showMessage('Failed to edit comment.');
       }
     },
-    [board, setBoard, showMessage, user],
+    [setBoard, showMessage],
   );
 
   const deleteComment = useCallback(
     async (commentId: string): Promise<void> => {
-      if (!board || !user) return;
+      const currentBoard = boardRef.current;
+      const currentUser = userRef.current;
+      if (!currentBoard || !currentUser) return;
       const commentDeleteWindowMs = 2 * 24 * 60 * 60 * 1000;
 
-      const commentToDelete = board.tasks
+      const commentToDelete = currentBoard.tasks
         .flatMap((task) => task.comments ?? [])
         .find((comment) => comment.id === commentId);
 
@@ -136,8 +149,8 @@ export function useBoardComments(
         return;
       }
 
-      const isAuthor = commentToDelete.authorId === user.id;
-      const isGlobalAdmin = user.globalRole === 'GLOBAL_ADMIN';
+      const isAuthor = commentToDelete.authorId === currentUser.id;
+      const isGlobalAdmin = currentUser.globalRole === 'GLOBAL_ADMIN';
 
       if (!isGlobalAdmin && !isAuthor) {
         alert('You can only delete your own comments.');
@@ -172,7 +185,7 @@ export function useBoardComments(
         showMessage('Failed to delete comment.');
       }
     },
-    [board, setBoard, showMessage, user],
+    [setBoard, showMessage],
   );
 
   return { addComment, editComment, deleteComment };
