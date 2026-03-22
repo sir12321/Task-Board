@@ -5,12 +5,9 @@ export interface BoardWorkflowConfig {
   closedColumnId: string | null;
 }
 
-export interface LegacyWorkflowColumns {
-  todoColumnId?: string | null;
-  inProgressColumnId?: string | null;
-}
-
-export const parseWorkflowColumnIds = (value: string | null | undefined): string[] => {
+export const parseWorkflowColumnIds = (
+  value: string | null | undefined,
+): string[] => {
   if (!value) {
     return [];
   }
@@ -18,14 +15,17 @@ export const parseWorkflowColumnIds = (value: string | null | undefined): string
   try {
     const parsed = JSON.parse(value);
     return Array.isArray(parsed)
-      ? parsed.filter((columnId): columnId is string => typeof columnId === 'string')
+      ? parsed.filter(
+          (columnId): columnId is string => typeof columnId === 'string',
+        )
       : [];
   } catch {
     return [];
   }
 };
 
-export const getFallbackWorkflowColumnIds = (workflow: LegacyWorkflowColumns & {
+// This function is used to support legacy workflows that may not have the `workflowColumnIds` field.
+export const getFallbackWorkflowColumnIds = (workflow: {
   workflowColumnIds?: string[];
   resolvedColumnId?: string | null;
   closedColumnId?: string | null;
@@ -34,16 +34,15 @@ export const getFallbackWorkflowColumnIds = (workflow: LegacyWorkflowColumns & {
     return workflow.workflowColumnIds;
   }
 
-  return [
-    workflow.todoColumnId,
-    workflow.inProgressColumnId,
-    workflow.resolvedColumnId,
-    workflow.closedColumnId,
-  ].filter((columnId): columnId is string => Boolean(columnId));
+  return [workflow.resolvedColumnId, workflow.closedColumnId].filter(
+    (columnId): columnId is string => Boolean(columnId),
+  );
 };
 
 export const getWorkflowSequence = (workflow: BoardWorkflowConfig): string[] =>
-  workflow.workflowColumnIds.filter((columnId): columnId is string => Boolean(columnId));
+  workflow.workflowColumnIds.filter((columnId): columnId is string =>
+    Boolean(columnId),
+  );
 
 export const getWorkflowStep = (
   workflow: BoardWorkflowConfig,
@@ -54,7 +53,8 @@ export const isResolvedColumn = (
   workflow: BoardWorkflowConfig,
   columnId: string,
 ): boolean =>
-  workflow.resolvedColumnId === columnId || workflow.closedColumnId === columnId;
+  workflow.resolvedColumnId === columnId ||
+  workflow.closedColumnId === columnId;
 
 export const isClosedColumn = (
   workflow: BoardWorkflowConfig,
@@ -109,7 +109,9 @@ export const validateWorkflowConfig = (
   }
 
   if (usedIds.size !== nonStoryColumnIds.length) {
-    throw new Error('Every non-story column must be included in workflow order');
+    throw new Error(
+      'Every non-story column must be included in workflow order',
+    );
   }
 
   if (!usedIds.has(workflow.resolvedColumnId)) {
@@ -122,7 +124,10 @@ export const validateWorkflowConfig = (
 
   const sequence = getWorkflowSequence(workflow);
   // Sanity check to make sure user doesn't move 'Closed' to the middle of the board
-  if (sequence.length === 0 || sequence[sequence.length - 1] !== workflow.closedColumnId) {
+  if (
+    sequence.length === 0 ||
+    sequence[sequence.length - 1] !== workflow.closedColumnId
+  ) {
     throw new Error('Closed column must be the last workflow stage');
   }
 };

@@ -56,8 +56,6 @@ export const getBoards = async (
     storyColumnId: board.storyColumnId,
     workflowColumnIds: getFallbackWorkflowColumnIds({
       workflowColumnIds: parseWorkflowColumnIds(board.workflowColumnIds),
-      todoColumnId: board.todoColumnId,
-      inProgressColumnId: board.inProgressColumnId,
       resolvedColumnId: board.resolvedColumnId,
       closedColumnId: board.closedColumnId,
     }),
@@ -91,14 +89,25 @@ export const getBoards = async (
     ...board,
     workflowColumnIds: workflow.workflowColumnIds,
     tasks: board.tasks.map((task) => {
+<<<<<<< HEAD
       const { column, assignee, reporter, parent, comments, auditLogs, ...rest } = task;
       const taskComments = comments ?? [];
       const taskAuditLogs = auditLogs ?? [];
+=======
+      const {
+        column,
+        assignee,
+        reporter,
+        parent,
+        comments,
+        auditLogs,
+        ...rest
+      } = task;
+>>>>>>> ea0e7d5e558513d92272d7e76d3a742d9fb978db
       const todoColumnName =
         board.columns.find(
           (candidate) => candidate.id === workflow.workflowColumnIds[0],
-        )
-          ?.name ?? 'To Do';
+        )?.name ?? 'To Do';
       const fallbackStoryStatus = minChild.get(task.id)?.name ?? todoColumnName;
 
       return {

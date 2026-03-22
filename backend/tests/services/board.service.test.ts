@@ -57,16 +57,24 @@ describe('Board Service', () => {
 
     it('throws error if user is not a member of project', async () => {
       pMock.projectMember.findUnique.mockResolvedValue(null);
-      await expect(verifyCreationPermission('u1', 'p1')).rejects.toThrow(/not a member/i);
+      await expect(verifyCreationPermission('u1', 'p1')).rejects.toThrow(
+        /not a member/i,
+      );
     });
 
     it('throws error if user is a member but not admin', async () => {
-      pMock.projectMember.findUnique.mockResolvedValue({ role: 'PROJECT_MEMBER' } as never);
-      await expect(verifyCreationPermission('u1', 'p1')).rejects.toThrow(/Only project admins/i);
+      pMock.projectMember.findUnique.mockResolvedValue({
+        role: 'PROJECT_MEMBER',
+      } as never);
+      await expect(verifyCreationPermission('u1', 'p1')).rejects.toThrow(
+        /Only project admins/i,
+      );
     });
 
     it('allows project admin', async () => {
-      pMock.projectMember.findUnique.mockResolvedValue({ role: 'PROJECT_ADMIN' } as never);
+      pMock.projectMember.findUnique.mockResolvedValue({
+        role: 'PROJECT_ADMIN',
+      } as never);
       await expect(verifyCreationPermission('u1', 'p1')).resolves.not.toThrow();
     });
   });
@@ -83,9 +91,11 @@ describe('Board Service', () => {
         id: 'b1',
         name: 'B1',
         storyColumnId: 'story-col',
-        workflowColumnIds: JSON.stringify(['todo-col', 'doing-col', 'done-col']),
-        todoColumnId: null,
-        inProgressColumnId: null,
+        workflowColumnIds: JSON.stringify([
+          'todo-col',
+          'doing-col',
+          'done-col',
+        ]),
         resolvedColumnId: 'doing-col',
         closedColumnId: 'done-col',
         columns: [{ id: 'col1', name: 'colname', order: 0 }],
@@ -98,9 +108,9 @@ describe('Board Service', () => {
             assignee: { name: 'Assig', avatarUrl: null },
             reporter: null,
             parent: null,
-            comments: []
-          }
-        ]
+            comments: [],
+          },
+        ],
       } as never);
 
       const res = await getBoards('b1');
@@ -115,8 +125,12 @@ describe('Board Service', () => {
 
   describe('updateBoardWorkflow', () => {
     it('updates workflow for a project admin', async () => {
-      pMock.board.findUnique.mockResolvedValueOnce({ projectId: 'p1' } as never);
-      pMock.projectMember.findUnique.mockResolvedValue({ role: 'PROJECT_ADMIN' } as never);
+      pMock.board.findUnique.mockResolvedValueOnce({
+        projectId: 'p1',
+      } as never);
+      pMock.projectMember.findUnique.mockResolvedValue({
+        role: 'PROJECT_ADMIN',
+      } as never);
       pMock.column.findMany.mockResolvedValue([
         { id: 'story-col' },
         { id: 'todo-col' },
@@ -138,7 +152,11 @@ describe('Board Service', () => {
         where: { id: 'b1' },
         data: {
           storyColumnId: 'story-col',
-          workflowColumnIds: JSON.stringify(['todo-col', 'doing-col', 'done-col']),
+          workflowColumnIds: JSON.stringify([
+            'todo-col',
+            'doing-col',
+            'done-col',
+          ]),
           resolvedColumnId: 'doing-col',
           closedColumnId: 'done-col',
         },

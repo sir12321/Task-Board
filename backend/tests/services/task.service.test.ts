@@ -14,8 +14,6 @@ vi.mock('../../src/utils/prisma', () => ({
   default: pMock,
 }));
 
-
-
 describe('Task Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -24,14 +22,14 @@ describe('Task Service', () => {
 
   const mockPermissions = (): void => {
     pMock.board.findUnique.mockResolvedValue({ projectId: 'p1' } as never);
-    pMock.projectMember.findUnique.mockResolvedValue({ role: 'PROJECT_ADMIN' } as never);
+    pMock.projectMember.findUnique.mockResolvedValue({
+      role: 'PROJECT_ADMIN',
+    } as never);
   };
 
   const workflowBoard = {
     storyColumnId: 'story-col',
     workflowColumnIds: JSON.stringify(['todo-col', 'doing-col', 'done-col']),
-    todoColumnId: null,
-    inProgressColumnId: null,
     resolvedColumnId: 'doing-col',
     closedColumnId: 'done-col',
   };
@@ -39,13 +37,25 @@ describe('Task Service', () => {
   describe('makeTask', () => {
     it('creates a task successfully', async () => {
       mockPermissions();
-      pMock.board.findUnique.mockResolvedValueOnce({ projectId: 'p1' } as never).mockResolvedValueOnce(workflowBoard as never);
+      pMock.board.findUnique
+        .mockResolvedValueOnce({ projectId: 'p1' } as never)
+        .mockResolvedValueOnce(workflowBoard as never);
       pMock.column.findUnique.mockResolvedValue({ wipLimit: null } as never);
-      pMock.task.create.mockResolvedValue({ id: 't1', title: 'Task 1' } as never);
+      pMock.task.create.mockResolvedValue({
+        id: 't1',
+        title: 'Task 1',
+      } as never);
 
       const res = await makeTask(
-        { title: 'Task 1', type: 'TASK', priority: 'LOW', columnId: 'todo-col', boardId: 'b1', reporterId: 'u1' },
-        'u1'
+        {
+          title: 'Task 1',
+          type: 'TASK',
+          priority: 'LOW',
+          columnId: 'todo-col',
+          boardId: 'b1',
+          reporterId: 'u1',
+        },
+        'u1',
       );
 
       expect(res.title).toBe('Task 1');
@@ -53,14 +63,25 @@ describe('Task Service', () => {
 
     it('checks WIP limits', async () => {
       mockPermissions();
-      pMock.board.findUnique.mockResolvedValueOnce({ projectId: 'p1' } as never);
+      pMock.board.findUnique.mockResolvedValueOnce({
+        projectId: 'p1',
+      } as never);
       pMock.column.findUnique.mockResolvedValue({ wipLimit: 1 } as never);
       pMock.task.count.mockResolvedValue(2); // Over limit
 
-      await expect(makeTask(
-        { title: 'Task 1', type: 'TASK', priority: 'LOW', columnId: 'doing-col', boardId: 'b1', reporterId: 'u1' },
-        'u1'
-      )).rejects.toThrow(/WIP limit/i);
+      await expect(
+        makeTask(
+          {
+            title: 'Task 1',
+            type: 'TASK',
+            priority: 'LOW',
+            columnId: 'doing-col',
+            boardId: 'b1',
+            reporterId: 'u1',
+          },
+          'u1',
+        ),
+      ).rejects.toThrow(/WIP limit/i);
     });
 
     it('checks assignee membership', async () => {
@@ -70,11 +91,21 @@ describe('Task Service', () => {
       pMock.projectMember.findUnique
         .mockResolvedValueOnce({ role: 'PROJECT_ADMIN' } as never)
         .mockResolvedValueOnce(null);
-      
-      await expect(makeTask(
-        { title: 'Task 1', type: 'TASK', priority: 'LOW', columnId: 'todo-col', boardId: 'b1', reporterId: 'u1', assigneeId: 'u2' },
-        'u1'
-      )).rejects.toThrow(/Assignee must be a member/i);
+
+      await expect(
+        makeTask(
+          {
+            title: 'Task 1',
+            type: 'TASK',
+            priority: 'LOW',
+            columnId: 'todo-col',
+            boardId: 'b1',
+            reporterId: 'u1',
+            assigneeId: 'u2',
+          },
+          'u1',
+        ),
+      ).rejects.toThrow(/Assignee must be a member/i);
     });
   });
 
@@ -91,8 +122,16 @@ describe('Task Service', () => {
       } as never);
       pMock.board.findUnique.mockResolvedValue({ projectId: 'p1' } as never);
       mockPermissions();
-      pMock.column.findUnique.mockResolvedValue({ id: 'doing-col', order: 2, name: 'In Progress', wipLimit: null } as never);
-      pMock.task.update.mockResolvedValue({ id: 't1', columnId: 'doing-col' } as never);
+      pMock.column.findUnique.mockResolvedValue({
+        id: 'doing-col',
+        order: 2,
+        name: 'In Progress',
+        wipLimit: null,
+      } as never);
+      pMock.task.update.mockResolvedValue({
+        id: 't1',
+        columnId: 'doing-col',
+      } as never);
 
       const res = await moveTask('t1', 'doing-col', 'u1');
       expect(res.columnId).toBe('doing-col');
@@ -109,19 +148,31 @@ describe('Task Service', () => {
       } as never);
       pMock.board.findUnique.mockResolvedValue({ projectId: 'p1' } as never);
       mockPermissions();
-      pMock.column.findUnique.mockResolvedValue({ id: 'done-col', order: 3, name: 'Done', wipLimit: null } as never);
+      pMock.column.findUnique.mockResolvedValue({
+        id: 'done-col',
+        order: 3,
+        name: 'Done',
+        wipLimit: null,
+      } as never);
 
-      await expect(moveTask('t1', 'done-col', 'u1')).rejects.toThrow(/next workflow stage/i);
+      await expect(moveTask('t1', 'done-col', 'u1')).rejects.toThrow(
+        /next workflow stage/i,
+      );
     });
   });
 
   describe('removeTask', () => {
     it('removes task and children', async () => {
-      pMock.task.findUnique.mockResolvedValue({ boardId: 'b1', columnId: 'todo-col' } as never);
+      pMock.task.findUnique.mockResolvedValue({
+        boardId: 'b1',
+        columnId: 'todo-col',
+      } as never);
       pMock.board.findUnique
         .mockResolvedValueOnce({ ...workflowBoard } as never)
         .mockResolvedValueOnce({ projectId: 'p1' } as never);
-      pMock.projectMember.findUnique.mockResolvedValue({ role: 'PROJECT_ADMIN' } as never);
+      pMock.projectMember.findUnique.mockResolvedValue({
+        role: 'PROJECT_ADMIN',
+      } as never);
       pMock.task.count.mockResolvedValue(0);
       pMock.task.delete.mockResolvedValue({ id: 't1' } as never);
 
@@ -130,17 +181,30 @@ describe('Task Service', () => {
     });
 
     it('throws if closed task is deleted', async () => {
-       pMock.task.findUnique.mockResolvedValue({ boardId: 'b1', columnId: 'done-col' } as never);
-       pMock.board.findUnique.mockResolvedValue({ closedColumnId: 'done-col' } as never);
-       await expect(removeTask('t1', 'u1')).rejects.toThrow(/closed and locked/i);
+      pMock.task.findUnique.mockResolvedValue({
+        boardId: 'b1',
+        columnId: 'done-col',
+      } as never);
+      pMock.board.findUnique.mockResolvedValue({
+        closedColumnId: 'done-col',
+      } as never);
+      await expect(removeTask('t1', 'u1')).rejects.toThrow(
+        /closed and locked/i,
+      );
     });
   });
 
   describe('closeTask', () => {
     it('closes task successfully', async () => {
-      pMock.task.findUnique.mockResolvedValue({ id: 't1', boardId: 'b1' } as never);
+      pMock.task.findUnique.mockResolvedValue({
+        id: 't1',
+        boardId: 'b1',
+      } as never);
       mockPermissions();
-      pMock.task.update.mockResolvedValue({ id: 't1', closedAt: new Date() } as never);
+      pMock.task.update.mockResolvedValue({
+        id: 't1',
+        closedAt: new Date(),
+      } as never);
 
       await closeTask('t1', 'u1');
       expect(pMock.task.update).toHaveBeenCalled();
@@ -160,7 +224,9 @@ describe('Task Service', () => {
       pMock.board.findUnique
         .mockResolvedValueOnce({ closedColumnId: 'done-col' } as never)
         .mockResolvedValueOnce({ projectId: 'p1' } as never);
-      pMock.projectMember.findUnique.mockResolvedValue({ role: 'PROJECT_ADMIN' } as never);
+      pMock.projectMember.findUnique.mockResolvedValue({
+        role: 'PROJECT_ADMIN',
+      } as never);
       pMock.task.update.mockResolvedValue({ id: 't1', title: 'New' } as never);
 
       const res = await updateTask('t1', { title: 'New' }, 'u1');

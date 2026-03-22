@@ -49,8 +49,6 @@ export type BoardWorkflowRecord = Prisma.BoardGetPayload<{
   select: {
     storyColumnId: true;
     workflowColumnIds: true;
-    todoColumnId: true;
-    inProgressColumnId: true;
     resolvedColumnId: true;
     closedColumnId: true;
   };
@@ -64,8 +62,6 @@ export const getBoardWorkflow = async (
     select: {
       storyColumnId: true,
       workflowColumnIds: true,
-      todoColumnId: true,
-      inProgressColumnId: true,
       resolvedColumnId: true,
       closedColumnId: true,
     },
