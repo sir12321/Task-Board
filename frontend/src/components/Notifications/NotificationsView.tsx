@@ -13,7 +13,9 @@ const formatter = new Intl.DateTimeFormat(undefined, {
 const getNotificationHtml = (content: string) => renderRichText(content);
 
 const getNotificationText = (content: string) =>
-  getRichTextPlainText(getNotificationHtml(content)).replace(/\s+/g, ' ').trim();
+  getRichTextPlainText(getNotificationHtml(content))
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const NotificationsView = () => {
   const { user, setUser } = useAuth();

@@ -37,6 +37,7 @@ const ProjectBoardSelector = () => {
         setExpandedProjectId(activeProjects[0].id);
       }
     } catch {
+      // No-op: some users may not have any accessible projects yet.
     }
   }, [expandedProjectId]);
 
