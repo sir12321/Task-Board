@@ -275,6 +275,11 @@ const Board = ({
                 rightNeighbor?.id !== StoryColumnId;
               const isClosedWorkflowColumn =
                 column.id === state.board.closedColumnId;
+              const closedWorkflowColumnName =
+                sortedColumns.find(
+                  (workflowColumn) =>
+                    workflowColumn.id === state.board.closedColumnId,
+                )?.name ?? null;
               return (
                 <Column
                   key={column.id}
@@ -406,6 +411,7 @@ const Board = ({
                   }}
                   canDeleteColumn={column.id !== StoryColumnId}
                   isClosedWorkflowColumn={isClosedWorkflowColumn}
+                  closedWorkflowColumnName={closedWorkflowColumnName}
                 />
               );
             })(),

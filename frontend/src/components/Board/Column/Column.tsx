@@ -30,6 +30,7 @@ interface Properties {
   onDeleteColumn?: (columnId: string) => void;
   canDeleteColumn?: boolean;
   isClosedWorkflowColumn?: boolean;
+  closedWorkflowColumnName?: string | null;
 }
 
 const Column = ({
@@ -52,6 +53,7 @@ const Column = ({
   onDeleteColumn,
   canDeleteColumn = true,
   isClosedWorkflowColumn = false,
+  closedWorkflowColumnName = null,
 }: Properties) => {
   // UI state for the workflow management dropdown
   const [workflowMenuOpen, setWorkflowMenuOpen] = useState(false);
@@ -229,7 +231,14 @@ const Column = ({
           task={task}
           onClick={onTaskClick ? () => onTaskClick(task.id) : undefined}
           onEdit={
-            !isClosedWorkflowColumn && onTaskEdit
+            !isClosedWorkflowColumn &&
+            onTaskEdit &&
+            !(
+              task.type === 'STORY' &&
+              Boolean(closedWorkflowColumnName) &&
+              task.status.trim().toLowerCase() ===
+                closedWorkflowColumnName?.trim().toLowerCase()
+            )
               ? () => onTaskEdit(task.id)
               : undefined
           }
