@@ -224,8 +224,8 @@ const TaskCreateEditModal = ({
               Type
               <select
                 value={type}
-                onChange={
-                  (e) => setType(e.target.value as NewTaskInput['type'])
+                onChange={(e) =>
+                  setType(e.target.value as NewTaskInput['type'])
                 }
                 disabled={isClosedTask}
                 aria-describedby={error ? errorId : undefined}

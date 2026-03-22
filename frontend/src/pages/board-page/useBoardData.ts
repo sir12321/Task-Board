@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { AuthUser, Board, ProjectDetails } from '../types/Types';
+import type { AuthUser, Board, ProjectDetails } from '../../types/Types';
 import type { NavigateFunction } from 'react-router-dom';
-import { apiClient } from '../utils/api';
-import { getTaskStatus } from '../components/Board/Board/workflow';
+import { apiClient } from '../../utils/api';
+import { getTaskStatus } from '../../components/Board/Board/workflow';
 import { useBoardTasks } from './useBoardTasks';
 import { useBoardComments } from './useBoardComments';
 import { useBoardColumns } from './useBoardColumns';
