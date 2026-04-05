@@ -1,4 +1,4 @@
-# Task-Board (COP290 Assignment 2)
+# Task-Board 
 
 A Jira-inspired task board with:
 
@@ -8,8 +8,8 @@ A Jira-inspired task board with:
 
 ## Collaborators
 
-- Prabuddha Sinha - 2024CS10199
-- Manya Jain - 2024CS10351
+- Prabuddha Sinha
+- Manya Jain
 
 ## Quick Setup
 
@@ -26,6 +26,7 @@ npm install
 cp .env.example .env
 npx prisma migrate dev
 npx prisma db seed
+npm run build
 npm run dev
 ```
 
@@ -39,6 +40,7 @@ Open a new terminal:
 cd frontend
 npm install
 cp .env.example .env
+npm run build
 npm run dev
 ```
 
